@@ -14,14 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/message_reader.h"
+#include "message_reader.h"
 
 #include <memory>
 
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -134,5 +134,5 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

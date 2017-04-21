@@ -14,16 +14,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_stream_translator.h"
+#include "request_stream_translator.h"
 
 #include <memory>
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
+#include "request_message_translator.h"
 #include "google/protobuf/stubs/stringpiece.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -284,5 +284,5 @@ void RequestStreamTranslator::RenderData(pb::StringPiece name,
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

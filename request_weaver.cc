@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_weaver.h"
+#include "request_weaver.h"
 
 #include <string>
 #include <vector>
@@ -25,7 +25,7 @@
 #include "google/protobuf/util/internal/object_writer.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -251,5 +251,5 @@ RequestWeaver::WeaveInfo* RequestWeaver::WeaveInfo::FindOrCreateWeaveMsg(
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

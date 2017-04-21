@@ -14,16 +14,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
+#include "message_stream.h"
 
 #include <deque>
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/test_common.h"
+#include "test_common.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -276,5 +276,5 @@ TEST_F(ZeroCopyInputStreamOverMessageStreamTest, DirectTest) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

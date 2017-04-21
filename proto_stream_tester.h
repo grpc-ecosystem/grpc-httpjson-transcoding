@@ -17,14 +17,14 @@
 
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
+#include "message_stream.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -112,7 +112,7 @@ bool ProtoStreamTester::ExpectNextEq(const std::string& expected_proto_text) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_PROTO_STREAM_TESTER_H_

@@ -19,17 +19,17 @@
 #include <string>
 #include <vector>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
-#include "contrib/endpoints/src/grpc/transcoding/proto_stream_tester.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
-#include "contrib/endpoints/src/grpc/transcoding/type_helper.h"
+#include "message_stream.h"
+#include "proto_stream_tester.h"
+#include "request_message_translator.h"
+#include "type_helper.h"
 #include "google/api/service.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -85,7 +85,7 @@ class RequestTranslatorTestBase : public ::testing::Test {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_REQUEST_TRANSLATOR_TEST_BASE_H_

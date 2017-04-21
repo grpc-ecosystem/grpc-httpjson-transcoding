@@ -45,20 +45,6 @@ cc_library(
 )
 
 cc_library(
-    name = "type_helper",
-    srcs = [
-        "type_helper.cc",
-    ],
-    hdrs = [
-        "type_helper.h",
-    ],
-    deps = [
-        "//external:protobuf",
-        "//contrib/endpoints/include:headers_only",
-    ],
-)
-
-cc_library(
     name = "message_stream",
     srcs = [
         "message_stream.cc",
@@ -167,22 +153,7 @@ cc_library(
         ":json_request_translator",
         ":message_stream",
         ":response_to_json_translator",
-        ":type_helper",
         "//external:protobuf",
-    ],
-)
-
-cc_library(
-    name = "transcoding_endpoints",
-    srcs = [
-        "transcoder_factory.cc",
-        "transcoder_factory.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":transcoding",
-        "//contrib/endpoints/include:headers_only",
-        "//external:service_config",
     ],
 )
 
@@ -210,23 +181,6 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "type_helper_test",
-    size = "small",
-    srcs = [
-        "type_helper_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":test_common",
-        ":type_helper",
-        "//external:googletest_main",
-        "//external:service_config",
-    ],
-)
-
 cc_proto_library(
     name = "bookstore_test_proto",
     testonly = 1,
@@ -235,155 +189,5 @@ cc_proto_library(
     protoc = "//external:protoc",
     deps = [
         "//external:cc_wkt_protos",
-    ],
-)
-
-cc_library(
-    name = "test_common",
-    testonly = 1,
-    srcs = ["test_common.cc"],
-    hdrs = ["test_common.h"],
-    deps = [
-        ":transcoder_input_stream",
-        "//external:googletest",
-        "//external:protobuf",
-        "//external:service_config",
-    ],
-)
-
-cc_library(
-    name = "request_translator_test_base",
-    testonly = 1,
-    srcs = [
-        "proto_stream_tester.cc",
-        "proto_stream_tester.h",
-        "request_translator_test_base.cc",
-    ],
-    hdrs = [
-        "request_translator_test_base.h",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":request_message_translator",
-        ":test_common",
-        ":type_helper",
-        "//external:googletest",
-        "//external:protobuf",
-        "//external:service_config",
-    ],
-)
-
-cc_test(
-    name = "request_message_translator_test",
-    size = "small",
-    srcs = [
-        "request_message_translator_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":request_message_translator",
-        ":request_translator_test_base",
-        ":test_common",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "request_stream_translator_test",
-    size = "small",
-    srcs = [
-        "request_stream_translator_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":request_stream_translator",
-        ":request_translator_test_base",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "json_request_translator_test",
-    size = "small",
-    srcs = [
-        "json_request_translator_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":json_request_translator",
-        ":request_translator_test_base",
-        ":test_common",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "message_reader_test",
-    size = "small",
-    srcs = [
-        "message_reader_test.cc",
-    ],
-    deps = [
-        ":message_reader",
-        ":test_common",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "response_to_json_translator_test",
-    size = "small",
-    srcs = [
-        "response_to_json_translator_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":message_reader",
-        ":response_to_json_translator",
-        ":test_common",
-        ":type_helper",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "message_stream_test",
-    size = "small",
-    srcs = [
-        "message_stream_test.cc",
-    ],
-    deps = [
-        ":message_stream",
-        ":test_common",
-        "//external:googletest_main",
-    ],
-)
-
-cc_test(
-    name = "transcoder_test",
-    size = "small",
-    srcs = [
-        "transcoder_test.cc",
-    ],
-    data = [
-        "testdata/bookstore_service.pb.txt",
-    ],
-    deps = [
-        ":bookstore_test_proto",
-        ":test_common",
-        ":transcoding_endpoints",
-        "//external:googletest_main",
     ],
 )

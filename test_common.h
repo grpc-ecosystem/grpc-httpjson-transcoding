@@ -20,14 +20,14 @@
 #include <string>
 #include <vector>
 
-#include "contrib/endpoints/src/grpc/transcoding/transcoder_input_stream.h"
+#include "transcoder_input_stream.h"
 #include "google/api/service.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -146,7 +146,7 @@ class JsonArrayTester {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_MESSAGE_READER_H_

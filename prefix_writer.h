@@ -22,7 +22,7 @@
 #include "google/protobuf/util/internal/object_writer.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -107,7 +107,7 @@ class PrefixWriter : public google::protobuf::util::converter::ObjectWriter {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_PREFIX_WRITER_H_

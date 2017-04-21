@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/response_to_json_translator.h"
+#include "response_to_json_translator.h"
 
 #include <string>
 
@@ -24,7 +24,7 @@
 #include "google/protobuf/util/type_resolver.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -128,5 +128,5 @@ bool ResponseToJsonTranslator::TranslateMessage(
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

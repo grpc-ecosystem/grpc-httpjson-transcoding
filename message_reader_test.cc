@@ -14,18 +14,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/message_reader.h"
+#include "message_reader.h"
 
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "contrib/endpoints/src/grpc/transcoding/test_common.h"
+#include "test_common.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -361,5 +361,5 @@ TEST_F(MessageReaderTest, DirectTest) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

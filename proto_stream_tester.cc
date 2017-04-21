@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/proto_stream_tester.h"
+#include "proto_stream_tester.h"
 
 #include <string>
 
@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -113,5 +113,5 @@ bool ProtoStreamTester::ExpectStatusEq(int error_code) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

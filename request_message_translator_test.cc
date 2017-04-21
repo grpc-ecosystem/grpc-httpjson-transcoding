@@ -14,20 +14,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
+#include "request_message_translator.h"
 
 #include <memory>
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/bookstore.pb.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_translator_test_base.h"
-#include "contrib/endpoints/src/grpc/transcoding/test_common.h"
+#include "bookstore.pb.h"
+#include "request_translator_test_base.h"
+#include "test_common.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -497,5 +497,5 @@ TEST_F(RequestMessageTranslatorTest, IgnoreUnkownFields) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

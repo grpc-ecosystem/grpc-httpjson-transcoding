@@ -31,7 +31,7 @@
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -187,7 +187,7 @@ std::string GenerateInput(const std::string& seed, size_t size) {
 namespace {
 
 std::string LoadFile(const std::string& input_file_name) {
-  const char kTestdata[] = "contrib/endpoints/src/grpc/transcoding/testdata/";
+  const char kTestdata[] = "testdata/";
   std::string file_name = std::string(kTestdata) + input_file_name;
 
   std::ifstream ifs(file_name);
@@ -342,5 +342,5 @@ bool JsonArrayTester::TestClosed(const std::string& actual) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

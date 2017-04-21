@@ -18,12 +18,12 @@
 #include <memory>
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/transcoder_input_stream.h"
+#include "transcoder_input_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -79,7 +79,7 @@ class MessageStream {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_MESSAGE_STREAM_H_

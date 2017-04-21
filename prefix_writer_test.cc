@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/prefix_writer.h"
+#include "prefix_writer.h"
 
 #include <memory>
 #include <string>
@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -205,5 +205,5 @@ TEST_F(PrefixWriterTest, ThreeLevelPrefix) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

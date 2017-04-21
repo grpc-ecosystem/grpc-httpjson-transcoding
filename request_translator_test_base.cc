@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_translator_test_base.h"
+#include "request_translator_test_base.h"
 
 #include <fstream>
 #include <memory>
@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
-#include "contrib/endpoints/src/grpc/transcoding/test_common.h"
+#include "message_stream.h"
+#include "test_common.h"
 #include "google/api/service.pb.h"
 #include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/text_format.h"
@@ -32,7 +32,7 @@
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -123,5 +123,5 @@ void RequestTranslatorTestBase::Build() {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

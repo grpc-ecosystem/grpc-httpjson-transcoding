@@ -17,7 +17,7 @@
 // bookstore.proto
 // Test proto for transcoding
 syntax = "proto3";
-package google.api_manager.transcoding;
+package google.grpc.transcoding;
 message Biography {
   int64 year_born = 1;
   int64 year_died = 2;

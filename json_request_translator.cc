@@ -14,20 +14,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/json_request_translator.h"
+#include "json_request_translator.h"
 
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_stream_translator.h"
+#include "message_stream.h"
+#include "request_message_translator.h"
+#include "request_stream_translator.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/internal/json_stream_parser.h"
 #include "google/protobuf/util/internal/object_writer.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace {
@@ -160,5 +160,5 @@ JsonRequestTranslator::JsonRequestTranslator(
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

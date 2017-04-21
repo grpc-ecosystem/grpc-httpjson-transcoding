@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_weaver.h"
+#include "request_weaver.h"
 
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -514,5 +514,5 @@ TEST_F(RequestWeaverTest, IgnoreListTest) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

@@ -14,21 +14,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/json_request_translator.h"
+#include "json_request_translator.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "contrib/endpoints/src/grpc/transcoding/bookstore.pb.h"
-#include "contrib/endpoints/src/grpc/transcoding/proto_stream_tester.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_translator_test_base.h"
-#include "contrib/endpoints/src/grpc/transcoding/test_common.h"
+#include "bookstore.pb.h"
+#include "proto_stream_tester.h"
+#include "request_translator_test_base.h"
+#include "test_common.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "gtest/gtest.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 namespace testing {
@@ -742,5 +742,5 @@ TEST_F(JsonRequestTranslatorTest, StreamingErrorNotAnArray) {
 }  // namespace testing
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

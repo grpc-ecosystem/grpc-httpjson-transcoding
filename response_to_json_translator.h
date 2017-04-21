@@ -17,14 +17,14 @@
 
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_reader.h"
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
+#include "message_reader.h"
+#include "message_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/type_resolver.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -95,7 +95,7 @@ class ResponseToJsonTranslator : public MessageStream {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_RESPONSE_TO_JSON_TRANSLATOR_H_

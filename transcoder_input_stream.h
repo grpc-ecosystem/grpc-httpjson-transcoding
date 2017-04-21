@@ -18,7 +18,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 namespace transcoding {
 
 class TranscoderInputStream
@@ -29,7 +29,7 @@ class TranscoderInputStream
 };
 
 }  // namespace transcoding
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODER_H_

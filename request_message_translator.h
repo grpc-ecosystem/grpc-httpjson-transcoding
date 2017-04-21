@@ -18,9 +18,9 @@
 #include <memory>
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
-#include "contrib/endpoints/src/grpc/transcoding/prefix_writer.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_weaver.h"
+#include "message_stream.h"
+#include "prefix_writer.h"
+#include "request_weaver.h"
 #include "google/protobuf/stubs/bytestream.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/error_listener.h"
@@ -28,7 +28,7 @@
 #include "google/protobuf/util/type_resolver.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -196,7 +196,7 @@ class RequestMessageTranslator : public MessageStream {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODING_REQUEST_MESSAGE_TRANSLATOR_H_

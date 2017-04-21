@@ -14,12 +14,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
+#include "request_message_translator.h"
 
 #include <string>
 
-#include "contrib/endpoints/src/grpc/transcoding/prefix_writer.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_weaver.h"
+#include "prefix_writer.h"
+#include "request_weaver.h"
 #include "google/protobuf/stubs/bytestream.h"
 #include "google/protobuf/util/internal/error_listener.h"
 #include "google/protobuf/util/internal/protostream_objectwriter.h"
@@ -29,7 +29,7 @@ namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -157,5 +157,5 @@ void RequestMessageTranslator::StatusErrorListener::MissingField(
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

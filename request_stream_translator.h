@@ -19,14 +19,14 @@
 #include <functional>
 #include <memory>
 
-#include "contrib/endpoints/src/grpc/transcoding/message_stream.h"
-#include "contrib/endpoints/src/grpc/transcoding/request_message_translator.h"
+#include "message_stream.h"
+#include "request_message_translator.h"
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -140,6 +140,6 @@ class RequestStreamTranslator
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 #endif  // API_MANAGER_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_

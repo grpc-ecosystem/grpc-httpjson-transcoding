@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "contrib/endpoints/src/grpc/transcoding/prefix_writer.h"
+#include "prefix_writer.h"
 
 #include <string>
 
@@ -23,7 +23,7 @@
 #include "google/protobuf/util/internal/object_writer.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 
 namespace transcoding {
 
@@ -212,5 +212,5 @@ void PrefixWriter::EndPrefix() {
 
 }  // namespace transcoding
 
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google

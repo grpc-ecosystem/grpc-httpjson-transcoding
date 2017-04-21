@@ -15,11 +15,11 @@
 #ifndef GRPC_TRANSCODING_TRANSCODER_H_
 #define GRPC_TRANSCODING_TRANSCODER_H_
 
-#include "contrib/endpoints/src/grpc/transcoding/transcoder_input_stream.h"
+#include "transcoder_input_stream.h"
 #include "google/protobuf/stubs/status.h"
 
 namespace google {
-namespace api_manager {
+namespace grpc {
 namespace transcoding {
 
 // Transcoder interface that transcodes a single request. It holds
@@ -149,7 +149,7 @@ class Transcoder {
 };
 
 }  // namespace transcoding
-}  // namespace api_manager
+}  // namespace grpc
 }  // namespace google
 
 #endif  // API_MANAGER_TRANSCODER_H_
