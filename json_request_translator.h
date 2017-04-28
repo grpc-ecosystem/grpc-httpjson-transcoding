@@ -109,4 +109,4 @@ class JsonRequestTranslator {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_REQUEST_TRANSLATOR_H
+#endif  // GRPC_TRANSCODING_REQUEST_TRANSLATOR_H

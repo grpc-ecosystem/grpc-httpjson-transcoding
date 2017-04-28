@@ -19,6 +19,7 @@ load(
     "//:repositories.bzl",
     "protobuf_repositories",
     "googletest_repositories",
+    "googleapis_repositories",
 )
 
 
@@ -26,6 +27,7 @@ protobuf_repositories()
 
 googletest_repositories()
 
+googleapis_repositories()
 
 # Workaround for Bazel > 0.4.0 since it needs newer protobuf.bzl from:
 # https://github.com/google/protobuf/pull/2246

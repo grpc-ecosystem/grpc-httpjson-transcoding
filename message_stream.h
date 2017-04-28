@@ -82,4 +82,4 @@ class MessageStream {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_MESSAGE_STREAM_H_
+#endif  // GRPC_TRANSCODING_MESSAGE_STREAM_H_

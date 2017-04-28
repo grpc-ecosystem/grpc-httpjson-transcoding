@@ -115,4 +115,4 @@ bool ProtoStreamTester::ExpectNextEq(const std::string& expected_proto_text) {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_PROTO_STREAM_TESTER_H_
+#endif  // GRPC_TRANSCODING_PROTO_STREAM_TESTER_H_

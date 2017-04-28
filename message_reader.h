@@ -94,4 +94,4 @@ class MessageReader {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_MESSAGE_READER_H_
+#endif  // GRPC_TRANSCODING_MESSAGE_READER_H_

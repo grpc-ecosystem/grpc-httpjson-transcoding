@@ -88,4 +88,4 @@ class RequestTranslatorTestBase : public ::testing::Test {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_REQUEST_TRANSLATOR_TEST_BASE_H_
+#endif  // GRPC_TRANSCODING_REQUEST_TRANSLATOR_TEST_BASE_H_

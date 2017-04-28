@@ -110,4 +110,4 @@ class PrefixWriter : public google::protobuf::util::converter::ObjectWriter {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_PREFIX_WRITER_H_
+#endif  // GRPC_TRANSCODING_PREFIX_WRITER_H_

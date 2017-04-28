@@ -98,4 +98,4 @@ class ResponseToJsonTranslator : public MessageStream {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_RESPONSE_TO_JSON_TRANSLATOR_H_
+#endif  // GRPC_TRANSCODING_RESPONSE_TO_JSON_TRANSLATOR_H_

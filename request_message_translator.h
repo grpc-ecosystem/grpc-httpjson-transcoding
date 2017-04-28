@@ -199,4 +199,4 @@ class RequestMessageTranslator : public MessageStream {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_REQUEST_MESSAGE_TRANSLATOR_H_
+#endif  // GRPC_TRANSCODING_REQUEST_MESSAGE_TRANSLATOR_H_

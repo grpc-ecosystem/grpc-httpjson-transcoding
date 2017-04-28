@@ -142,4 +142,4 @@ class RequestStreamTranslator
 
 }  // namespace grpc
 }  // namespace google
-#endif  // API_MANAGER_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_
+#endif  // GRPC_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_

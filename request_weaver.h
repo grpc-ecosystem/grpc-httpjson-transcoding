@@ -154,4 +154,4 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
 }  // namespace grpc
 }  // namespace google
 
-#endif  // API_MANAGER_TRANSCODING_REQUEST_WEAVER_H_
+#endif  // GRPC_TRANSCODING_REQUEST_WEAVER_H_
