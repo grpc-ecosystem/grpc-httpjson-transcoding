@@ -10,5 +10,5 @@ See [CONTRIBUTING.md](http://github.com/grpc-ecosystem/grpc-transcoding/blob/mas
 
 # License
 grpc-transcoding is licensed under the Apache 2.0 license.
-See [LICENSE.txt](https://github.com/grpc-ecosystem/grpc-transcoding/blob/master/LICENSE.txt) for more details.
+See [LICENSE](https://github.com/grpc-ecosystem/grpc-transcoding/blob/master/LICENSE.txt) for more details.
 
