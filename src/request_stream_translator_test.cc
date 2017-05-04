@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "bookstore.pb.h"
+#include "src/bookstore.pb.h"
 #include "request_translator_test_base.h"
 #include "google/protobuf/type.pb.h"
 #include "gtest/gtest.h"

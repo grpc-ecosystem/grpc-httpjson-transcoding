@@ -16,12 +16,11 @@
 #
 
 load(
-    "//:repositories.bzl",
+    "//src:repositories.bzl",
     "protobuf_repositories",
     "googletest_repositories",
     "googleapis_repositories",
 )
-
 
 protobuf_repositories()
 

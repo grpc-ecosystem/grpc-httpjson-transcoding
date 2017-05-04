@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "bookstore.pb.h"
+#include "src/bookstore.pb.h"
 #include "test_common.h"
 #include "type_helper.h"
 #include "google/protobuf/io/zero_copy_stream.h"

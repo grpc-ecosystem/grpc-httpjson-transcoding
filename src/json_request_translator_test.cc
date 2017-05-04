@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "bookstore.pb.h"
+#include "src/bookstore.pb.h"
 #include "proto_stream_tester.h"
 #include "request_translator_test_base.h"
 #include "test_common.h"

@@ -187,7 +187,7 @@ std::string GenerateInput(const std::string& seed, size_t size) {
 namespace {
 
 std::string LoadFile(const std::string& input_file_name) {
-  const char kTestdata[] = "testdata/";
+  const char kTestdata[] = "src/testdata/";
   std::string file_name = std::string(kTestdata) + input_file_name;
 
   std::ifstream ifs(file_name);
