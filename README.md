@@ -1,6 +1,6 @@
-# grpc-transcoding
+# grpc-httpjson-transcoding
 
-grpc-transcoding is a library that supports
+grpc-httpjson-transcoding is a library that supports
 [transcoding](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto)
 so that HTTP/JSON can be converted to gRPC.
 
