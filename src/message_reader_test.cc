@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "test_common.h"
 #include "gtest/gtest.h"
+#include "test_common.h"
 
 namespace google {
 namespace grpc {

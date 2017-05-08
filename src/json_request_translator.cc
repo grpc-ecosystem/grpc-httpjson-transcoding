@@ -18,13 +18,13 @@
 
 #include <string>
 
-#include "message_stream.h"
-#include "request_message_translator.h"
-#include "request_stream_translator.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/internal/json_stream_parser.h"
 #include "google/protobuf/util/internal/object_writer.h"
+#include "message_stream.h"
+#include "request_message_translator.h"
+#include "request_stream_translator.h"
 
 namespace google {
 namespace grpc {

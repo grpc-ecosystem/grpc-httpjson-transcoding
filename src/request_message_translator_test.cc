@@ -19,12 +19,12 @@
 #include <memory>
 #include <string>
 
-#include "src/bookstore.pb.h"
-#include "request_translator_test_base.h"
-#include "test_common.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "gtest/gtest.h"
+#include "request_translator_test_base.h"
+#include "src/bookstore.pb.h"
+#include "test_common.h"
 
 namespace google {
 namespace grpc {

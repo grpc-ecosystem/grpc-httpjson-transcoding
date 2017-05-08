@@ -19,11 +19,11 @@
 #include <functional>
 #include <memory>
 
-#include "message_stream.h"
-#include "request_message_translator.h"
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "message_stream.h"
+#include "request_message_translator.h"
 
 namespace google {
 namespace grpc {

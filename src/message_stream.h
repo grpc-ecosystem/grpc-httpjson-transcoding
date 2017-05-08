@@ -18,9 +18,9 @@
 #include <memory>
 #include <string>
 
-#include "transcoder_input_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
+#include "transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {

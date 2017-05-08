@@ -17,8 +17,8 @@
 
 #include <memory>
 
-#include "transcoder_input_stream.h"
 #include "google/protobuf/stubs/status.h"
+#include "transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {
