@@ -15,8 +15,8 @@
 #ifndef GRPC_TRANSCODING_TRANSCODER_H_
 #define GRPC_TRANSCODING_TRANSCODER_H_
 
-#include "transcoder_input_stream.h"
 #include "google/protobuf/stubs/status.h"
+#include "transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {

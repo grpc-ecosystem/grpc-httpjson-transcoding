@@ -20,12 +20,12 @@
 #include <string>
 #include <vector>
 
-#include "src/bookstore.pb.h"
-#include "proto_stream_tester.h"
-#include "request_translator_test_base.h"
-#include "test_common.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "gtest/gtest.h"
+#include "proto_stream_tester.h"
+#include "request_translator_test_base.h"
+#include "src/bookstore.pb.h"
+#include "test_common.h"
 
 namespace google {
 namespace grpc {

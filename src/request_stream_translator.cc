@@ -19,8 +19,8 @@
 #include <memory>
 #include <string>
 
-#include "request_message_translator.h"
 #include "google/protobuf/stubs/stringpiece.h"
+#include "request_message_translator.h"
 
 namespace google {
 namespace grpc {

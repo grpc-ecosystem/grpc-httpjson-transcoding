@@ -22,14 +22,14 @@
 #include <string>
 #include <vector>
 
-#include "message_stream.h"
-#include "test_common.h"
 #include "google/api/service.pb.h"
 #include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "gtest/gtest.h"
+#include "message_stream.h"
+#include "test_common.h"
 
 namespace google {
 namespace grpc {

@@ -17,11 +17,11 @@
 
 #include <string>
 
-#include "message_reader.h"
-#include "message_stream.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "message_reader.h"
+#include "message_stream.h"
 
 namespace google {
 namespace grpc {
