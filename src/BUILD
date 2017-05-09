@@ -89,6 +89,36 @@ cc_library(
 )
 
 cc_library(
+    name = "path_matcher",
+    srcs = [
+        "path_matcher_node.cc",
+        "path_matcher_node.h",
+    ],
+    hdrs = [
+        "path_matcher.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":http_template",
+    ],
+)
+
+cc_library(
+    name = "http_template",
+    srcs = [
+        "http_template.cc",
+    ],
+    hdrs = [
+        "http_template.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+cc_library(
     name = "json_request_translator",
     srcs = [
         "json_request_translator.cc",
@@ -154,6 +184,32 @@ cc_library(
         ":message_stream",
         ":response_to_json_translator",
         "//external:protobuf",
+    ],
+)
+
+cc_test(
+    name = "http_template_test",
+    size = "small",
+    srcs = [
+        "http_template_test.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":http_template",
+        "//external:googletest_main",
+    ],
+)
+
+cc_test(
+    name = "path_matcher_test",
+    size = "small",
+    srcs = [
+        "path_matcher_test.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":path_matcher",
+        "//external:googletest_main",
     ],
 )
 
@@ -279,7 +335,7 @@ cc_test(
     name = "request_stream_translator_test",
     size = "small",
     srcs = [
-       "request_stream_translator_test.cc",
+        "request_stream_translator_test.cc",
     ],
     data = [
         "testdata/bookstore_service.pb.txt",
@@ -345,7 +401,7 @@ cc_test(
 cc_test(
     name = "message_stream_test",
     size = "small",
-   srcs = [
+    srcs = [
         "message_stream_test.cc",
     ],
     deps = [
