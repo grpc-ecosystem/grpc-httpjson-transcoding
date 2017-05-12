@@ -14,7 +14,7 @@
 #
 ################################################################################
 #
-package(default_visibility = ["//visibility:private"])
+package(default_visibility = ["//visibility:public"])
 
 load("@protobuf_git//:protobuf.bzl", "cc_proto_library")
 
@@ -97,9 +97,6 @@ cc_library(
     hdrs = [
         "path_matcher.h",
     ],
-    visibility = [
-        "//visibility:public",
-    ],
     deps = [
         ":http_template",
     ],
@@ -112,9 +109,6 @@ cc_library(
     ],
     hdrs = [
         "http_template.h",
-    ],
-    visibility = [
-        "//visibility:public",
     ],
 )
 
@@ -167,7 +161,6 @@ cc_library(
     srcs = [
         "transcoder_input_stream.h",
     ],
-    visibility = ["//visibility:public"],
     deps = [
         "@protobuf_git//:protobuf",
     ],
@@ -178,11 +171,11 @@ cc_library(
     hdrs = [
         "transcoder.h",
     ],
-    visibility = ["//visibility:public"],
     deps = [
         ":json_request_translator",
         ":message_stream",
         ":response_to_json_translator",
+        ":type_helper",
         "//external:protobuf",
     ],
 )

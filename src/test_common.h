@@ -89,6 +89,9 @@ std::string GenerateInput(const std::string& seed, size_t size);
 // Load service from a proto text file. Returns true if loading succeeds;
 // otherwise returns false.
 bool LoadService(const std::string& config_pb_txt_file,
+                 const std::string& testdata_path,
+                 ::google::api::Service* service);
+bool LoadService(const std::string& config_pb_txt_file,
                  ::google::api::Service* service);
 
 // Parses the gRPC message delimiter and returns the size of the message.
