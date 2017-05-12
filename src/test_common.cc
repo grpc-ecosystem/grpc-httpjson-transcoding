@@ -186,10 +186,7 @@ std::string GenerateInput(const std::string& seed, size_t size) {
 
 namespace {
 
-std::string LoadFile(const std::string& input_file_name) {
-  const char kTestdata[] = "src/testdata/";
-  std::string file_name = std::string(kTestdata) + input_file_name;
-
+std::string LoadFile(const std::string& file_name) {
   std::ifstream ifs(file_name);
   if (!ifs) {
     ADD_FAILURE() << "Could not open " << file_name.c_str() << std::endl;
@@ -203,8 +200,9 @@ std::string LoadFile(const std::string& input_file_name) {
 }  // namespace
 
 bool LoadService(const std::string& config_pb_txt_file,
+                 const std::string& testdata_path,
                  ::google::api::Service* service) {
-  auto config = LoadFile(config_pb_txt_file);
+  auto config = LoadFile(testdata_path + config_pb_txt_file);
   if (config.empty()) {
     return false;
   }
@@ -216,6 +214,12 @@ bool LoadService(const std::string& config_pb_txt_file,
   } else {
     return true;
   }
+}
+
+bool LoadService(const std::string& config_pb_txt_file,
+                 ::google::api::Service* service) {
+  static const char kTestdata[] = "src/testdata/";
+  return LoadService(config_pb_txt_file, kTestdata, service);
 }
 
 unsigned DelimiterToSize(const unsigned char* delimiter) {
