@@ -77,6 +77,7 @@ class PathMatcher {
     Method method;
     std::vector<HttpTemplate::Variable> variables;
     std::string body_field_path;
+    std::set<std::string> system_query_parameter_names;
   };
   // The info associated with each method. The path matcher nodes
   // will hold pointers to MethodData objects in this vector.
@@ -104,8 +105,12 @@ class PathMatcherBuilder {
   // Registrations are one-to-one. If this function is called more than once, it
   // replaces the existing method. Only the last registered method is stored.
   // Return false if path is an invalid http template.
-  bool Register(std::string http_method, std::string path,
-                std::string body_field_path, Method method);
+  bool Register(const std::string& http_method, const std::string& path,
+                const std::string& body_field_path,
+                const std::set<std::string>& system_query_parameter_names,
+                Method method);
+  bool Register(const std::string& http_method, const std::string& path,
+                const std::string& body_field_path, Method method);
 
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
   // registered path-WrapperGraph pairs. Note the PathMatchBuilder instance
@@ -412,7 +417,7 @@ Method PathMatcher<Method>::Lookup(
     variable_bindings->clear();
     ExtractBindingsFromPath(method_data->variables, parts, variable_bindings);
     ExtractBindingsFromQueryParameters(
-        query_params, method_data->method->system_query_parameter_names(),
+        query_params, method_data->system_query_parameter_names,
         variable_bindings);
   }
   if (body_field_path != nullptr) {
@@ -468,9 +473,10 @@ void PathMatcherBuilder<Method>::InsertPathToNode(
 // This wrapper converts the |http_rule| into a HttpTemplate. Then, inserts the
 // template into the trie.
 template <class Method>
-bool PathMatcherBuilder<Method>::Register(std::string http_method,
-                                          std::string http_template,
-                                          std::string body_field_path,
+bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
+                                          const std::string& http_template,
+                                          const std::string& body_field_path,
+                                          const std::set<std::string>& system_query_parameter_names,
                                           Method method) {
   std::unique_ptr<HttpTemplate> ht(HttpTemplate::Parse(http_template));
   if (nullptr == ht) {
@@ -485,13 +491,22 @@ bool PathMatcherBuilder<Method>::Register(std::string http_method,
   auto method_data = std::unique_ptr<MethodData>(new MethodData());
   method_data->method = method;
   method_data->variables = std::move(ht->Variables());
-  method_data->body_field_path = std::move(body_field_path);
+  method_data->body_field_path = body_field_path;
+  method_data->system_query_parameter_names = system_query_parameter_names;
 
   InsertPathToNode(path_info, method_data.get(), http_method, true,
                    root_ptr_.get());
   // Add the method_data to the methods_ vector for cleanup
   methods_.emplace_back(std::move(method_data));
   return true;
+}
+
+template <class Method>
+bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
+                                          const std::string& http_template,
+                                          const std::string& body_field_path,
+                                          Method method) {
+  return Register(http_method, http_template, body_field_path, {}, method);
 }
 
 }  // namespace transcoding
