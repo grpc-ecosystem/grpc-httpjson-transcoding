@@ -48,9 +48,6 @@ struct Binding {
 typedef std::vector<Binding> Bindings;
 typedef std::vector<std::string> FieldPath;
 class MethodInfo {
- public:
-  MOCK_CONST_METHOD0(system_query_parameter_names,
-                     const std::set<std::string>&());
 };
 
 bool operator==(const Binding& b1, const Binding& b2) {
@@ -92,8 +89,6 @@ class PathMatcherTest : public ::testing::Test {
                                        std::string http_template,
                                        std::string body_field_path) {
     auto method = new MethodInfo();
-    ON_CALL(*method, system_query_parameter_names())
-        .WillByDefault(ReturnRef(empty_set_));
     if (!builder_.Register(http_method, http_template, body_field_path,
                            method)) {
       delete method;
@@ -107,9 +102,7 @@ class PathMatcherTest : public ::testing::Test {
       std::string http_method, std::string http_template,
       const std::set<std::string>* system_params) {
     auto method = new MethodInfo();
-    ON_CALL(*method, system_query_parameter_names())
-        .WillByDefault(ReturnRef(*system_params));
-    if (!builder_.Register(http_method, http_template, std::string(), method)) {
+    if (!builder_.Register(http_method, http_template, std::string(), *system_params, method)) {
       delete method;
       return nullptr;
     }
