@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "message_reader.h"
+#include "src/message_reader.h"
 
 #include <memory>
 #include <sstream>

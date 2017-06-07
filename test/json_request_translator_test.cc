@@ -14,17 +14,17 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "json_request_translator.h"
+#include "src/json_request_translator.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "bookstore.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "gtest/gtest.h"
 #include "proto_stream_tester.h"
 #include "request_translator_test_base.h"
-#include "src/bookstore.pb.h"
 #include "test_common.h"
 
 namespace google {

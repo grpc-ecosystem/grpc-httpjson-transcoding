@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "http_template.h"
+#include "src/http_template.h"
 #include "gtest/gtest.h"
 
 #include <ostream>

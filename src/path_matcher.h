@@ -473,11 +473,10 @@ void PathMatcherBuilder<Method>::InsertPathToNode(
 // This wrapper converts the |http_rule| into a HttpTemplate. Then, inserts the
 // template into the trie.
 template <class Method>
-bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
-                                          const std::string& http_template,
-                                          const std::string& body_field_path,
-                                          const std::set<std::string>& system_query_parameter_names,
-                                          Method method) {
+bool PathMatcherBuilder<Method>::Register(
+    const std::string& http_method, const std::string& http_template,
+    const std::string& body_field_path,
+    const std::set<std::string>& system_query_parameter_names, Method method) {
   std::unique_ptr<HttpTemplate> ht(HttpTemplate::Parse(http_template));
   if (nullptr == ht) {
     return false;
