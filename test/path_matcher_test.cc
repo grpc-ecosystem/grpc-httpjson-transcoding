@@ -47,8 +47,7 @@ struct Binding {
 
 typedef std::vector<Binding> Bindings;
 typedef std::vector<std::string> FieldPath;
-class MethodInfo {
-};
+class MethodInfo {};
 
 bool operator==(const Binding& b1, const Binding& b2) {
   return b1.field_path == b2.field_path && b1.value == b2.value;
@@ -102,7 +101,8 @@ class PathMatcherTest : public ::testing::Test {
       std::string http_method, std::string http_template,
       const std::set<std::string>* system_params) {
     auto method = new MethodInfo();
-    if (!builder_.Register(http_method, http_template, std::string(), *system_params, method)) {
+    if (!builder_.Register(http_method, http_template, std::string(),
+                           *system_params, method)) {
       delete method;
       return nullptr;
     }

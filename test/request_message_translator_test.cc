@@ -14,16 +14,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "request_message_translator.h"
+#include "src/request_message_translator.h"
 
 #include <memory>
 #include <string>
 
+#include "bookstore.pb.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "gtest/gtest.h"
 #include "request_translator_test_base.h"
-#include "src/bookstore.pb.h"
 #include "test_common.h"
 
 namespace google {

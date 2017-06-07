@@ -14,19 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "response_to_json_translator.h"
+#include "src/response_to_json_translator.h"
 
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "bookstore.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-#include "src/bookstore.pb.h"
+#include "src/type_helper.h"
 #include "test_common.h"
-#include "type_helper.h"
 
 namespace google {
 namespace grpc {

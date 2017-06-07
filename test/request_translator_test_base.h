@@ -23,10 +23,10 @@
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "gtest/gtest.h"
-#include "message_stream.h"
 #include "proto_stream_tester.h"
-#include "request_message_translator.h"
-#include "type_helper.h"
+#include "src/message_stream.h"
+#include "src/request_message_translator.h"
+#include "src/type_helper.h"
 
 namespace google {
 namespace grpc {

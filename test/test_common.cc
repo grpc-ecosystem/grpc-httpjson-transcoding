@@ -218,7 +218,7 @@ bool LoadService(const std::string& config_pb_txt_file,
 
 bool LoadService(const std::string& config_pb_txt_file,
                  ::google::api::Service* service) {
-  static const char kTestdata[] = "src/testdata/";
+  static const char kTestdata[] = "test/testdata/";
   return LoadService(config_pb_txt_file, kTestdata, service);
 }
 
