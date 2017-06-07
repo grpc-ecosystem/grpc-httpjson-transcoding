@@ -14,6 +14,8 @@
 #
 ################################################################################
 #
+package(default_visibility = ["//visibility:public"])
+
 load("@protobuf_git//:protobuf.bzl", "cc_proto_library")
 
 cc_test(
