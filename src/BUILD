@@ -108,7 +108,10 @@ cc_library(
         "path_matcher_node.h",
     ],
     hdrs = [
-        "path_matcher.h",
+        "include/grpc_transcoding/path_matcher.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":http_template",
