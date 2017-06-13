@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/request_weaver.h"
+#include "grpc_transcoding/request_weaver.h"
 
 #include <memory>
 #include <string>

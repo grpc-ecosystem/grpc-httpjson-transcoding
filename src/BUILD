@@ -22,7 +22,10 @@ cc_library(
         "prefix_writer.cc",
     ],
     hdrs = [
-        "prefix_writer.h",
+        "include/grpc_transcoding/prefix_writer.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         "//external:protobuf",
@@ -35,7 +38,10 @@ cc_library(
         "request_weaver.cc",
     ],
     hdrs = [
-        "request_weaver.h",
+        "include/grpc_transcoding/request_weaver.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         "//external:protobuf",
@@ -48,7 +54,10 @@ cc_library(
         "message_stream.cc",
     ],
     hdrs = [
-        "message_stream.h",
+        "include/grpc_transcoding/message_stream.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":transcoder_input_stream",
@@ -62,7 +71,10 @@ cc_library(
         "request_message_translator.cc",
     ],
     hdrs = [
-        "request_message_translator.h",
+        "include/grpc_transcoding/request_message_translator.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":message_stream",
@@ -78,7 +90,10 @@ cc_library(
         "request_stream_translator.cc",
     ],
     hdrs = [
-        "request_stream_translator.h",
+        "include/grpc_transcoding/request_stream_translator.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":request_message_translator",
@@ -90,10 +105,13 @@ cc_library(
     name = "path_matcher",
     srcs = [
         "path_matcher_node.cc",
-        "path_matcher_node.h",
+        "include/grpc_transcoding/path_matcher_node.h",
     ],
     hdrs = [
-        "path_matcher.h",
+        "include/grpc_transcoding/path_matcher.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":http_template",
@@ -106,7 +124,10 @@ cc_library(
         "http_template.cc",
     ],
     hdrs = [
-        "http_template.h",
+        "include/grpc_transcoding/http_template.h",
+    ],
+    includes = [
+        "include/"
     ],
 )
 
@@ -116,7 +137,10 @@ cc_library(
         "json_request_translator.cc",
     ],
     hdrs = [
-        "json_request_translator.h",
+        "include/grpc_transcoding/json_request_translator.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":request_message_translator",
@@ -131,7 +155,10 @@ cc_library(
         "message_reader.cc",
     ],
     hdrs = [
-        "message_reader.h",
+        "include/grpc_transcoding/message_reader.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":transcoder_input_stream",
@@ -145,7 +172,10 @@ cc_library(
         "response_to_json_translator.cc",
     ],
     hdrs = [
-        "response_to_json_translator.h",
+        "include/grpc_transcoding/response_to_json_translator.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":message_reader",
@@ -157,7 +187,10 @@ cc_library(
 cc_library(
     name = "transcoder_input_stream",
     srcs = [
-        "transcoder_input_stream.h",
+        "include/grpc_transcoding/transcoder_input_stream.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         "//external:protobuf",
@@ -167,7 +200,10 @@ cc_library(
 cc_library(
     name = "transcoding",
     hdrs = [
-        "transcoder.h",
+        "include/grpc_transcoding/transcoder.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         ":json_request_translator",
@@ -184,7 +220,10 @@ cc_library(
         "type_helper.cc",
     ],
     hdrs = [
-        "type_helper.h",
+        "include/grpc_transcoding/type_helper.h",
+    ],
+    includes = [
+        "include/"
     ],
     deps = [
         "//external:protobuf",

@@ -14,15 +14,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "request_message_translator.h"
+#include "grpc_transcoding/request_message_translator.h"
 
 #include <string>
 
 #include "google/protobuf/stubs/bytestream.h"
 #include "google/protobuf/util/internal/error_listener.h"
 #include "google/protobuf/util/internal/protostream_objectwriter.h"
-#include "prefix_writer.h"
-#include "request_weaver.h"
+#include "grpc_transcoding/prefix_writer.h"
+#include "grpc_transcoding/request_weaver.h"
 
 namespace pb = ::google::protobuf;
 namespace pbutil = ::google::protobuf::util;

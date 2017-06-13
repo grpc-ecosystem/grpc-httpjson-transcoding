@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "response_to_json_translator.h"
+#include "grpc_transcoding/response_to_json_translator.h"
 
 #include <string>
 
