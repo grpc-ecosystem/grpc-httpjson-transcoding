@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/http_template.h"
+#include "grpc_transcoding/http_template.h"
 #include "gtest/gtest.h"
 
 #include <ostream>

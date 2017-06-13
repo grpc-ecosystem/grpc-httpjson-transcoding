@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/path_matcher.h"
+#include "grpc_transcoding/path_matcher.h"
 
 #include <memory>
 #include <ostream>
