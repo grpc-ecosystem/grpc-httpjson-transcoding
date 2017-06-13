@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "json_request_translator.h"
+#include "grpc_transcoding/json_request_translator.h"
 
 #include <string>
 
@@ -22,9 +22,9 @@
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/internal/json_stream_parser.h"
 #include "google/protobuf/util/internal/object_writer.h"
-#include "message_stream.h"
-#include "request_message_translator.h"
-#include "request_stream_translator.h"
+#include "grpc_transcoding/message_stream.h"
+#include "grpc_transcoding/request_message_translator.h"
+#include "grpc_transcoding/request_stream_translator.h"
 
 namespace google {
 namespace grpc {

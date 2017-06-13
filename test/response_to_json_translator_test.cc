@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/response_to_json_translator.h"
+#include "grpc_transcoding/response_to_json_translator.h"
 
 #include <functional>
 #include <memory>
@@ -25,7 +25,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-#include "src/type_helper.h"
+#include "grpc_transcoding/type_helper.h"
 #include "test_common.h"
 
 namespace google {

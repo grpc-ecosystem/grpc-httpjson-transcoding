@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/json_request_translator.h"
+#include "grpc_transcoding/json_request_translator.h"
 
 #include <memory>
 #include <string>

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/type_helper.h"
+#include "grpc_transcoding/type_helper.h"
 
 #include <fstream>
 #include <memory>

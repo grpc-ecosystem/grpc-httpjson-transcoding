@@ -24,7 +24,7 @@
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-#include "src/transcoder_input_stream.h"
+#include "grpc_transcoding/transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {

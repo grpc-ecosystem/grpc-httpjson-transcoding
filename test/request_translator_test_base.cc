@@ -28,7 +28,7 @@
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "gtest/gtest.h"
-#include "src/message_stream.h"
+#include "grpc_transcoding/message_stream.h"
 #include "test_common.h"
 
 namespace google {

@@ -24,9 +24,9 @@
 #include "google/protobuf/util/type_resolver.h"
 #include "gtest/gtest.h"
 #include "proto_stream_tester.h"
-#include "src/message_stream.h"
-#include "src/request_message_translator.h"
-#include "src/type_helper.h"
+#include "grpc_transcoding/message_stream.h"
+#include "grpc_transcoding/request_message_translator.h"
+#include "grpc_transcoding/type_helper.h"
 
 namespace google {
 namespace grpc {

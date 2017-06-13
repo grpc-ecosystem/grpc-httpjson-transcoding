@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/message_stream.h"
+#include "grpc_transcoding/message_stream.h"
 
 #include <deque>
 #include <string>

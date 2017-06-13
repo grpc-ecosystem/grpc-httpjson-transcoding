@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/request_stream_translator.h"
+#include "grpc_transcoding/request_stream_translator.h"
 
 #include <memory>
 #include <string>

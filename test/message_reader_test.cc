@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/message_reader.h"
+#include "grpc_transcoding/message_reader.h"
 
 #include <memory>
 #include <sstream>
