@@ -105,7 +105,7 @@ cc_library(
     name = "path_matcher",
     srcs = [
         "path_matcher_node.cc",
-        "path_matcher_node.h",
+        "include/grpc_transcoding/path_matcher_node.h",
     ],
     hdrs = [
         "include/grpc_transcoding/path_matcher.h",
@@ -124,7 +124,10 @@ cc_library(
         "http_template.cc",
     ],
     hdrs = [
-        "http_template.h",
+        "include/grpc_transcoding/http_template.h",
+    ],
+    includes = [
+        "include/"
     ],
 )
 

@@ -22,8 +22,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "src/http_template.h"
-#include "src/path_matcher_node.h"
+#include "http_template.h"
+#include "path_matcher_node.h"
 
 namespace google {
 namespace grpc {

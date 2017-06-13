@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "src/http_template.h"
+#include "grpc_transcoding/http_template.h"
 
 namespace google {
 namespace grpc {

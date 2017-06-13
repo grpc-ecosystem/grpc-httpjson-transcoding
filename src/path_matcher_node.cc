@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "src/path_matcher_node.h"
-#include "src/http_template.h"
+#include "grpc_transcoding/path_matcher_node.h"
+#include "grpc_transcoding/http_template.h"
 
 namespace google {
 namespace grpc {
