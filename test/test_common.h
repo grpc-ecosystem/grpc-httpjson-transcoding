@@ -23,8 +23,8 @@
 #include "google/api/service.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
-#include "gtest/gtest.h"
 #include "grpc_transcoding/transcoder_input_stream.h"
+#include "gtest/gtest.h"
 
 namespace google {
 namespace grpc {

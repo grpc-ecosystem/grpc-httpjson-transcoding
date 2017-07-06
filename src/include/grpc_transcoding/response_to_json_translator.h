@@ -72,8 +72,8 @@ class ResponseToJsonTranslator : public MessageStream {
   ResponseToJsonTranslator(
       ::google::protobuf::util::TypeResolver* type_resolver,
       std::string type_url, bool streaming, TranscoderInputStream* in,
-      const ::google::protobuf::util::JsonPrintOptions&
-          json_print_options = ::google::protobuf::util::JsonPrintOptions());
+      const ::google::protobuf::util::JsonPrintOptions& json_print_options =
+          ::google::protobuf::util::JsonPrintOptions());
 
   // MessageStream implementation
   bool NextMessage(std::string* message);
