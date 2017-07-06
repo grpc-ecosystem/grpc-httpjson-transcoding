@@ -19,6 +19,7 @@
 
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
+#include "google/protobuf/util/json_util.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "message_reader.h"
 #include "message_stream.h"
@@ -64,9 +65,15 @@ class ResponseToJsonTranslator : public MessageStream {
   // streaming - whether this is a streaming call or not
   // in - the input stream of delimited proto message(s) as in the gRPC wire
   //      format (http://www.grpc.io/docs/guides/wire.html)
+  // json_print_options - control various aspects for the generated JSON, such
+  //      as indentation, weather to omit fields with default values, etc (
+  //      https://developers.google.com/protocol-buffers/docs/reference/cpp/
+  //      google.protobuf.util.json_util#JsonPrintOptions
   ResponseToJsonTranslator(
       ::google::protobuf::util::TypeResolver* type_resolver,
-      std::string type_url, bool streaming, TranscoderInputStream* in);
+      std::string type_url, bool streaming, TranscoderInputStream* in,
+      const ::google::protobuf::util::JsonPrintOptions&
+          json_print_options = ::google::protobuf::util::JsonPrintOptions());
 
   // MessageStream implementation
   bool NextMessage(std::string* message);
@@ -80,6 +87,7 @@ class ResponseToJsonTranslator : public MessageStream {
 
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::string type_url_;
+  const ::google::protobuf::util::JsonPrintOptions json_print_options_;
   bool streaming_;
 
   // A MessageReader to extract full messages

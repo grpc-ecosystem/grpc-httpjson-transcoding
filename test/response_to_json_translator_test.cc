@@ -57,15 +57,17 @@ class ResponseToJsonTranslatorTestRun {
   // input - the input to be passed to the MessageReader,
   // expected - the expected translated json chunks as the input is processed,
   ResponseToJsonTranslatorTestRun(pbutil::TypeResolver* type_resolver,
-                                  bool streaming, const std::string& type_url,
-                                  const std::string& input,
-                                  const std::vector<ExpectedAt>& expected)
+                            bool streaming, const std::string& type_url,
+                            const pbutil::JsonPrintOptions& json_print_options,
+                            const std::string& input,
+                            const std::vector<ExpectedAt>& expected)
       : input_(input),
         expected_(expected),
         streaming_(streaming),
         input_stream_(new TestZeroCopyInputStream()),
         translator_(new ResponseToJsonTranslator(
-            type_resolver, type_url, streaming_, input_stream_.get())),
+            type_resolver, type_url, streaming_, input_stream_.get(),
+            json_print_options)),
         position_(0),
         next_expected_(std::begin(expected_)) {}
 
@@ -186,19 +188,21 @@ class ResponseToJsonTranslatorTestCase {
   // input - the input to be passed to the MessageReader,
   // expected - the expected translated json chunks as the input is processed,
   ResponseToJsonTranslatorTestCase(pbutil::TypeResolver* type_resolver,
-                                   bool streaming, const std::string& type_url,
-                                   std::string input,
-                                   std::vector<ExpectedAt> expected)
+                           bool streaming, const std::string& type_url,
+                           const pbutil::JsonPrintOptions& json_print_options,
+                           std::string input, std::vector<ExpectedAt> expected)
       : type_resolver_(type_resolver),
         streaming_(streaming),
         type_url_(type_url),
+        json_print_options_(json_print_options),
         input_(std::move(input)),
         expected_(std::move(expected)) {}
 
   std::unique_ptr<ResponseToJsonTranslatorTestRun> NewRun() {
     return std::unique_ptr<ResponseToJsonTranslatorTestRun>(
         new ResponseToJsonTranslatorTestRun(type_resolver_, streaming_,
-                                            type_url_, input_, expected_));
+                                            type_url_, json_print_options_,
+                                            input_, expected_));
   }
 
   // Runs the test for different partitions of the input.
@@ -234,6 +238,7 @@ class ResponseToJsonTranslatorTestCase {
   pbutil::TypeResolver* type_resolver_;
   bool streaming_;
   std::string type_url_;
+  pbutil::JsonPrintOptions json_print_options_;
 
   // The entire input including message delimiters
   std::string input_;
@@ -261,6 +266,21 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
     type_url_ = "type.googleapis.com/" + type_name;
   }
 
+  // Sets json print options type for used in this test. Must be used before
+  // Build().
+  void SetJsonPrintOptions(const pbutil::JsonPrintOptions& json_print_options) {
+    json_print_options_ = json_print_options;
+  }
+
+  // Sets whether always print primitive fields for default values. Must be used
+  // before Build(). The default is false.
+  void SetJsonAlwaysPrintPrimitiveFields(bool always_print_primitive_fields) {
+    pbutil::JsonPrintOptions json_print_options;
+    json_print_options.always_print_primitive_fields =
+                                                always_print_primitive_fields;
+    SetJsonPrintOptions(json_print_options);
+  }
+
   // Sets whether this is a streaming call or not. Must be used before Build().
   // The default is non-streaming.
   void SetStreaming(bool streaming) { streaming_ = streaming; }
@@ -285,8 +305,8 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
 
     return std::unique_ptr<ResponseToJsonTranslatorTestCase>(
         new ResponseToJsonTranslatorTestCase(
-            type_helper_->Resolver(), streaming_, type_url_, std::move(input),
-            std::move(expected)));
+            type_helper_->Resolver(), streaming_, type_url_, json_print_options_,
+            std::move(input), std::move(expected)));
   }
 
  private:
@@ -294,6 +314,7 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
   std::unique_ptr<TypeHelper> type_helper_;
 
   std::string type_url_;
+  pbutil::JsonPrintOptions json_print_options_;
   bool streaming_;
 
   // The entire input
@@ -308,6 +329,20 @@ TEST_F(ResponseToJsonTranslatorTest, Simple) {
   SetMessageType("Shelf");
   AddMessage<Shelf>(R"(name : "1" theme : "History")",
                     R"({ "name" : "1", "theme" : "History"})");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 1.0));
+  EXPECT_TRUE(tc->Test(4, 0.5));
+}
+
+TEST_F(ResponseToJsonTranslatorTest, SimpleAlwaysPrintPrimitiveFields) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("Shelf");
+  SetJsonAlwaysPrintPrimitiveFields(true);
+  AddMessage<Shelf>(R"(name : "" theme : "")",
+                    R"({ "name" : "", "theme" : ""})");
 
   auto tc = Build();
   EXPECT_TRUE(tc->Test(1, 1.0));
@@ -355,10 +390,62 @@ TEST_F(ResponseToJsonTranslatorTest, Nested) {
   EXPECT_TRUE(tc->Test(3, 0.2));
 }
 
+TEST_F(ResponseToJsonTranslatorTest, NestedAlwaysPrintPrimitiveFields) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("Book");
+  SetJsonAlwaysPrintPrimitiveFields(true);
+  AddMessage<Book>(
+      R"(
+          name : ""
+          author : ""
+          title : ""
+          author_info {
+            first_name : ""
+            last_name : ""
+            bio {
+              year_born : 0
+              year_died : 0
+              text : ""
+            }
+          }
+        )",
+      R"({
+          "author" : "",
+          "name" : "",
+          "title" : "",
+          "authorInfo" : {
+            "firstName" : "",
+            "lastName" : "",
+            "bio" : {
+              "yearBorn" : "0",
+              "yearDied" : "0",
+              "text" : ""
+            }
+          }
+        })");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 0.2));
+}
+
 TEST_F(ResponseToJsonTranslatorTest, Empty) {
   ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
   SetMessageType("Shelf");
   AddMessage<Shelf>("", "{}");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+}
+
+TEST_F(ResponseToJsonTranslatorTest, EmptyAlwaysPrintPrimitiveFields) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("Shelf");
+  SetJsonAlwaysPrintPrimitiveFields(true);
+  AddMessage<Shelf>(R"()",
+                    R"({ "name" : "", "theme" : ""})");
 
   auto tc = Build();
   EXPECT_TRUE(tc->Test(1, 1.0));

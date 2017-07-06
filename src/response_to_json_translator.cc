@@ -20,7 +20,6 @@
 
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/stubs/status.h"
-#include "google/protobuf/util/json_util.h"
 #include "google/protobuf/util/type_resolver.h"
 
 namespace google {
@@ -30,9 +29,11 @@ namespace transcoding {
 
 ResponseToJsonTranslator::ResponseToJsonTranslator(
     ::google::protobuf::util::TypeResolver* type_resolver, std::string type_url,
-    bool streaming, TranscoderInputStream* in)
+    bool streaming, TranscoderInputStream* in,
+    const ::google::protobuf::util::JsonPrintOptions& json_print_options)
     : type_resolver_(type_resolver),
       type_url_(std::move(type_url)),
+      json_print_options_(json_print_options),
       streaming_(streaming),
       reader_(in),
       first_(true),
@@ -118,7 +119,7 @@ bool ResponseToJsonTranslator::TranslateMessage(
 
   // Do the actual translation.
   status_ = ::google::protobuf::util::BinaryToJsonStream(
-      type_resolver_, type_url_, proto_in, &json_stream);
+      type_resolver_, type_url_, proto_in, &json_stream, json_print_options_);
   if (!status_.ok()) {
     return false;
   }
