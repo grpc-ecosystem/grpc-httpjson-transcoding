@@ -24,8 +24,8 @@
 #include "bookstore.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
-#include "gtest/gtest.h"
 #include "grpc_transcoding/type_helper.h"
+#include "gtest/gtest.h"
 #include "test_common.h"
 
 namespace google {
@@ -56,11 +56,11 @@ class ResponseToJsonTranslatorTestRun {
   // type_url - type url of messages being translated,
   // input - the input to be passed to the MessageReader,
   // expected - the expected translated json chunks as the input is processed,
-  ResponseToJsonTranslatorTestRun(pbutil::TypeResolver* type_resolver,
-                            bool streaming, const std::string& type_url,
-                            const pbutil::JsonPrintOptions& json_print_options,
-                            const std::string& input,
-                            const std::vector<ExpectedAt>& expected)
+  ResponseToJsonTranslatorTestRun(
+      pbutil::TypeResolver* type_resolver, bool streaming,
+      const std::string& type_url,
+      const pbutil::JsonPrintOptions& json_print_options,
+      const std::string& input, const std::vector<ExpectedAt>& expected)
       : input_(input),
         expected_(expected),
         streaming_(streaming),
@@ -187,10 +187,11 @@ class ResponseToJsonTranslatorTestCase {
   // type_url - type url of messages being translated,
   // input - the input to be passed to the MessageReader,
   // expected - the expected translated json chunks as the input is processed,
-  ResponseToJsonTranslatorTestCase(pbutil::TypeResolver* type_resolver,
-                           bool streaming, const std::string& type_url,
-                           const pbutil::JsonPrintOptions& json_print_options,
-                           std::string input, std::vector<ExpectedAt> expected)
+  ResponseToJsonTranslatorTestCase(
+      pbutil::TypeResolver* type_resolver, bool streaming,
+      const std::string& type_url,
+      const pbutil::JsonPrintOptions& json_print_options, std::string input,
+      std::vector<ExpectedAt> expected)
       : type_resolver_(type_resolver),
         streaming_(streaming),
         type_url_(type_url),
@@ -277,7 +278,7 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
   void SetJsonAlwaysPrintPrimitiveFields(bool always_print_primitive_fields) {
     pbutil::JsonPrintOptions json_print_options;
     json_print_options.always_print_primitive_fields =
-                                                always_print_primitive_fields;
+        always_print_primitive_fields;
     SetJsonPrintOptions(json_print_options);
   }
 
@@ -305,8 +306,8 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
 
     return std::unique_ptr<ResponseToJsonTranslatorTestCase>(
         new ResponseToJsonTranslatorTestCase(
-            type_helper_->Resolver(), streaming_, type_url_, json_print_options_,
-            std::move(input), std::move(expected)));
+            type_helper_->Resolver(), streaming_, type_url_,
+            json_print_options_, std::move(input), std::move(expected)));
   }
 
  private:

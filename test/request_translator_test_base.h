@@ -22,11 +22,11 @@
 #include "google/api/service.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/type_resolver.h"
-#include "gtest/gtest.h"
-#include "proto_stream_tester.h"
 #include "grpc_transcoding/message_stream.h"
 #include "grpc_transcoding/request_message_translator.h"
 #include "grpc_transcoding/type_helper.h"
+#include "gtest/gtest.h"
+#include "proto_stream_tester.h"
 
 namespace google {
 namespace grpc {
