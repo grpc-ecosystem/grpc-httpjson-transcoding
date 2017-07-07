@@ -159,9 +159,21 @@ def googleapis_repositories(protobuf_repo="@protobuf_git//", bind=True):
 
 licenses(["notice"])
 
-load("@protobuf_git//:protobuf.bzl", "cc_proto_library")
+load("{0}:protobuf.bzl", "cc_proto_library")
 
 exports_files(glob(["google/**"]))
+
+cc_proto_library(
+    name = "http_api_protos",
+    srcs = [
+        "google/api/annotations.proto",
+        "google/api/http.proto",
+    ],
+    default_runtime = "//external:protobuf",
+    protoc = "//external:protoc",
+    visibility = ["//visibility:public"],
+    deps = ["{0}:cc_wkt_protos"],
+)
 
 cc_proto_library(
     name = "servicecontrol",
@@ -190,7 +202,6 @@ cc_proto_library(
 cc_proto_library(
     name = "service_config",
     srcs = [
-        "google/api/annotations.proto",
         "google/api/auth.proto",
         "google/api/backend.proto",
         "google/api/billing.proto",
@@ -199,7 +210,6 @@ cc_proto_library(
         "google/api/control.proto",
         "google/api/documentation.proto",
         "google/api/endpoint.proto",
-        "google/api/http.proto",
         "google/api/label.proto",
         "google/api/log.proto",
         "google/api/logging.proto",
@@ -217,25 +227,11 @@ cc_proto_library(
     include = ".",
     visibility = ["//visibility:public"],
     deps = [
+        ":http_api_protos",
         "//external:cc_wkt_protos",
     ],
     protoc = "//external:protoc",
     default_runtime = "//external:protobuf",
-)
-
-cc_proto_library(
-    name = "cloud_trace",
-    srcs = [
-        "google/devtools/cloudtrace/v1/trace.proto",
-    ],
-    include = ".",
-    default_runtime = "//external:protobuf",
-    protoc = "//external:protoc",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":service_config",
-        "//external:cc_wkt_protos",
-    ],
 )
 """.format(protobuf_repo)
 
@@ -248,21 +244,11 @@ cc_proto_library(
 
     if bind:
         native.bind(
-            name = "servicecontrol",
-            actual = "@googleapis_git//:servicecontrol",
-        )
-
-        native.bind(
-            name = "servicecontrol_genproto",
-            actual = "@googleapis_git//:servicecontrol_genproto",
-        )
-
-        native.bind(
             name = "service_config",
             actual = "@googleapis_git//:service_config",
         )
 
         native.bind(
-            name = "cloud_trace",
-            actual = "@googleapis_git//:cloud_trace",
+            name = "http_api_protos",
+            actual = "@googleapis_git//:http_api_protos",
         )
