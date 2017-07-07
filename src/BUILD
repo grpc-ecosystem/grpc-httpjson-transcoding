@@ -132,6 +132,20 @@ cc_library(
 )
 
 cc_library(
+    name = "path_matcher_utility",
+    hdrs = [
+        "include/grpc_transcoding/path_matcher_utility.h",
+    ],
+    includes = [
+        "include/"
+    ],
+    deps = [
+        ":path_matcher",
+        "//external:http_api_protos",
+    ],
+)
+
+cc_library(
     name = "json_request_translator",
     srcs = [
         "json_request_translator.cc",
@@ -208,6 +222,7 @@ cc_library(
     deps = [
         ":json_request_translator",
         ":message_stream",
+        ":path_matcher_utility",
         ":response_to_json_translator",
         ":type_helper",
         "//external:protobuf",

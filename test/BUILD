@@ -45,6 +45,19 @@ cc_test(
 )
 
 cc_test(
+    name = "path_matcher_utility_test",
+    size = "small",
+    srcs = [
+        "path_matcher_utility_test.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//external:googletest_main",
+        "//src:path_matcher_utility",
+    ],
+)
+
+cc_test(
     name = "prefix_writer_test",
     size = "small",
     srcs = [
