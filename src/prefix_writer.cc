@@ -29,7 +29,7 @@ namespace transcoding {
 
 PrefixWriter::PrefixWriter(const std::string& prefix,
                            google::protobuf::util::converter::ObjectWriter* ow)
-    : prefix_(google::protobuf::Split(prefix, ".", true)),
+    : prefix_(google::protobuf::Split(prefix, ".")),
       non_actionable_depth_(0),
       writer_(ow) {}
 
