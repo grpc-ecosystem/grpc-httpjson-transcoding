@@ -29,9 +29,6 @@ namespace transcoding {
 namespace testing {
 namespace {
 
-namespace pbio = ::google::protobuf::io;
-namespace pbutil = ::google::protobuf::util;
-
 // A test MessageStream implementation for testing ZeroCopyInputStream over
 // MessageStream implementation.
 class TestMessageStream : public MessageStream {
@@ -55,7 +52,9 @@ class TestMessageStream : public MessageStream {
     }
   }
   bool Finished() const { return messages_.empty() && finished_; }
-  pbutil::Status Status() const { return pbutil::Status::OK; }
+  google::protobuf::util::Status Status() const {
+    return google::protobuf::util::Status::OK;
+  }
 
  private:
   bool finished_;
