@@ -15,6 +15,7 @@
 #ifndef GRPC_TRANSCODING_HTTP_TEMPLATE_H_
 #define GRPC_TRANSCODING_HTTP_TEMPLATE_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -24,7 +25,7 @@ namespace transcoding {
 
 class HttpTemplate {
  public:
-  static HttpTemplate *Parse(const std::string &ht);
+  static std::unique_ptr<HttpTemplate> Parse(const std::string &ht);
   const std::vector<std::string> &segments() const { return segments_; }
   const std::string &verb() const { return verb_; }
 
