@@ -44,8 +44,14 @@ bool ResponseToJsonTranslator::NextMessage(std::string* message) {
     // All done
     return false;
   }
+
   // Try to read a message
   auto proto_in = reader_.NextMessage();
+  status_ = reader_.Status();
+  if (!status_.ok()) {
+    return false;
+  }
+
   if (proto_in) {
     std::string json_out;
     if (TranslateMessage(proto_in.get(), &json_out)) {

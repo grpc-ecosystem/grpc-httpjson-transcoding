@@ -72,18 +72,22 @@ class MessageReader {
   //       NextMessage() again.
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage();
 
+  ::google::protobuf::util::Status Status() const { return status_; }
+
   // Returns true if the stream has ended (this is permanent); otherwise returns
   // false.
-  bool Finished() const { return finished_; }
+  bool Finished() const { return finished_ || !status_.ok(); }
 
  private:
   TranscoderInputStream* in_;
   // The size of the current message.
-  unsigned int current_message_size_;
+  uint32_t current_message_size_;
   // Whether we have read the current message size or not
   bool have_current_message_size_;
   // Are we all done?
   bool finished_;
+  // Status
+  ::google::protobuf::util::Status status_;
 
   MessageReader(const MessageReader&) = delete;
   MessageReader& operator=(const MessageReader&) = delete;

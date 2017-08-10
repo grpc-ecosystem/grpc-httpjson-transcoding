@@ -82,6 +82,8 @@ class InputStreamOverMessageStream : public TranscoderInputStream {
     return static_cast<int64_t>(message_.size() - position_);
   }
 
+  bool Finished() const { return src_->Finished(); }
+
  private:
   // Updates the current message and creates an ArrayInputStream over it.
   void ReadNextMessage() {

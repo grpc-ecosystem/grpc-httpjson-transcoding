@@ -825,6 +825,75 @@ TEST_F(ResponseToJsonTranslatorTest, Streaming5KMessages) {
   EXPECT_TRUE(ExpectJsonArrayEq(expected_json_array, actual_json_array));
 }
 
+TEST_F(ResponseToJsonTranslatorTest, IncompleteFrameHeader) {
+  // Load the service config
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+
+  // Create a TypeHelper using the service config
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/Shelf", true, &input_stream);
+
+  input_stream.AddChunk(std::string("\x0A", 1));
+  input_stream.Finish();
+
+  std::string actual;
+  EXPECT_FALSE(translator.NextMessage(&actual));
+  EXPECT_FALSE(translator.Status().ok());
+  EXPECT_EQ(translator.Status().error_message(),
+            "Incomplete gRPC frame header received");
+}
+
+TEST_F(ResponseToJsonTranslatorTest, InvalidFrameFlag) {
+  // Load the service config
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+
+  // Create a TypeHelper using the service config
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/Shelf", true, &input_stream);
+
+  input_stream.AddChunk(std::string("\x0A\x00\x00\x00\x00", 5));
+  input_stream.Finish();
+
+  std::string actual;
+  EXPECT_FALSE(translator.NextMessage(&actual));
+  EXPECT_FALSE(translator.Status().ok());
+  EXPECT_EQ(translator.Status().error_message(),
+            "Unsupported gRPC frame flag: 10");
+}
+
+TEST_F(ResponseToJsonTranslatorTest, IncompleteFrame) {
+  // Load the service config
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+
+  // Create a TypeHelper using the service config
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/Shelf", true, &input_stream);
+
+  input_stream.AddChunk(std::string("\x00\x00\x00\x00\x05\x00", 6));
+  input_stream.Finish();
+
+  std::string actual;
+  EXPECT_FALSE(translator.NextMessage(&actual));
+  EXPECT_FALSE(translator.Status().ok());
+  EXPECT_EQ(translator.Status().error_message(),
+            "Incomplete gRPC frame expected size: 5 actual size: 1");
+}
+
 }  // namespace
 }  // namespace testing
 }  // namespace transcoding

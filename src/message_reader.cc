@@ -60,21 +60,9 @@ bool ReadStream(pbio::ZeroCopyInputStream* stream, unsigned char* buffer,
   return true;
 }
 
-// Determines whether the stream is finished or not.
-bool IsStreamFinished(pbio::ZeroCopyInputStream* stream) {
-  int size = 0;
-  const void* data = nullptr;
-  if (!stream->Next(&data, &size)) {
-    return true;
-  } else {
-    stream->BackUp(size);
-    return false;
-  }
-}
-
 // A helper function to extract the size from a gRPC wire format message
 // delimiter - see http://www.grpc.io/docs/guides/wire.html.
-unsigned DelimiterToSize(const unsigned char* delimiter) {
+uint32_t DelimiterToSize(const unsigned char* delimiter) {
   unsigned size = 0;
   // Bytes 1-4 are big-endian 32-bit message size
   size = size | static_cast<unsigned>(delimiter[1]);
@@ -90,9 +78,9 @@ unsigned DelimiterToSize(const unsigned char* delimiter) {
 }  // namespace
 
 std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
-  if (finished_) {
+  if (Finished()) {
     // The stream has ended
-    return std::unique_ptr<pbio::ZeroCopyInputStream>();
+    return nullptr;
   }
 
   // Check if we have the current message size. If not try to read it.
@@ -101,15 +89,27 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
     if (in_->BytesAvailable() < static_cast<pb::int64>(kDelimiterSize)) {
       // We don't have 5 bytes available to read the length of the message.
       // Find out whether the stream is finished and return false.
-      finished_ = IsStreamFinished(in_);
-      return std::unique_ptr<pbio::ZeroCopyInputStream>();
+      finished_ = in_->Finished();
+      if (finished_ && in_->BytesAvailable() != 0) {
+        status_ = google::protobuf::util::Status(
+            google::protobuf::util::error::INTERNAL,
+            "Incomplete gRPC frame header received");
+      }
+      return nullptr;
     }
 
     // Try to read the delimiter
     unsigned char delimiter[kDelimiterSize] = {0};
     if (!ReadStream(in_, delimiter, sizeof(delimiter))) {
       finished_ = true;
-      return std::unique_ptr<pbio::ZeroCopyInputStream>();
+      return nullptr;
+    }
+
+    if (delimiter[0] != 0) {
+      status_ = google::protobuf::util::Status(
+          google::protobuf::util::error::INTERNAL,
+          "Unsupported gRPC frame flag: " + std::to_string(delimiter[0]));
+      return nullptr;
     }
 
     current_message_size_ = DelimiterToSize(delimiter);
@@ -117,19 +117,24 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
   }
 
   if (in_->BytesAvailable() < static_cast<pb::int64>(current_message_size_)) {
+    if (in_->Finished()) {
+      status_ = google::protobuf::util::Status(
+          google::protobuf::util::error::INTERNAL,
+          "Incomplete gRPC frame expected size: " +
+              std::to_string(current_message_size_) + " actual size: " +
+              std::to_string(in_->BytesAvailable()));
+    }
     // We don't have a full message
-    return std::unique_ptr<pbio::ZeroCopyInputStream>();
+    return nullptr;
   }
-
-  // We have a message! Use LimitingInputStream to wrap the input stream and
-  // limit it to current_message_size_ bytes to cover only the current message.
-  auto result = std::unique_ptr<pbio::ZeroCopyInputStream>(
-      new pbio::LimitingInputStream(in_, current_message_size_));
 
   // Reset the have_current_message_size_ for the next message
   have_current_message_size_ = false;
 
-  return result;
+  // We have a message! Use LimitingInputStream to wrap the input stream and
+  // limit it to current_message_size_ bytes to cover only the current message.
+  return std::unique_ptr<pbio::ZeroCopyInputStream>(
+      new pbio::LimitingInputStream(in_, current_message_size_));
 }
 
 }  // namespace transcoding
