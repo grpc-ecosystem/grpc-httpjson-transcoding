@@ -95,6 +95,7 @@ class MessageReaderTestRun {
       }
       // Read the message
       auto stream = reader_->NextMessage();
+      EXPECT_TRUE(reader_->Status().ok());
       if (!stream) {
         ADD_FAILURE() << "No message available" << std::endl;
         return false;
@@ -296,6 +297,7 @@ TEST_F(MessageReaderTest, DirectTest) {
   // Nothing yet
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Add the delimiter for the first message
   input_stream.AddChunk(SizeToDelimiter(message1.size()));
@@ -303,6 +305,7 @@ TEST_F(MessageReaderTest, DirectTest) {
   // Still nothing
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Add the message itself
   input_stream.AddChunk(message1);
@@ -313,6 +316,7 @@ TEST_F(MessageReaderTest, DirectTest) {
   EXPECT_EQ(message1, ReadAllFromStream(message1_stream.get()));
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Add part of the message2
   input_stream.AddChunk(SizeToDelimiter(message2.size()));
@@ -321,6 +325,7 @@ TEST_F(MessageReaderTest, DirectTest) {
   // No message should be available
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Add the rest of the second message
   input_stream.AddChunk(message2.substr(10));
@@ -331,6 +336,7 @@ TEST_F(MessageReaderTest, DirectTest) {
   EXPECT_EQ(message2, ReadAllFromStream(message2_stream.get()));
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Adding both message3 & message4 in one shot and Finish the stream
   input_stream.AddChunk(SizeToDelimiter(message3.size()));
@@ -341,6 +347,7 @@ TEST_F(MessageReaderTest, DirectTest) {
 
   // Not finished yet as we still have messages to read
   EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
   // Now both message3 & message4 must be available
   auto message3_stream = reader.NextMessage();
@@ -355,6 +362,45 @@ TEST_F(MessageReaderTest, DirectTest) {
   // All done, the reader must be finished
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_TRUE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
+}
+
+TEST_F(MessageReaderTest, IncompleteFrameHeader) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
+
+  input_stream.AddChunk("\x0a");
+  input_stream.Finish();
+
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(),
+            "Incomplete gRPC frame header received");
+}
+
+TEST_F(MessageReaderTest, InvalidFrameFlag) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
+
+  input_stream.AddChunk(std::string("\x0A\x00\x00\x00\x00", 5));
+  input_stream.Finish();
+
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(), "Unsupported gRPC frame flag: 10");
+}
+
+TEST_F(MessageReaderTest, IncompleteFrame) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
+
+  input_stream.AddChunk(std::string("\x00\x00\x00\x00\x05\x00", 6));
+  input_stream.Finish();
+
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(),
+            "Incomplete gRPC frame expected size: 5 actual size: 1");
 }
 
 }  // namespace

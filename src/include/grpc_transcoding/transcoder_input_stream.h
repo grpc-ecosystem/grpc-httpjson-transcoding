@@ -26,6 +26,9 @@ class TranscoderInputStream
  public:
   // returns the number of bytes available to read at the moment.
   virtual int64_t BytesAvailable() const = 0;
+
+  // returns if the stream is finished. i.e. No more data will be added.
+  virtual bool Finished() const = 0;
 };
 
 }  // namespace transcoding
