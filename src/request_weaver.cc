@@ -148,8 +148,8 @@ RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderString(
-    internal::string_view name, internal::string_view value) {
+RequestWeaver* RequestWeaver::RenderString(internal::string_view name,
+                                           internal::string_view value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
   }
@@ -215,7 +215,8 @@ void RequestWeaver::CollisionCheck(internal::string_view name) {
     if (name == it->first->name()) {
       if (it->first->cardinality() == pb::Field::CARDINALITY_REPEATED) {
         pbconv::ObjectWriter::RenderDataPieceTo(
-            pbconv::DataPiece(internal::string_view(it->second), true), name, ow_);
+            pbconv::DataPiece(internal::string_view(it->second), true), name,
+            ow_);
       } else {
         // TODO: Report collision error. For now we just ignore
         // the conflicting binding.

@@ -22,9 +22,9 @@
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
 #include "request_message_translator.h"
-#include "grpc_transcoding/internal/protobuf_types.h"
 
 namespace google {
 namespace grpc {
@@ -80,8 +80,7 @@ class RequestStreamTranslator
   RequestStreamTranslator* EndObject();
   RequestStreamTranslator* StartList(internal::string_view name);
   RequestStreamTranslator* EndList();
-  RequestStreamTranslator* RenderBool(internal::string_view name,
-                                      bool value);
+  RequestStreamTranslator* RenderBool(internal::string_view name, bool value);
   RequestStreamTranslator* RenderInt32(internal::string_view name,
                                        google::protobuf::int32 value);
   RequestStreamTranslator* RenderUint32(internal::string_view name,
@@ -92,8 +91,7 @@ class RequestStreamTranslator
                                         google::protobuf::uint64 value);
   RequestStreamTranslator* RenderDouble(internal::string_view name,
                                         double value);
-  RequestStreamTranslator* RenderFloat(internal::string_view name,
-                                       float value);
+  RequestStreamTranslator* RenderFloat(internal::string_view name, float value);
   RequestStreamTranslator* RenderString(internal::string_view name,
                                         internal::string_view value);
   RequestStreamTranslator* RenderBytes(internal::string_view name,
@@ -107,8 +105,7 @@ class RequestStreamTranslator
   void EndMessageTranslator();
 
   // Helper method to render a single piece of data, to reuse code.
-  void RenderData(internal::string_view name,
-                  std::function<void()> renderer);
+  void RenderData(internal::string_view name, std::function<void()> renderer);
 
   // TypeResolver to be passed to the RequestMessageTranslator
   google::protobuf::util::TypeResolver& type_resolver_;

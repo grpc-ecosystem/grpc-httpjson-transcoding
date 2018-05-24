@@ -65,8 +65,7 @@ PrefixWriter* PrefixWriter::EndList() {
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderBool(internal::string_view name,
-                                       bool value) {
+PrefixWriter* PrefixWriter::RenderBool(internal::string_view name, bool value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -195,8 +194,7 @@ PrefixWriter* PrefixWriter::RenderNull(internal::string_view name) {
   return this;
 }
 
-internal::string_view PrefixWriter::StartPrefix(
-    internal::string_view name) {
+internal::string_view PrefixWriter::StartPrefix(internal::string_view name) {
   for (const auto& prefix : prefix_) {
     writer_->StartObject(name);
     name = prefix;
