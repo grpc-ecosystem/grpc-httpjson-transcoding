@@ -17,6 +17,19 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "protobuf",
+    hdrs = [
+        "include/grpc_transcoding/internal/protobuf_types.h",
+    ],
+    includes = [
+        "include/",
+    ],
+    deps = [
+        "//external:protobuf",
+    ]
+)
+
+cc_library(
     name = "prefix_writer",
     srcs = [
         "prefix_writer.cc",
@@ -28,7 +41,7 @@ cc_library(
         "include/"
     ],
     deps = [
-        "//external:protobuf",
+        ":protobuf",
     ],
 )
 
@@ -44,7 +57,7 @@ cc_library(
         "include/"
     ],
     deps = [
-        "//external:protobuf",
+        ":protobuf",
     ],
 )
 
@@ -80,7 +93,7 @@ cc_library(
         ":message_stream",
         ":prefix_writer",
         ":request_weaver",
-        "//external:protobuf",
+        ":protobuf",
     ],
 )
 

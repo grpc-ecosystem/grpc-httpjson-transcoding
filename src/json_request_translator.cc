@@ -22,6 +22,7 @@
 #include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/internal/json_stream_parser.h"
 #include "google/protobuf/util/internal/object_writer.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 #include "grpc_transcoding/message_stream.h"
 #include "grpc_transcoding/request_message_translator.h"
 #include "grpc_transcoding/request_stream_translator.h"
@@ -103,7 +104,7 @@ class LazyRequestTranslator : public MessageStream {
 
     // Feed the chunk to the parser & check the status.
     status_ = json_parser_->Parse(
-        pb::StringPiece(reinterpret_cast<const char*>(data), size));
+        internal::string_view(reinterpret_cast<const char*>(data), size));
     if (!status_.ok()) {
       return false;
     }

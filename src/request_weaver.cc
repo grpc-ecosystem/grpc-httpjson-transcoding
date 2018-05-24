@@ -40,7 +40,7 @@ RequestWeaver::RequestWeaver(std::vector<BindingInfo> bindings,
   }
 }
 
-RequestWeaver* RequestWeaver::StartObject(pb::StringPiece name) {
+RequestWeaver* RequestWeaver::StartObject(internal::string_view name) {
   ow_->StartObject(name);
   if (current_.empty()) {
     // The outermost StartObject("");
@@ -71,7 +71,7 @@ RequestWeaver* RequestWeaver::EndObject() {
   return this;
 }
 
-RequestWeaver* RequestWeaver::StartList(google::protobuf::StringPiece name) {
+RequestWeaver* RequestWeaver::StartList(internal::string_view name) {
   ow_->StartList(name);
   // We don't support weaving inside lists, so we won't need to do any matching
   // until we leave this list.
@@ -85,7 +85,7 @@ RequestWeaver* RequestWeaver::EndList() {
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderBool(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
                                          bool value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -94,7 +94,7 @@ RequestWeaver* RequestWeaver::RenderBool(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderInt32(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
                                           google::protobuf::int32 value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -103,7 +103,7 @@ RequestWeaver* RequestWeaver::RenderInt32(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderUint32(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
                                            google::protobuf::uint32 value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -112,7 +112,7 @@ RequestWeaver* RequestWeaver::RenderUint32(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderInt64(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
                                           google::protobuf::int64 value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -121,7 +121,7 @@ RequestWeaver* RequestWeaver::RenderInt64(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderUint64(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
                                            google::protobuf::uint64 value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -130,7 +130,7 @@ RequestWeaver* RequestWeaver::RenderUint64(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderDouble(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderDouble(internal::string_view name,
                                            double value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -139,7 +139,7 @@ RequestWeaver* RequestWeaver::RenderDouble(google::protobuf::StringPiece name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderFloat(google::protobuf::StringPiece name,
+RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
                                           float value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
@@ -149,7 +149,7 @@ RequestWeaver* RequestWeaver::RenderFloat(google::protobuf::StringPiece name,
 }
 
 RequestWeaver* RequestWeaver::RenderString(
-    google::protobuf::StringPiece name, google::protobuf::StringPiece value) {
+    internal::string_view name, internal::string_view value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
   }
@@ -157,7 +157,7 @@ RequestWeaver* RequestWeaver::RenderString(
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderNull(google::protobuf::StringPiece name) {
+RequestWeaver* RequestWeaver::RenderNull(internal::string_view name) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
   }
@@ -165,8 +165,8 @@ RequestWeaver* RequestWeaver::RenderNull(google::protobuf::StringPiece name) {
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderBytes(google::protobuf::StringPiece name,
-                                          google::protobuf::StringPiece value) {
+RequestWeaver* RequestWeaver::RenderBytes(internal::string_view name,
+                                          internal::string_view value) {
   if (non_actionable_depth_ == 0) {
     CollisionCheck(name);
   }
@@ -192,8 +192,8 @@ void RequestWeaver::Bind(std::vector<const pb::Field*> field_path,
 void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
   for (const auto& data : info->bindings) {
     pbconv::ObjectWriter::RenderDataPieceTo(
-        pbconv::DataPiece(pb::StringPiece(data.second), true),
-        pb::StringPiece(data.first->name()), ow_);
+        pbconv::DataPiece(internal::string_view(data.second), true),
+        internal::string_view(data.first->name()), ow_);
   }
   info->bindings.clear();
   for (auto& msg : info->messages) {
@@ -207,7 +207,7 @@ void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
   info->messages.clear();
 }
 
-void RequestWeaver::CollisionCheck(pb::StringPiece name) {
+void RequestWeaver::CollisionCheck(internal::string_view name) {
   if (current_.empty()) return;
 
   for (auto it = current_.top()->bindings.begin();
@@ -215,7 +215,7 @@ void RequestWeaver::CollisionCheck(pb::StringPiece name) {
     if (name == it->first->name()) {
       if (it->first->cardinality() == pb::Field::CARDINALITY_REPEATED) {
         pbconv::ObjectWriter::RenderDataPieceTo(
-            pbconv::DataPiece(pb::StringPiece(it->second), true), name, ow_);
+            pbconv::DataPiece(internal::string_view(it->second), true), name, ow_);
       } else {
         // TODO: Report collision error. For now we just ignore
         // the conflicting binding.
@@ -228,7 +228,7 @@ void RequestWeaver::CollisionCheck(pb::StringPiece name) {
 }
 
 RequestWeaver::WeaveInfo* RequestWeaver::WeaveInfo::FindWeaveMsg(
-    const pb::StringPiece field_name) {
+    const internal::string_view field_name) {
   for (auto& msg : messages) {
     if (field_name == msg.first->name()) {
       return &msg.second;

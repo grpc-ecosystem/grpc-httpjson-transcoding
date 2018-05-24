@@ -17,7 +17,7 @@
 def protobuf_repositories(bind=True):
     native.git_repository(
         name = "protobuf_git",
-        commit = "593e917c176b5bc5aafa57bf9f6030d749d91cd5",  # v3.2.0
+        commit = "106ffc04be1abf3ff3399f54ccf149815b287dd9",  # v3.5.1
         remote = "https://github.com/google/protobuf.git",
     )
 
@@ -118,7 +118,7 @@ cc_library(
     native.new_git_repository(
         name = "googletest_git",
         build_file_content = BUILD,
-        commit = "d225acc90bc3a8c420a9bcd1f033033c1ccd7fe0",
+        commit = "43863938377a9ea1399c0596269e0890b5c5515a",
         remote = "https://github.com/google/googletest.git",
     )
 
@@ -237,7 +237,7 @@ cc_proto_library(
 
     native.new_git_repository(
         name = "googleapis_git",
-        commit = "2fe0050bd2a6d4c6ba798c0311f0b149b8997314",
+        commit = "5c6df0cd18c6a429eab739fb711c27f6e1393366", # May 14, 2017
         remote = "https://github.com/googleapis/googleapis.git",
         build_file_content = BUILD,
     )
