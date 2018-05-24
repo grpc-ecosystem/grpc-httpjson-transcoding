@@ -23,6 +23,7 @@
 #include "google/protobuf/util/internal/error_listener.h"
 #include "google/protobuf/util/internal/protostream_objectwriter.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
 #include "prefix_writer.h"
 #include "request_weaver.h"
@@ -143,17 +144,15 @@ class RequestMessageTranslator : public MessageStream {
     void InvalidName(
         const ::google::protobuf::util::converter::LocationTrackerInterface&
             loc,
-        ::google::protobuf::StringPiece unknown_name,
-        ::google::protobuf::StringPiece message);
+        internal::string_view unknown_name, internal::string_view message);
     void InvalidValue(
         const ::google::protobuf::util::converter::LocationTrackerInterface&
             loc,
-        ::google::protobuf::StringPiece type_name,
-        ::google::protobuf::StringPiece value);
+        internal::string_view type_name, internal::string_view value);
     void MissingField(
         const ::google::protobuf::util::converter::LocationTrackerInterface&
             loc,
-        ::google::protobuf::StringPiece missing_name);
+        internal::string_view missing_name);
 
    private:
     ::google::protobuf::util::Status status_;

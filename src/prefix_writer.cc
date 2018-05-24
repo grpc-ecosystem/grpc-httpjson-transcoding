@@ -33,7 +33,7 @@ PrefixWriter::PrefixWriter(const std::string& prefix,
       non_actionable_depth_(0),
       writer_(ow) {}
 
-PrefixWriter* PrefixWriter::StartObject(google::protobuf::StringPiece name) {
+PrefixWriter* PrefixWriter::StartObject(internal::string_view name) {
   if (++non_actionable_depth_ == 1) {
     name = StartPrefix(name);
   }
@@ -49,7 +49,7 @@ PrefixWriter* PrefixWriter::EndObject() {
   return this;
 }
 
-PrefixWriter* PrefixWriter::StartList(google::protobuf::StringPiece name) {
+PrefixWriter* PrefixWriter::StartList(internal::string_view name) {
   if (++non_actionable_depth_ == 1) {
     name = StartPrefix(name);
   }
@@ -65,8 +65,7 @@ PrefixWriter* PrefixWriter::EndList() {
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderBool(google::protobuf::StringPiece name,
-                                       bool value) {
+PrefixWriter* PrefixWriter::RenderBool(internal::string_view name, bool value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -78,7 +77,7 @@ PrefixWriter* PrefixWriter::RenderBool(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderInt32(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderInt32(internal::string_view name,
                                         google::protobuf::int32 value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -91,7 +90,7 @@ PrefixWriter* PrefixWriter::RenderInt32(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderUint32(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderUint32(internal::string_view name,
                                          google::protobuf::uint32 value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -104,7 +103,7 @@ PrefixWriter* PrefixWriter::RenderUint32(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderInt64(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderInt64(internal::string_view name,
                                         google::protobuf::int64 value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -117,7 +116,7 @@ PrefixWriter* PrefixWriter::RenderInt64(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderUint64(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderUint64(internal::string_view name,
                                          google::protobuf::uint64 value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -130,7 +129,7 @@ PrefixWriter* PrefixWriter::RenderUint64(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderDouble(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderDouble(internal::string_view name,
                                          double value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -143,7 +142,7 @@ PrefixWriter* PrefixWriter::RenderDouble(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderFloat(google::protobuf::StringPiece name,
+PrefixWriter* PrefixWriter::RenderFloat(internal::string_view name,
                                         float value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -156,8 +155,8 @@ PrefixWriter* PrefixWriter::RenderFloat(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderString(google::protobuf::StringPiece name,
-                                         google::protobuf::StringPiece value) {
+PrefixWriter* PrefixWriter::RenderString(internal::string_view name,
+                                         internal::string_view value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -169,8 +168,8 @@ PrefixWriter* PrefixWriter::RenderString(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderBytes(google::protobuf::StringPiece name,
-                                        google::protobuf::StringPiece value) {
+PrefixWriter* PrefixWriter::RenderBytes(internal::string_view name,
+                                        internal::string_view value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -182,7 +181,7 @@ PrefixWriter* PrefixWriter::RenderBytes(google::protobuf::StringPiece name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderNull(google::protobuf::StringPiece name) {
+PrefixWriter* PrefixWriter::RenderNull(internal::string_view name) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -195,8 +194,7 @@ PrefixWriter* PrefixWriter::RenderNull(google::protobuf::StringPiece name) {
   return this;
 }
 
-google::protobuf::StringPiece PrefixWriter::StartPrefix(
-    google::protobuf::StringPiece name) {
+internal::string_view PrefixWriter::StartPrefix(internal::string_view name) {
   for (const auto& prefix : prefix_) {
     writer_->StartObject(name);
     name = prefix;

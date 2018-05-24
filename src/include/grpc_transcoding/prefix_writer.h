@@ -20,6 +20,7 @@
 
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 
 namespace google {
 namespace grpc {
@@ -63,30 +64,30 @@ class PrefixWriter : public google::protobuf::util::converter::ObjectWriter {
                google::protobuf::util::converter::ObjectWriter* ow);
 
   // ObjectWriter methods.
-  PrefixWriter* StartObject(google::protobuf::StringPiece name);
+  PrefixWriter* StartObject(internal::string_view name);
   PrefixWriter* EndObject();
-  PrefixWriter* StartList(google::protobuf::StringPiece name);
+  PrefixWriter* StartList(internal::string_view name);
   PrefixWriter* EndList();
-  PrefixWriter* RenderBool(google::protobuf::StringPiece name, bool value);
-  PrefixWriter* RenderInt32(google::protobuf::StringPiece name,
+  PrefixWriter* RenderBool(internal::string_view name, bool value);
+  PrefixWriter* RenderInt32(internal::string_view name,
                             google::protobuf::int32 value);
-  PrefixWriter* RenderUint32(google::protobuf::StringPiece name,
+  PrefixWriter* RenderUint32(internal::string_view name,
                              google::protobuf::uint32 value);
-  PrefixWriter* RenderInt64(google::protobuf::StringPiece name,
+  PrefixWriter* RenderInt64(internal::string_view name,
                             google::protobuf::int64 value);
-  PrefixWriter* RenderUint64(google::protobuf::StringPiece name,
+  PrefixWriter* RenderUint64(internal::string_view name,
                              google::protobuf::uint64 value);
-  PrefixWriter* RenderDouble(google::protobuf::StringPiece name, double value);
-  PrefixWriter* RenderFloat(google::protobuf::StringPiece name, float value);
-  PrefixWriter* RenderString(google::protobuf::StringPiece name,
-                             google::protobuf::StringPiece value);
-  PrefixWriter* RenderBytes(google::protobuf::StringPiece name,
-                            google::protobuf::StringPiece value);
-  PrefixWriter* RenderNull(google::protobuf::StringPiece name);
+  PrefixWriter* RenderDouble(internal::string_view name, double value);
+  PrefixWriter* RenderFloat(internal::string_view name, float value);
+  PrefixWriter* RenderString(internal::string_view name,
+                             internal::string_view value);
+  PrefixWriter* RenderBytes(internal::string_view name,
+                            internal::string_view value);
+  PrefixWriter* RenderNull(internal::string_view name);
 
  private:
   // Helper method to start the prefix and return the name to use for the value.
-  google::protobuf::StringPiece StartPrefix(google::protobuf::StringPiece name);
+  internal::string_view StartPrefix(internal::string_view name);
 
   // Helper method to end the prefix.
   void EndPrefix();

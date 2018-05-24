@@ -61,7 +61,7 @@ bool RequestStreamTranslator::Finished() const {
 }
 
 RequestStreamTranslator* RequestStreamTranslator::StartObject(
-    pb::StringPiece name) {
+    internal::string_view name) {
   if (!status_.ok()) {
     // In error state - return right away
     return this;
@@ -103,7 +103,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndObject() {
 }
 
 RequestStreamTranslator* RequestStreamTranslator::StartList(
-    pb::StringPiece name) {
+    internal::string_view name) {
   if (!status_.ok()) {
     // In error state - return right away
     return this;
@@ -150,7 +150,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndList() {
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderBool(
-    pb::StringPiece name, bool value) {
+    internal::string_view name, bool value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderBool(name, value);
   });
@@ -158,7 +158,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderBool(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderInt32(
-    pb::StringPiece name, pb::int32 value) {
+    internal::string_view name, pb::int32 value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderInt32(name, value);
   });
@@ -166,7 +166,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderInt32(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderUint32(
-    pb::StringPiece name, pb::uint32 value) {
+    internal::string_view name, pb::uint32 value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderUint32(name, value);
   });
@@ -174,7 +174,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderUint32(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderInt64(
-    pb::StringPiece name, pb::int64 value) {
+    internal::string_view name, pb::int64 value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderInt64(name, value);
   });
@@ -182,7 +182,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderInt64(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderUint64(
-    pb::StringPiece name, pb::uint64 value) {
+    internal::string_view name, pb::uint64 value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderUint64(name, value);
   });
@@ -190,7 +190,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderUint64(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderDouble(
-    pb::StringPiece name, double value) {
+    internal::string_view name, double value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderDouble(name, value);
   });
@@ -198,7 +198,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderDouble(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderFloat(
-    pb::StringPiece name, float value) {
+    internal::string_view name, float value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderFloat(name, value);
   });
@@ -206,7 +206,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderFloat(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderString(
-    pb::StringPiece name, pb::StringPiece value) {
+    internal::string_view name, internal::string_view value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderString(name, value);
   });
@@ -214,7 +214,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderString(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderBytes(
-    pb::StringPiece name, pb::StringPiece value) {
+    internal::string_view name, internal::string_view value) {
   RenderData(name, [this, name, value]() {
     translator_->Input().RenderBytes(name, value);
   });
@@ -222,7 +222,7 @@ RequestStreamTranslator* RequestStreamTranslator::RenderBytes(
 }
 
 RequestStreamTranslator* RequestStreamTranslator::RenderNull(
-    pb::StringPiece name) {
+    internal::string_view name) {
   RenderData(name, [this, name]() { translator_->Input().RenderNull(name); });
   return this;
 }
@@ -258,7 +258,7 @@ void RequestStreamTranslator::EndMessageTranslator() {
   translator_.reset();
 }
 
-void RequestStreamTranslator::RenderData(pb::StringPiece name,
+void RequestStreamTranslator::RenderData(internal::string_view name,
                                          std::function<void()> renderer) {
   if (!status_.ok()) {
     // In error state - ignore

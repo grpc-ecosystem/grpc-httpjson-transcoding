@@ -23,6 +23,7 @@
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/object_writer.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 
 namespace google {
 namespace grpc {
@@ -77,26 +78,26 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
                 google::protobuf::util::converter::ObjectWriter* ow);
 
   // ObjectWriter methods
-  RequestWeaver* StartObject(google::protobuf::StringPiece name);
+  RequestWeaver* StartObject(internal::string_view name);
   RequestWeaver* EndObject();
-  RequestWeaver* StartList(google::protobuf::StringPiece name);
+  RequestWeaver* StartList(internal::string_view name);
   RequestWeaver* EndList();
-  RequestWeaver* RenderBool(google::protobuf::StringPiece name, bool value);
-  RequestWeaver* RenderInt32(google::protobuf::StringPiece name,
+  RequestWeaver* RenderBool(internal::string_view name, bool value);
+  RequestWeaver* RenderInt32(internal::string_view name,
                              google::protobuf::int32 value);
-  RequestWeaver* RenderUint32(google::protobuf::StringPiece name,
+  RequestWeaver* RenderUint32(internal::string_view name,
                               google::protobuf::uint32 value);
-  RequestWeaver* RenderInt64(google::protobuf::StringPiece name,
+  RequestWeaver* RenderInt64(internal::string_view name,
                              google::protobuf::int64 value);
-  RequestWeaver* RenderUint64(google::protobuf::StringPiece name,
+  RequestWeaver* RenderUint64(internal::string_view name,
                               google::protobuf::uint64 value);
-  RequestWeaver* RenderDouble(google::protobuf::StringPiece name, double value);
-  RequestWeaver* RenderFloat(google::protobuf::StringPiece name, float value);
-  RequestWeaver* RenderString(google::protobuf::StringPiece name,
-                              google::protobuf::StringPiece value);
-  RequestWeaver* RenderNull(google::protobuf::StringPiece name);
-  RequestWeaver* RenderBytes(google::protobuf::StringPiece name,
-                             google::protobuf::StringPiece value);
+  RequestWeaver* RenderDouble(internal::string_view name, double value);
+  RequestWeaver* RenderFloat(internal::string_view name, float value);
+  RequestWeaver* RenderString(internal::string_view name,
+                              internal::string_view value);
+  RequestWeaver* RenderNull(internal::string_view name);
+  RequestWeaver* RenderBytes(internal::string_view name,
+                             internal::string_view value);
 
  private:
   // Container for information to be weaved.
@@ -110,7 +111,7 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
     std::list<std::pair<const google::protobuf::Field*, std::string>> bindings;
 
     // Find the entry for the speciied field in messages list .
-    WeaveInfo* FindWeaveMsg(google::protobuf::StringPiece field_name);
+    WeaveInfo* FindWeaveMsg(internal::string_view field_name);
 
     // Create an entry in messages for the given field. The caller must make
     // sure that there is no existing entry for the same field before calling.
@@ -129,7 +130,7 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
 
   // Checks if any repeated fields with the same field name are in the current
   // node of the weave tree. Output them if there are any.
-  void CollisionCheck(google::protobuf::StringPiece name);
+  void CollisionCheck(internal::string_view name);
 
   // All the headers, variable bindings and parameter bindings to be weaved in.
   //   root_   : root of the tree to be weaved in.

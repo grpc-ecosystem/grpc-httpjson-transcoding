@@ -22,6 +22,7 @@
 #include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
 #include "request_message_translator.h"
 
@@ -75,29 +76,27 @@ class RequestStreamTranslator
 
  private:
   // ObjectWriter methods.
-  RequestStreamTranslator* StartObject(google::protobuf::StringPiece name);
+  RequestStreamTranslator* StartObject(internal::string_view name);
   RequestStreamTranslator* EndObject();
-  RequestStreamTranslator* StartList(google::protobuf::StringPiece name);
+  RequestStreamTranslator* StartList(internal::string_view name);
   RequestStreamTranslator* EndList();
-  RequestStreamTranslator* RenderBool(google::protobuf::StringPiece name,
-                                      bool value);
-  RequestStreamTranslator* RenderInt32(google::protobuf::StringPiece name,
+  RequestStreamTranslator* RenderBool(internal::string_view name, bool value);
+  RequestStreamTranslator* RenderInt32(internal::string_view name,
                                        google::protobuf::int32 value);
-  RequestStreamTranslator* RenderUint32(google::protobuf::StringPiece name,
+  RequestStreamTranslator* RenderUint32(internal::string_view name,
                                         google::protobuf::uint32 value);
-  RequestStreamTranslator* RenderInt64(google::protobuf::StringPiece name,
+  RequestStreamTranslator* RenderInt64(internal::string_view name,
                                        google::protobuf::int64 value);
-  RequestStreamTranslator* RenderUint64(google::protobuf::StringPiece name,
+  RequestStreamTranslator* RenderUint64(internal::string_view name,
                                         google::protobuf::uint64 value);
-  RequestStreamTranslator* RenderDouble(google::protobuf::StringPiece name,
+  RequestStreamTranslator* RenderDouble(internal::string_view name,
                                         double value);
-  RequestStreamTranslator* RenderFloat(google::protobuf::StringPiece name,
-                                       float value);
-  RequestStreamTranslator* RenderString(google::protobuf::StringPiece name,
-                                        google::protobuf::StringPiece value);
-  RequestStreamTranslator* RenderBytes(google::protobuf::StringPiece name,
-                                       google::protobuf::StringPiece value);
-  RequestStreamTranslator* RenderNull(google::protobuf::StringPiece name);
+  RequestStreamTranslator* RenderFloat(internal::string_view name, float value);
+  RequestStreamTranslator* RenderString(internal::string_view name,
+                                        internal::string_view value);
+  RequestStreamTranslator* RenderBytes(internal::string_view name,
+                                       internal::string_view value);
+  RequestStreamTranslator* RenderNull(internal::string_view name);
 
   // Sets up the ProtoMessageHelper to handle writing data.
   void StartMessageTranslator();
@@ -106,8 +105,7 @@ class RequestStreamTranslator
   void EndMessageTranslator();
 
   // Helper method to render a single piece of data, to reuse code.
-  void RenderData(google::protobuf::StringPiece name,
-                  std::function<void()> renderer);
+  void RenderData(internal::string_view name, std::function<void()> renderer);
 
   // TypeResolver to be passed to the RequestMessageTranslator
   google::protobuf::util::TypeResolver& type_resolver_;
