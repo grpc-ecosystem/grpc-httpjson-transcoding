@@ -22,6 +22,7 @@
 
 #include "absl/strings/match.h"
 #include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
 
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/expecting_objectwriter.h"
@@ -66,12 +67,12 @@ class RequestWeaverTest : public ::testing::Test {
   std::vector<RequestWeaver::BindingInfo> bindings_;
   std::list<Field> fields_;
 
-  Field CreateField(internal::string_view name) {
+  Field CreateField(std::string name) {
     Field::Cardinality card;
-    if (absl::EndsWith(internal::ToAbslStringView(name), "*")) {
+    if (absl::EndsWith(name, "*")) {
       // we use "*" at the end of the field name to denote a repeated field.
       card = Field::CARDINALITY_REPEATED;
-      name.remove_suffix(1);
+      name.pop_back();
     } else {
       card = Field::CARDINALITY_OPTIONAL;
     }

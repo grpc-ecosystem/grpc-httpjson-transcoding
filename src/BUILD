@@ -26,7 +26,6 @@ cc_library(
     ],
     deps = [
         "//external:protobuf",
-        "@com_google_absl//absl/strings",
     ]
 )
 
@@ -43,6 +42,7 @@ cc_library(
     ],
     deps = [
         ":protobuf",
+        "@com_google_absl//absl/strings",
     ],
 )
 

@@ -15,18 +15,12 @@
 #ifndef GRPC_TRANSCODING_INTERNAL_PROTOBUF_TYPES_H_
 #define GRPC_TRANSCODING_INTERNAL_PROTOBUF_TYPES_H_
 
-#include "absl/strings/string_view.h"
-
 namespace google {
 namespace grpc {
 namespace transcoding {
 namespace internal {
 
 typedef ::google::protobuf::StringPiece string_view;
-
-inline absl::string_view ToAbslStringView(const string_view& s) {
-  return {s.data(), static_cast<absl::string_view::size_type>(s.size())};
-}
 
 }  // namespace internal
 }  // namespace transcoding
