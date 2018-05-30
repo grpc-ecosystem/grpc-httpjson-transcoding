@@ -63,7 +63,7 @@ class RequestWeaverTest : public ::testing::Test {
   std::vector<RequestWeaver::BindingInfo> bindings_;
   std::list<Field> fields_;
 
-  Field CreateField(google::protobuf::StringPiece name) {
+  Field CreateField(internal::string_view name) {
     Field::Cardinality card;
     if (name.ends_with("*")) {
       // we use "*" at the end of the field name to denote a repeated field.
