@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "google/protobuf/stubs/stringpiece.h"
 #include "grpc_transcoding/request_message_translator.h"
 
 namespace google {

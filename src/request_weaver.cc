@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/datapiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
