@@ -18,8 +18,7 @@
 
 #include <string>
 
-#include "google/protobuf/stubs/stringpiece.h"
-#include "google/protobuf/stubs/strutil.h"
+#include "absl/strings/str_split.h"
 #include "google/protobuf/util/internal/object_writer.h"
 
 namespace google {
@@ -29,7 +28,7 @@ namespace transcoding {
 
 PrefixWriter::PrefixWriter(const std::string& prefix,
                            google::protobuf::util::converter::ObjectWriter* ow)
-    : prefix_(google::protobuf::Split(prefix, ".")),
+    : prefix_(absl::StrSplit(prefix, ".", absl::SkipEmpty())),
       non_actionable_depth_(0),
       writer_(ow) {}
 

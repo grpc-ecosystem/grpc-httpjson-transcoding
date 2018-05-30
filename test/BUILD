@@ -78,6 +78,7 @@ cc_test(
     deps = [
         "//external:googletest_main",
         "//src:request_weaver",
+        "@com_google_absl//absl/strings",
     ],
 )
 

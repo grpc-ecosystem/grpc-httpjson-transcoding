@@ -22,8 +22,9 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/str_split.h"
+
 #include "google/api/service.pb.h"
-#include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
@@ -45,7 +46,8 @@ std::vector<const google::protobuf::Field*> ParseFieldPath(
     google::protobuf::util::converter::TypeInfo& type_info,
     const std::string& field_path_str) {
   // First, split the field names
-  auto field_names = google::protobuf::Split(field_path_str, ".");
+  std::vector<std::string> field_names =
+      absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
 
   auto current_type = &type;
   std::vector<const google::protobuf::Field*> field_path;
