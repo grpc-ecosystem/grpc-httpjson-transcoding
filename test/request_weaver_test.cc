@@ -20,7 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/stubs/strutil.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
+
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/expecting_objectwriter.h"
 #include "gtest/gtest.h"
@@ -40,7 +43,8 @@ class RequestWeaverTest : public ::testing::Test {
   RequestWeaverTest() : mock_(), expect_(&mock_) {}
 
   void Bind(std::string field_path_str, std::string value) {
-    auto field_names = google::protobuf::Split(field_path_str, ".");
+    std::vector<std::string> field_names =
+        absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
     std::vector<const Field*> field_path;
     for (const auto& n : field_names) {
       fields_.emplace_back(CreateField(n));
@@ -63,12 +67,12 @@ class RequestWeaverTest : public ::testing::Test {
   std::vector<RequestWeaver::BindingInfo> bindings_;
   std::list<Field> fields_;
 
-  Field CreateField(internal::string_view name) {
+  Field CreateField(std::string name) {
     Field::Cardinality card;
-    if (name.ends_with("*")) {
+    if (absl::EndsWith(name, "*")) {
       // we use "*" at the end of the field name to denote a repeated field.
       card = Field::CARDINALITY_REPEATED;
-      name.remove_suffix(1);
+      name.pop_back();
     } else {
       card = Field::CARDINALITY_OPTIONAL;
     }

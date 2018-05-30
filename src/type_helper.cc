@@ -16,7 +16,8 @@
 //
 #include "grpc_transcoding/type_helper.h"
 
-#include "google/protobuf/stubs/strutil.h"
+#include "absl/strings/str_split.h"
+
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
@@ -54,7 +55,7 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
   // TypeResolver implementation
   // Resolves a type url for a message type.
   virtual pbutil::Status ResolveMessageType(const std::string& type_url,
-                                            pb::Type* type) {
+                                            pb::Type* type) override {
     auto i = type_map_.find(type_url);
     if (end(type_map_) != i) {
       if (nullptr != type) {
@@ -137,7 +138,8 @@ pbutil::Status TypeHelper::ResolveFieldPath(
     const pb::Type& type, const std::string& field_path_str,
     std::vector<const pb::Field*>* field_path_out) const {
   // Split the field names & call ResolveFieldPath()
-  const std::vector<std::string> field_names = pb::Split(field_path_str, ".");
+  const std::vector<std::string> field_names =
+      absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
   return ResolveFieldPath(type, field_names, field_path_out);
 }
 

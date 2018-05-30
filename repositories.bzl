@@ -14,6 +14,13 @@
 #
 ################################################################################
 #
+def absl_repositories(bind=True):
+    native.git_repository(
+        name = "com_google_absl",
+        commit = "99477fa9f1e89a7d8253c8aeee331864710d080c",
+        remote = "https://github.com/abseil/abseil-cpp",
+    )
+
 def protobuf_repositories(bind=True):
     native.git_repository(
         name = "protobuf_git",
