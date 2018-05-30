@@ -19,7 +19,6 @@
 #include <functional>
 #include <memory>
 
-#include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "grpc_transcoding/internal/protobuf_types.h"

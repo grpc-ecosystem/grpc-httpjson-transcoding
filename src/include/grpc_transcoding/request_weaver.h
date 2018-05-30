@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/stubs/stringpiece.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
