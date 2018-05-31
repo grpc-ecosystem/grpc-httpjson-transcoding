@@ -163,8 +163,8 @@ bool RunTestForInputPartitions(size_t chunk_count,
   // To choose a m-partition of input of size n, we need to choose m-1 breakdown
   // points between 1 and n-1.
   return ForSomeDistinctTuples(
-      chunk_count - 1, input.size() - 1, partitioning_coefficient,
-      [&input, test](const Tuple& t) {
+      chunk_count - 1, input.empty() ? 0 : input.size() - 1,
+      partitioning_coefficient, [&input, test](const Tuple& t) {
         if (!test(t)) {
           ADD_FAILURE() << "Failed for the following partition \""
                         << PartitionToDisplayString(input, t) << "\"\n";
