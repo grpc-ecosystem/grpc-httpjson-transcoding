@@ -133,7 +133,7 @@ void RequestMessageTranslator::StatusErrorListener::InvalidName(
     internal::string_view unknown_name, internal::string_view message) {
   status_ = ::google::protobuf::util::Status(
       ::google::protobuf::util::error::INVALID_ARGUMENT,
-      loc.ToString() + ": " + message.ToString());
+      loc.ToString() + ": " + std::string(message));
 }
 
 void RequestMessageTranslator::StatusErrorListener::InvalidValue(
@@ -141,8 +141,8 @@ void RequestMessageTranslator::StatusErrorListener::InvalidValue(
     internal::string_view type_name, internal::string_view value) {
   status_ = ::google::protobuf::util::Status(
       ::google::protobuf::util::error::INVALID_ARGUMENT,
-      loc.ToString() + ": invalid value " + value.ToString() + " for type " +
-          type_name.ToString());
+      loc.ToString() + ": invalid value " + std::string(value) + " for type " +
+          std::string(type_name));
 }
 
 void RequestMessageTranslator::StatusErrorListener::MissingField(
@@ -150,7 +150,7 @@ void RequestMessageTranslator::StatusErrorListener::MissingField(
     internal::string_view missing_name) {
   status_ = ::google::protobuf::util::Status(
       ::google::protobuf::util::error::INVALID_ARGUMENT,
-      loc.ToString() + ": missing field " + missing_name.ToString());
+      loc.ToString() + ": missing field " + std::string(missing_name));
 }
 
 }  // namespace transcoding
