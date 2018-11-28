@@ -14,18 +14,28 @@
 #
 ################################################################################
 #
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+ABSEIL_COMMIT = "99477fa9f1e89a7d8253c8aeee331864710d080c"
+ABSEIL_SHA256 = "495e8e1c481018126b2a84bfe36e273907ce282b135e7d161e138e463d295f3d"
+
 def absl_repositories(bind=True):
-    native.git_repository(
+    http_archive(
         name = "com_google_absl",
-        commit = "99477fa9f1e89a7d8253c8aeee331864710d080c",
-        remote = "https://github.com/abseil/abseil-cpp",
+        strip_prefix = "abseil-cpp-" + ABSEIL_COMMIT,
+        url = "https://github.com/abseil/abseil-cpp/archive/" + ABSEIL_COMMIT + ".tar.gz",
+        sha256 = ABSEIL_SHA256,
     )
 
+PROTOBUF_COMMIT = "106ffc04be1abf3ff3399f54ccf149815b287dd9"  # v3.5.1
+PROTOBUF_SHA256 = "ebc5f911ae580234da9cbcff03b841395bd97861efc82f67a165c5c3d366f2c6"
+
 def protobuf_repositories(bind=True):
-    native.git_repository(
+    http_archive(
         name = "protobuf_git",
-        commit = "106ffc04be1abf3ff3399f54ccf149815b287dd9",  # v3.5.1
-        remote = "https://github.com/google/protobuf.git",
+        strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
+        url = "https://github.com/google/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
+        sha256 = PROTOBUF_SHA256,
     )
 
     if bind:
@@ -59,6 +69,8 @@ def protobuf_repositories(bind=True):
             actual = "@protobuf_git//:protoc_lib",
         )
 
+GOOGLETEST_COMMIT = "43863938377a9ea1399c0596269e0890b5c5515a"
+GOOGLETEST_SHA256 = "7c8ece456ad588c30160429498e108e2df6f42a30888b3ec0abf5d9792d9d3a0"
 
 def googletest_repositories(bind=True):
     BUILD = """
@@ -122,11 +134,12 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 """
-    native.new_git_repository(
+    http_archive(
         name = "googletest_git",
+        strip_prefix = "googletest-" + GOOGLETEST_COMMIT,
         build_file_content = BUILD,
-        commit = "43863938377a9ea1399c0596269e0890b5c5515a",
-        remote = "https://github.com/google/googletest.git",
+        url = "https://github.com/google/googletest/archive/" + GOOGLETEST_COMMIT + ".tar.gz",
+        sha256 = GOOGLETEST_SHA256,
     )
 
     if bind:
@@ -144,6 +157,9 @@ cc_library(
             name = "googletest_prod",
             actual = "@googletest_git//:googletest_prod",
         )
+
+GOOGLEAPIS_COMMIT = "5c6df0cd18c6a429eab739fb711c27f6e1393366" # May 14, 2017
+GOOGLEAPIS_SHA256 = "c6ce26246232c0f3e78d3a30f087444ec01c8ee64b34d058bfcd4f0f4a387a0b"
 
 def googleapis_repositories(protobuf_repo="@protobuf_git//", bind=True):
     BUILD = """
@@ -242,11 +258,12 @@ cc_proto_library(
 )
 """.format(protobuf_repo)
 
-    native.new_git_repository(
+    http_archive(
         name = "googleapis_git",
-        commit = "5c6df0cd18c6a429eab739fb711c27f6e1393366", # May 14, 2017
-        remote = "https://github.com/googleapis/googleapis.git",
+        strip_prefix = "googleapis-" + GOOGLEAPIS_COMMIT,
+        url = "https://github.com/googleapis/googleapis/archive/" + GOOGLEAPIS_COMMIT + ".tar.gz",
         build_file_content = BUILD,
+        sha256 = GOOGLEAPIS_SHA256,
     )
 
     if bind:
