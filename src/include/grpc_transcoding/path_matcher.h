@@ -508,7 +508,8 @@ bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
                                           const std::string& http_template,
                                           const std::string& body_field_path,
                                           Method method) {
-  return Register(http_method, http_template, body_field_path, {}, method);
+  return Register(http_method, http_template, body_field_path,
+                  std::unordered_set<std::string>(), method);
 }
 
 }  // namespace transcoding
