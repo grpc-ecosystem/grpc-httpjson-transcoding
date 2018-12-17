@@ -99,7 +99,7 @@ class PathMatcherTest : public ::testing::Test {
 
   MethodInfo* AddPathWithSystemParams(
       std::string http_method, std::string http_template,
-      const std::set<std::string>* system_params) {
+      const std::unordered_set<std::string>* system_params) {
     auto method = new MethodInfo();
     if (!builder_.Register(http_method, http_template, std::string(),
                            *system_params, method)) {
@@ -150,7 +150,7 @@ class PathMatcherTest : public ::testing::Test {
   PathMatcherBuilder<MethodInfo*> builder_;
   PathMatcherPtr<MethodInfo*> matcher_;
   std::vector<std::unique_ptr<MethodInfo>> stored_methods_;
-  std::set<std::string> empty_set_;
+  std::unordered_set<std::string> empty_set_;
 };
 
 TEST_F(PathMatcherTest, WildCardMatchesRoot) {
@@ -712,7 +712,7 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
-  std::set<std::string> system_params{"key", "api_key"};
+  std::unordered_set<std::string> system_params{"key", "api_key"};
   MethodInfo* a_b = AddPathWithSystemParams("GET", "/a/{x}/b", &system_params);
   Build();
 
