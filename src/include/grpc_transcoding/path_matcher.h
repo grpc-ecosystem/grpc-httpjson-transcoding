@@ -17,10 +17,10 @@
 
 #include <cstddef>
 #include <memory>
-#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "http_template.h"
 #include "path_matcher_node.h"
@@ -71,13 +71,13 @@ class PathMatcher {
   // registered to this node.
   std::unique_ptr<PathMatcherNode> root_ptr_;
   // Holds the set of custom verbs found in configured templates.
-  std::set<std::string> custom_verbs_;
+  std::unordered_set<std::string> custom_verbs_;
   // Data we store per each registered method
   struct MethodData {
     Method method;
     std::vector<HttpTemplate::Variable> variables;
     std::string body_field_path;
-    std::set<std::string> system_query_parameter_names;
+    std::unordered_set<std::string> system_query_parameter_names;
   };
   // The info associated with each method. The path matcher nodes
   // will hold pointers to MethodData objects in this vector.
@@ -105,10 +105,11 @@ class PathMatcherBuilder {
   // Registrations are one-to-one. If this function is called more than once, it
   // replaces the existing method. Only the last registered method is stored.
   // Return false if path is an invalid http template.
-  bool Register(const std::string& http_method, const std::string& path,
-                const std::string& body_field_path,
-                const std::set<std::string>& system_query_parameter_names,
-                Method method);
+  bool Register(
+      const std::string& http_method, const std::string& path,
+      const std::string& body_field_path,
+      const std::unordered_set<std::string>& system_query_parameter_names,
+      Method method);
   bool Register(const std::string& http_method, const std::string& path,
                 const std::string& body_field_path, Method method);
 
@@ -129,7 +130,7 @@ class PathMatcherBuilder {
   // TODO: Perhaps this should not be at this level because there will
   // be multiple templates in different services on a server. Consider moving
   // this to PathMatcherNode.
-  std::set<std::string> custom_verbs_;
+  std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
 
@@ -291,7 +292,8 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
 
 template <class VariableBinding>
 void ExtractBindingsFromQueryParameters(
-    const std::string& query_params, const std::set<std::string>& system_params,
+    const std::string& query_params,
+    const std::unordered_set<std::string>& system_params,
     std::vector<VariableBinding>* bindings) {
   // The bindings in URL the query parameters have the following form:
   //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
@@ -476,7 +478,8 @@ template <class Method>
 bool PathMatcherBuilder<Method>::Register(
     const std::string& http_method, const std::string& http_template,
     const std::string& body_field_path,
-    const std::set<std::string>& system_query_parameter_names, Method method) {
+    const std::unordered_set<std::string>& system_query_parameter_names,
+    Method method) {
   std::unique_ptr<HttpTemplate> ht(HttpTemplate::Parse(http_template));
   if (nullptr == ht) {
     return false;
@@ -505,7 +508,8 @@ bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
                                           const std::string& http_template,
                                           const std::string& body_field_path,
                                           Method method) {
-  return Register(http_method, http_template, body_field_path, {}, method);
+  return Register(http_method, http_template, body_field_path,
+                  std::unordered_set<std::string>(), method);
 }
 
 }  // namespace transcoding
