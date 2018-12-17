@@ -139,7 +139,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
     std::vector<const pb::Field*>* field_path_out) const {
   // Split the field names & call ResolveFieldPath()
   const std::vector<std::string> field_names =
-      absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
+      absl::StrSplit(field_path_str, '.', absl::SkipEmpty());
   return ResolveFieldPath(type, field_names, field_path_out);
 }
 
