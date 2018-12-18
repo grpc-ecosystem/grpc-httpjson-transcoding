@@ -37,7 +37,7 @@ class PathMatcherBuilder<const TestMethod*> {
  public:
   MOCK_METHOD5(Register,
                bool(const std::string&, const std::string&, const std::string&,
-                    const std::set<std::string>&, const TestMethod*));
+                    const std::unordered_set<std::string>&, const TestMethod*));
 };
 }
 }
@@ -64,12 +64,12 @@ TEST_F(PathMatcherUtilityTest, RegisterGet) {
   http_rule.set_get("/path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("GET"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("GET"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -80,12 +80,12 @@ TEST_F(PathMatcherUtilityTest, RegisterPut) {
   http_rule.set_put("/path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("PUT"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("PUT"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -96,12 +96,12 @@ TEST_F(PathMatcherUtilityTest, RegisterPost) {
   http_rule.set_post("/path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("POST"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("POST"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -112,12 +112,12 @@ TEST_F(PathMatcherUtilityTest, RegisterDelete) {
   http_rule.set_delete_("/path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("DELETE"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("DELETE"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -128,12 +128,12 @@ TEST_F(PathMatcherUtilityTest, RegisterPatch) {
   http_rule.set_patch("/path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("PATCH"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("PATCH"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -145,12 +145,12 @@ TEST_F(PathMatcherUtilityTest, RegisterCustom) {
   http_rule.mutable_custom()->set_path("/custom_path");
   http_rule.set_body("body");
   EXPECT_CALL(pmb, Register(Eq("OPTIONS"), Eq("/custom_path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
   EXPECT_CALL(pmb, Register(Eq("OPTIONS"), Eq("/custom_path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
@@ -174,25 +174,25 @@ TEST_F(PathMatcherUtilityTest, RegisterAdditionalBindings) {
   custom_http_rule3.set_put("/put_path");
 
   EXPECT_CALL(pmb, Register(Eq("GET"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   EXPECT_CALL(pmb, Register(Eq("OPTIONS"), Eq("/custom_path"), Eq("body1"),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   EXPECT_CALL(pmb, Register(Eq("HEAD"), Eq("/path"), Eq(""),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   EXPECT_CALL(pmb, Register(Eq("PUT"), Eq("/put_path"), Eq(""),
-                            Eq(std::set<std::string>()), Eq(&method1_)))
+                            Eq(std::unordered_set<std::string>()), Eq(&method1_)))
       .WillOnce(Return(true));
   ASSERT_TRUE(
       PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
 
   EXPECT_CALL(pmb, Register(Eq("GET"), Eq("/path"), Eq("body"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(true));
   EXPECT_CALL(pmb, Register(Eq("OPTIONS"), Eq("/custom_path"), Eq("body1"),
-                            Eq(std::set<std::string>{"key"}), Eq(&method2_)))
+                            Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
       .WillOnce(Return(false));
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
