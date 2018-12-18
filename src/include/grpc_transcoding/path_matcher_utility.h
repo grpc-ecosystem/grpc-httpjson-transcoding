@@ -35,7 +35,8 @@ class PathMatcherUtility {
   static bool RegisterByHttpRule(PathMatcherBuilder<Method> &pmb,
                                  const google::api::HttpRule &http_rule,
                                  const Method &method) {
-    return RegisterByHttpRule(pmb, http_rule, {}, method);
+    return RegisterByHttpRule(pmb, http_rule, std::unordered_set<std::string>(),
+                              method);
   }
 };
 
