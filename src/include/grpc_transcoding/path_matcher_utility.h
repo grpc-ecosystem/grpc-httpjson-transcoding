@@ -28,21 +28,22 @@ class PathMatcherUtility {
   template <class Method>
   static bool RegisterByHttpRule(
       PathMatcherBuilder<Method> &pmb, const google::api::HttpRule &http_rule,
-      const std::set<std::string> &system_query_parameter_names,
+      const std::unordered_set<std::string> &system_query_parameter_names,
       const Method &method);
 
   template <class Method>
   static bool RegisterByHttpRule(PathMatcherBuilder<Method> &pmb,
                                  const google::api::HttpRule &http_rule,
                                  const Method &method) {
-    return RegisterByHttpRule(pmb, http_rule, {}, method);
+    return RegisterByHttpRule(pmb, http_rule, std::unordered_set<std::string>(),
+                              method);
   }
 };
 
 template <class Method>
 bool PathMatcherUtility::RegisterByHttpRule(
     PathMatcherBuilder<Method> &pmb, const google::api::HttpRule &http_rule,
-    const std::set<std::string> &system_query_parameter_names,
+    const std::unordered_set<std::string> &system_query_parameter_names,
     const Method &method) {
   bool ok = true;
   switch (http_rule.pattern_case()) {
