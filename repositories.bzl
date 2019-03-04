@@ -27,14 +27,26 @@ def absl_repositories(bind=True):
         sha256 = ABSEIL_SHA256,
     )
 
-PROTOBUF_COMMIT = "106ffc04be1abf3ff3399f54ccf149815b287dd9"  # v3.5.1
-PROTOBUF_SHA256 = "ebc5f911ae580234da9cbcff03b841395bd97861efc82f67a165c5c3d366f2c6"
+BAZEL_SKYLIB_RELEASE = "0.6.0"
+BAZEL_SKYLIB_SHA256 = "eb5c57e4c12e68c0c20bc774bfbc60a568e800d025557bc4ea022c6479acc867"
+
+def bazel_skylib_repositories():
+    http_archive(
+        name = "bazel_skylib",
+        sha256 = BAZEL_SKYLIB_SHA256,
+        strip_prefix = "bazel-skylib-" + BAZEL_SKYLIB_RELEASE,
+        urls = ["https://github.com/bazelbuild/bazel-skylib/archive/" + BAZEL_SKYLIB_RELEASE + ".tar.gz"],
+    )
+
+
+PROTOBUF_COMMIT = "7492b5681231c79f0265793fa57dc780ae2481d6"  # v3.6.0
+PROTOBUF_SHA256 = "46f1da3a6a6db66dd240cf95a5553198f7c6e98e6ac942fceb8a1cf03291d96e"
 
 def protobuf_repositories(bind=True):
     http_archive(
         name = "protobuf_git",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
-        url = "https://github.com/google/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
+        url = "https://github.com/protocolbuffers/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
         sha256 = PROTOBUF_SHA256,
     )
 

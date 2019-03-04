@@ -18,12 +18,15 @@
 load(
     "//:repositories.bzl",
     "absl_repositories",
+    "bazel_skylib_repositories",
     "protobuf_repositories",
     "googletest_repositories",
     "googleapis_repositories",
 )
 
 absl_repositories()
+
+bazel_skylib_repositories()
 
 protobuf_repositories()
 
