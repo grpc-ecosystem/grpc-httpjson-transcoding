@@ -27,14 +27,91 @@ def absl_repositories(bind=True):
         sha256 = ABSEIL_SHA256,
     )
 
-PROTOBUF_COMMIT = "106ffc04be1abf3ff3399f54ccf149815b287dd9"  # v3.5.1
-PROTOBUF_SHA256 = "ebc5f911ae580234da9cbcff03b841395bd97861efc82f67a165c5c3d366f2c6"
+def zlib_repositories(bind = True):
+    BUILD = """
+# Copyright 2016 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
+#
+licenses(["notice"])
+exports_files(["README"])
+cc_library(
+    name = "zlib",
+    srcs = [
+        "adler32.c",
+        "crc32.c",
+        "crc32.h",
+        "deflate.c",
+        "deflate.h",
+        "infback.c",
+        "inffast.c",
+        "inffast.h",
+        "inffixed.h",
+        "inflate.c",
+        "inflate.h",
+        "inftrees.c",
+        "inftrees.h",
+        "trees.c",
+        "trees.h",
+        "zconf.h",
+        "zutil.c",
+        "zutil.h",
+    ],
+    hdrs = [
+        "zlib.h",
+    ],
+    copts = [
+        "-Wno-shift-negative-value",
+        "-Wno-unknown-warning-option",
+    ],
+    defines = [
+        "Z_SOLO",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+"""
+    http_archive(
+        name = "zlib",
+        strip_prefix = "zlib-1.2.11",
+        urls = ["https://github.com/madler/zlib/archive/v1.2.11.tar.gz"],
+        sha256 = "629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff",
+        build_file_content = BUILD,
+    )
+
+
+BAZEL_SKYLIB_RELEASE = "0.8.0"
+BAZEL_SKYLIB_SHA256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e"
+
+PROTOBUF_COMMIT = "3.9.0"  # July 10, 2019
+PROTOBUF_SHA256 = "2ee9dcec820352671eb83e081295ba43f7a4157181dad549024d7070d079cf65"
 
 def protobuf_repositories(bind=True):
+    zlib_repositories(bind)
+
+    http_archive(
+        name = "bazel_skylib",
+        urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/" + BAZEL_SKYLIB_RELEASE + "/bazel-skylib." + BAZEL_SKYLIB_RELEASE + ".tar.gz"],
+        sha256 = BAZEL_SKYLIB_SHA256,
+    )
+
     http_archive(
         name = "protobuf_git",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
-        url = "https://github.com/google/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
+        url = "https://github.com/google/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
         sha256 = PROTOBUF_SHA256,
     )
 
@@ -158,8 +235,8 @@ cc_library(
             actual = "@googletest_git//:googletest_prod",
         )
 
-GOOGLEAPIS_COMMIT = "5c6df0cd18c6a429eab739fb711c27f6e1393366" # May 14, 2017
-GOOGLEAPIS_SHA256 = "c6ce26246232c0f3e78d3a30f087444ec01c8ee64b34d058bfcd4f0f4a387a0b"
+GOOGLEAPIS_COMMIT = "32a10f69e2c9ce15bba13ab1ff928bacebb25160" # May 20, 2019
+GOOGLEAPIS_SHA256 = "6861efa8619579e06e70dd4765cdf6cef1ecad6a1a2026ad750541e99552bf71"
 
 def googleapis_repositories(protobuf_repo="@protobuf_git//", bind=True):
     BUILD = """
@@ -199,30 +276,6 @@ cc_proto_library(
 )
 
 cc_proto_library(
-    name = "servicecontrol",
-    srcs = [
-        "google/api/servicecontrol/v1/check_error.proto",
-        "google/api/servicecontrol/v1/distribution.proto",
-        "google/api/servicecontrol/v1/log_entry.proto",
-        "google/api/servicecontrol/v1/metric_value.proto",
-        "google/api/servicecontrol/v1/operation.proto",
-        "google/api/servicecontrol/v1/service_controller.proto",
-        "google/logging/type/http_request.proto",
-        "google/logging/type/log_severity.proto",
-        "google/rpc/error_details.proto",
-        "google/rpc/status.proto",
-        "google/type/money.proto",
-    ],
-    include = ".",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":service_config",
-    ],
-    protoc = "//external:protoc",
-    default_runtime = "//external:protobuf",
-)
-
-cc_proto_library(
     name = "service_config",
     srcs = [
         "google/api/auth.proto",
@@ -234,6 +287,7 @@ cc_proto_library(
         "google/api/documentation.proto",
         "google/api/endpoint.proto",
         "google/api/label.proto",
+        "google/api/launch_stage.proto",
         "google/api/log.proto",
         "google/api/logging.proto",
         "google/api/metric.proto",
@@ -241,6 +295,7 @@ cc_proto_library(
         "google/api/experimental/authorization_config.proto",
         "google/api/monitored_resource.proto",
         "google/api/monitoring.proto",
+        "google/api/resource.proto",
         "google/api/quota.proto",
         "google/api/service.proto",
         "google/api/source_info.proto",
@@ -260,6 +315,7 @@ cc_proto_library(
 
     http_archive(
         name = "googleapis_git",
+        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
         strip_prefix = "googleapis-" + GOOGLEAPIS_COMMIT,
         url = "https://github.com/googleapis/googleapis/archive/" + GOOGLEAPIS_COMMIT + ".tar.gz",
         build_file_content = BUILD,
