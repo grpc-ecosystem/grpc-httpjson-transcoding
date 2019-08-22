@@ -58,6 +58,9 @@ RequestMessageTranslator::RequestMessageTranslator(
       writer_pipeline_(&proto_writer_),
       output_delimiter_(output_delimiter),
       finished_(false) {
+  // Relax Base64 decoding to support RFC 2045 Base64
+  proto_writer_.set_use_strict_base64_decoding(false);
+
   // Create a RequestWeaver if we have variable bindings to weave
   if (!request_info.variable_bindings.empty()) {
     request_weaver_.reset(new RequestWeaver(
