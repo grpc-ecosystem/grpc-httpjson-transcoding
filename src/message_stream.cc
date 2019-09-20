@@ -71,7 +71,7 @@ class InputStreamOverMessageStream : public TranscoderInputStream {
 
   bool Skip(int) { return false; }  // Not implemented (no need)
 
-  google::protobuf::int64 ByteCount() const { return 0; }  // Not implemented
+  int64_t ByteCount() const { return 0; }  // Not implemented
 
   int64_t BytesAvailable() const {
     if (position_ >= message_.size()) {

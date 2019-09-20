@@ -51,8 +51,8 @@ class TestZeroCopyInputStream : public TranscoderInputStream {
   bool Next(const void** data, int* size);
   void BackUp(int count);
   int64_t BytesAvailable() const;
-  ::google::protobuf::int64 ByteCount() const { return 0; }  // Not implemented
-  bool Skip(int) { return false; }                           // Not implemented
+  int64_t ByteCount() const { return 0; }  // Not implemented
+  bool Skip(int) { return false; }         // Not implemented
 
  private:
   std::deque<std::string> chunks_;
