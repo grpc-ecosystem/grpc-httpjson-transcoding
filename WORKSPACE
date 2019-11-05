@@ -20,6 +20,7 @@ load(
     "absl_repositories",
     "protobuf_repositories",
     "googletest_repositories",
+    "grpc_repositories",
     "googleapis_repositories",
 )
 
@@ -30,3 +31,22 @@ protobuf_repositories()
 googletest_repositories()
 
 googleapis_repositories()
+
+grpc_repositories()
+
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+
+grpc_deps()
+
+load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+go_rules_dependencies()
+go_register_toolchains()
+
+load("@googleapis_git//:repository_rules.bzl", "switched_rules_by_language")
+
+switched_rules_by_language(
+    name = "com_google_googleapis_imports",
+    cc = True,
+    go = True,
+    grpc = True,
+)

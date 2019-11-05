@@ -92,7 +92,6 @@ cc_library(
         build_file_content = BUILD,
     )
 
-
 BAZEL_SKYLIB_RELEASE = "0.8.0"
 BAZEL_SKYLIB_SHA256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e"
 
@@ -235,100 +234,35 @@ cc_library(
             actual = "@googletest_git//:googletest_prod",
         )
 
-GOOGLEAPIS_COMMIT = "32a10f69e2c9ce15bba13ab1ff928bacebb25160" # May 20, 2019
-GOOGLEAPIS_SHA256 = "6861efa8619579e06e70dd4765cdf6cef1ecad6a1a2026ad750541e99552bf71"
+GRPC_VERSION = "1.23.0"
+GRPC_SHA256 = "f56ced18740895b943418fa29575a65cc2396ccfa3159fa40d318ef5f59471f9"
+
+def grpc_repositories():
+    http_archive(
+        name = "com_github_grpc_grpc",
+        strip_prefix = "grpc-" + GRPC_VERSION,
+        url = "https://github.com/grpc/grpc/archive/v" + GRPC_VERSION + ".tar.gz",
+        sha256 = GRPC_SHA256,
+    )
+
+GOOGLEAPIS_COMMIT = "be480e391cc88a75cf2a81960ef79c80d5012068" # Jul 24, 2019
+GOOGLEAPIS_SHA256 = "c1969e5b72eab6d9b6cfcff748e45ba57294aeea1d96fd04cd081995de0605c2"
 
 def googleapis_repositories(protobuf_repo="@protobuf_git//", bind=True):
-    BUILD = """
-# Copyright 2016 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
-#
-
-licenses(["notice"])
-
-load("{0}:protobuf.bzl", "cc_proto_library")
-
-exports_files(glob(["google/**"]))
-
-cc_proto_library(
-    name = "http_api_protos",
-    srcs = [
-        "google/api/annotations.proto",
-        "google/api/http.proto",
-    ],
-    default_runtime = "//external:protobuf",
-    protoc = "//external:protoc",
-    visibility = ["//visibility:public"],
-    deps = ["{0}:cc_wkt_protos"],
-)
-
-cc_proto_library(
-    name = "service_config",
-    srcs = [
-        "google/api/auth.proto",
-        "google/api/backend.proto",
-        "google/api/billing.proto",
-        "google/api/consumer.proto",
-        "google/api/context.proto",
-        "google/api/control.proto",
-        "google/api/documentation.proto",
-        "google/api/endpoint.proto",
-        "google/api/label.proto",
-        "google/api/launch_stage.proto",
-        "google/api/log.proto",
-        "google/api/logging.proto",
-        "google/api/metric.proto",
-        "google/api/experimental/experimental.proto",
-        "google/api/experimental/authorization_config.proto",
-        "google/api/monitored_resource.proto",
-        "google/api/monitoring.proto",
-        "google/api/resource.proto",
-        "google/api/quota.proto",
-        "google/api/service.proto",
-        "google/api/source_info.proto",
-        "google/api/system_parameter.proto",
-        "google/api/usage.proto",
-    ],
-    include = ".",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":http_api_protos",
-        "//external:cc_wkt_protos",
-    ],
-    protoc = "//external:protoc",
-    default_runtime = "//external:protobuf",
-)
-""".format(protobuf_repo)
-
     http_archive(
         name = "googleapis_git",
-        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
         strip_prefix = "googleapis-" + GOOGLEAPIS_COMMIT,
         url = "https://github.com/googleapis/googleapis/archive/" + GOOGLEAPIS_COMMIT + ".tar.gz",
-        build_file_content = BUILD,
         sha256 = GOOGLEAPIS_SHA256,
     )
 
     if bind:
         native.bind(
             name = "service_config",
-            actual = "@googleapis_git//:service_config",
+            actual = "@googleapis_git//google/api:service_cc_proto",
         )
 
         native.bind(
             name = "http_api_protos",
-            actual = "@googleapis_git//:http_api_protos",
+            actual = "@googleapis_git//google/api:annotations_cc_proto",
         )
