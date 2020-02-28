@@ -25,7 +25,6 @@
 #include <string>
 #include <unordered_map>
 
-namespace pb = ::google::protobuf;
 namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
 namespace pberr = ::google::protobuf::util::error;
@@ -41,21 +40,22 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
  public:
   SimpleTypeResolver() : url_prefix_(DEFAULT_URL_PREFIX) {}
 
-  void AddType(const pb::Type& t) {
+  void AddType(const google::protobuf::Type& t) {
     type_map_.emplace(url_prefix_ + t.name(), &t);
     // A temporary workaround for service configs that use
     // "proto2.MessageOptions.*" options.
-    ReplaceProto2WithGoogleProtobufInOptionNames(const_cast<pb::Type*>(&t));
+    ReplaceProto2WithGoogleProtobufInOptionNames(
+        const_cast<google::protobuf::Type*>(&t));
   }
 
-  void AddEnum(const pb::Enum& e) {
+  void AddEnum(const google::protobuf::Enum& e) {
     enum_map_.emplace(url_prefix_ + e.name(), &e);
   }
 
   // TypeResolver implementation
   // Resolves a type url for a message type.
-  virtual pbutil::Status ResolveMessageType(const std::string& type_url,
-                                            pb::Type* type) override {
+  virtual pbutil::Status ResolveMessageType(
+      const std::string& type_url, google::protobuf::Type* type) override {
     auto i = type_map_.find(type_url);
     if (end(type_map_) != i) {
       if (nullptr != type) {
@@ -69,8 +69,8 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
   }
 
   // Resolves a type url for an enum type.
-  virtual pbutil::Status ResolveEnumType(const std::string& type_url,
-                                         pb::Enum* enum_type) override {
+  virtual pbutil::Status ResolveEnumType(
+      const std::string& type_url, google::protobuf::Enum* enum_type) override {
     auto i = enum_map_.find(type_url);
     if (end(enum_map_) != i) {
       if (nullptr != enum_type) {
@@ -84,7 +84,8 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
   }
 
  private:
-  void ReplaceProto2WithGoogleProtobufInOptionNames(pb::Type* type) {
+  void ReplaceProto2WithGoogleProtobufInOptionNames(
+      google::protobuf::Type* type) {
     // As a temporary workaround for service configs that use
     // "proto2.MessageOptions.*" options instead of
     // "google.protobuf.MessageOptions.*", we replace the option names to make
@@ -101,8 +102,8 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
   }
 
   std::string url_prefix_;
-  std::unordered_map<std::string, const pb::Type*> type_map_;
-  std::unordered_map<std::string, const pb::Enum*> enum_map_;
+  std::unordered_map<std::string, const google::protobuf::Type*> type_map_;
+  std::unordered_map<std::string, const google::protobuf::Enum*> enum_map_;
 
   SimpleTypeResolver(const SimpleTypeResolver&) = delete;
   SimpleTypeResolver& operator=(const SimpleTypeResolver&) = delete;
@@ -126,17 +127,17 @@ void TypeHelper::Initialize() {
   type_info_.reset(pbconv::TypeInfo::NewTypeInfo(type_resolver_));
 }
 
-void TypeHelper::AddType(const pb::Type& t) {
+void TypeHelper::AddType(const google::protobuf::Type& t) {
   reinterpret_cast<SimpleTypeResolver*>(type_resolver_)->AddType(t);
 }
 
-void TypeHelper::AddEnum(const pb::Enum& e) {
+void TypeHelper::AddEnum(const google::protobuf::Enum& e) {
   reinterpret_cast<SimpleTypeResolver*>(type_resolver_)->AddEnum(e);
 }
 
 pbutil::Status TypeHelper::ResolveFieldPath(
-    const pb::Type& type, const std::string& field_path_str,
-    std::vector<const pb::Field*>* field_path_out) const {
+    const google::protobuf::Type& type, const std::string& field_path_str,
+    std::vector<const google::protobuf::Field*>* field_path_out) const {
   // Split the field names & call ResolveFieldPath()
   const std::vector<std::string> field_names =
       absl::StrSplit(field_path_str, '.', absl::SkipEmpty());
@@ -144,14 +145,15 @@ pbutil::Status TypeHelper::ResolveFieldPath(
 }
 
 pbutil::Status TypeHelper::ResolveFieldPath(
-    const pb::Type& type, const std::vector<std::string>& field_names,
-    std::vector<const pb::Field*>* field_path_out) const {
+    const google::protobuf::Type& type,
+    const std::vector<std::string>& field_names,
+    std::vector<const google::protobuf::Field*>* field_path_out) const {
   // The type of the current message being processed (initially the type of the
   // top level message)
   auto current_type = &type;
 
   // The resulting field path
-  std::vector<const pb::Field*> field_path;
+  std::vector<const google::protobuf::Field*> field_path;
 
   for (size_t i = 0; i < field_names.size(); ++i) {
     // Find the field by name in the current type
@@ -166,7 +168,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
 
     if (i < field_names.size() - 1) {
       // If this is not the last field in the path, it must be a message
-      if (pb::Field::TYPE_MESSAGE != field->kind()) {
+      if (google::protobuf::Field::TYPE_MESSAGE != field->kind()) {
         return pbutil::Status(
             pberr::INVALID_ARGUMENT,
             "Encountered a non-leaf field \"" + field->name() +

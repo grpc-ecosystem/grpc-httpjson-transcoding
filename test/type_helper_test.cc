@@ -27,8 +27,6 @@
 #include "gtest/gtest.h"
 #include "test_common.h"
 
-namespace pb = ::google::protobuf;
-
 namespace google {
 namespace grpc {
 
@@ -42,30 +40,30 @@ class TypeHelperTest : public ::testing::Test {
   TypeHelperTest() : types_(), enums_() {}
 
   void AddType(const std::string& n) {
-    pb::Type t;
+    google::protobuf::Type t;
     t.set_name(n);
     types_.emplace_back(std::move(t));
   }
 
   void AddEnum(const std::string& n) {
-    pb::Enum e;
+    google::protobuf::Enum e;
     e.set_name(n);
     enums_.emplace_back(std::move(e));
   }
 
   void Build() { helper_.reset(new TypeHelper(types_, enums_)); }
 
-  const pb::Type* GetType(const std::string& url) {
+  const google::protobuf::Type* GetType(const std::string& url) {
     return helper_->Info()->GetTypeByTypeUrl(url);
   }
 
-  const pb::Enum* GetEnum(const std::string& url) {
+  const google::protobuf::Enum* GetEnum(const std::string& url) {
     return helper_->Info()->GetEnumByTypeUrl(url);
   }
 
  private:
-  std::vector<pb::Type> types_;
-  std::vector<pb::Enum> enums_;
+  std::vector<google::protobuf::Type> types_;
+  std::vector<google::protobuf::Enum> enums_;
   std::unique_ptr<TypeHelper> helper_;
 };
 
@@ -136,16 +134,16 @@ class ServiceConfigBasedTypeHelperTest : public ::testing::Test {
     return true;
   }
 
-  const pb::Type* GetType(const std::string& url) {
+  const google::protobuf::Type* GetType(const std::string& url) {
     return helper_->Info()->GetTypeByTypeUrl(url);
   }
 
-  const pb::Enum* GetEnum(const std::string& url) {
+  const google::protobuf::Enum* GetEnum(const std::string& url) {
     return helper_->Info()->GetEnumByTypeUrl(url);
   }
 
-  const pb::Field* GetField(const std::string& type_url,
-                            const std::string& field_name) {
+  const google::protobuf::Field* GetField(const std::string& type_url,
+                                          const std::string& field_name) {
     auto t = GetType(type_url);
     if (nullptr == t) {
       return nullptr;
@@ -153,9 +151,9 @@ class ServiceConfigBasedTypeHelperTest : public ::testing::Test {
     return helper_->Info()->FindField(t, field_name);
   }
 
-  bool ResolveFieldPath(const std::string& type_name,
-                        const std::string& field_path_str,
-                        std::vector<const pb::Field*>* field_path) {
+  bool ResolveFieldPath(
+      const std::string& type_name, const std::string& field_path_str,
+      std::vector<const google::protobuf::Field*>* field_path) {
     auto type = GetType("type.googleapis.com/" + type_name);
     if (nullptr == type) {
       ADD_FAILURE() << "Could not find top level type \"" + type_name + "\""
@@ -186,8 +184,9 @@ TEST_F(ServiceConfigBasedTypeHelperTest, FullTypeTests) {
   ASSERT_NE(nullptr, t);
   EXPECT_EQ("CreateShelfRequest", t->name());
   EXPECT_EQ(1, t->fields_size());
-  EXPECT_EQ(pb::Field::TYPE_MESSAGE, t->fields(0).kind());
-  EXPECT_EQ(pb::Field::CARDINALITY_OPTIONAL, t->fields(0).cardinality());
+  EXPECT_EQ(google::protobuf::Field::TYPE_MESSAGE, t->fields(0).kind());
+  EXPECT_EQ(google::protobuf::Field::CARDINALITY_OPTIONAL,
+            t->fields(0).cardinality());
   EXPECT_EQ(1, t->fields(0).number());
   EXPECT_EQ("shelf", t->fields(0).name());
   EXPECT_EQ("type.googleapis.com/Shelf", t->fields(0).type_url());
@@ -197,12 +196,14 @@ TEST_F(ServiceConfigBasedTypeHelperTest, FullTypeTests) {
   ASSERT_NE(nullptr, t);
   EXPECT_EQ("Shelf", t->name());
   EXPECT_EQ(2, t->fields_size());
-  EXPECT_EQ(pb::Field::TYPE_STRING, t->fields(0).kind());
-  EXPECT_EQ(pb::Field::CARDINALITY_OPTIONAL, t->fields(0).cardinality());
+  EXPECT_EQ(google::protobuf::Field::TYPE_STRING, t->fields(0).kind());
+  EXPECT_EQ(google::protobuf::Field::CARDINALITY_OPTIONAL,
+            t->fields(0).cardinality());
   EXPECT_EQ(1, t->fields(0).number());
   EXPECT_EQ("name", t->fields(0).name());
-  EXPECT_EQ(pb::Field::TYPE_STRING, t->fields(1).kind());
-  EXPECT_EQ(pb::Field::CARDINALITY_OPTIONAL, t->fields(1).cardinality());
+  EXPECT_EQ(google::protobuf::Field::TYPE_STRING, t->fields(1).kind());
+  EXPECT_EQ(google::protobuf::Field::CARDINALITY_OPTIONAL,
+            t->fields(1).cardinality());
   EXPECT_EQ(2, t->fields(1).number());
   EXPECT_EQ("theme", t->fields(1).name());
 }
@@ -293,7 +294,7 @@ TEST_F(ServiceConfigBasedTypeHelperTest, FindFieldCamelCaseTests) {
 TEST_F(ServiceConfigBasedTypeHelperTest, ResolveFieldPathTests) {
   ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
 
-  std::vector<const pb::Field*> field_path;
+  std::vector<const google::protobuf::Field*> field_path;
 
   // empty
   EXPECT_TRUE(ResolveFieldPath("Shelf", "", &field_path));
