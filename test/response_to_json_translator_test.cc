@@ -21,11 +21,11 @@
 #include <string>
 #include <vector>
 
-#include "test/bookstore.pb.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/text_format.h"
 #include "grpc_transcoding/type_helper.h"
 #include "gtest/gtest.h"
+#include "test/bookstore.pb.h"
 #include "test_common.h"
 
 namespace google {
