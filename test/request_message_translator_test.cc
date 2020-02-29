@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "bookstore.pb.h"
+#include "test/bookstore.pb.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/type.pb.h"
 #include "gtest/gtest.h"
