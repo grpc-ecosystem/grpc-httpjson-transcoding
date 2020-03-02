@@ -109,7 +109,7 @@ def protobuf_repositories(bind=True):
     )
 
     http_archive(
-        name = "protobuf_git",
+        name = "com_google_protobuf",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
         url = "https://github.com/google/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
         sha256 = PROTOBUF_SHA256,
@@ -118,32 +118,32 @@ def protobuf_repositories(bind=True):
     if bind:
         native.bind(
             name = "protoc",
-            actual = "@protobuf_git//:protoc",
+            actual = "@com_google_protobuf//:protoc",
         )
 
         native.bind(
             name = "protobuf",
-            actual = "@protobuf_git//:protobuf",
+            actual = "@com_google_protobuf//:protobuf",
         )
 
         native.bind(
             name = "cc_wkt_protos",
-            actual = "@protobuf_git//:cc_wkt_protos",
+            actual = "@com_google_protobuf//:cc_wkt_protos",
         )
 
         native.bind(
             name = "cc_wkt_protos_genproto",
-            actual = "@protobuf_git//:cc_wkt_protos_genproto",
+            actual = "@com_google_protobuf//:cc_wkt_protos_genproto",
         )
 
         native.bind(
             name = "protobuf_compiler",
-            actual = "@protobuf_git//:protoc_lib",
+            actual = "@com_google_protobuf//:protoc_lib",
         )
 
         native.bind(
             name = "protobuf_clib",
-            actual = "@protobuf_git//:protoc_lib",
+            actual = "@com_google_protobuf//:protoc_lib",
         )
 
 GOOGLETEST_COMMIT = "43863938377a9ea1399c0596269e0890b5c5515a"
@@ -238,7 +238,7 @@ cc_library(
 GOOGLEAPIS_COMMIT = "32a10f69e2c9ce15bba13ab1ff928bacebb25160" # May 20, 2019
 GOOGLEAPIS_SHA256 = "6861efa8619579e06e70dd4765cdf6cef1ecad6a1a2026ad750541e99552bf71"
 
-def googleapis_repositories(protobuf_repo="@protobuf_git//", bind=True):
+def googleapis_repositories(protobuf_repo="@com_google_protobuf//", bind=True):
     BUILD = """
 # Copyright 2016 Google Inc. All Rights Reserved.
 #

@@ -14,9 +14,9 @@
 #
 ################################################################################
 #
-package(default_visibility = ["//visibility:public"])
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
-load("@protobuf_git//:protobuf.bzl", "cc_proto_library")
+package(default_visibility = ["//visibility:public"])
 
 cc_test(
     name = "http_template_test",
@@ -82,16 +82,16 @@ cc_test(
     ],
 )
 
-cc_proto_library(
-    name = "bookstore_test_proto",
+proto_library(
+    name = "bookstore_proto",
     testonly = 1,
     srcs = ["bookstore.proto"],
-    include = ".",
-    default_runtime = "//external:protobuf",
-    protoc = "//external:protoc",
-    deps = [
-        "//external:cc_wkt_protos",
-    ],
+)
+
+cc_proto_library(
+    name = "bookstore_cc_proto",
+    testonly = 1,
+    deps = [":bookstore_proto"],
 )
 
 cc_test(
@@ -136,7 +136,7 @@ cc_library(
         "request_translator_test_base.h",
     ],
     deps = [
-        ":bookstore_test_proto",
+        ":bookstore_cc_proto",
         ":test_common",
         "//external:googletest",
         "//external:protobuf",
@@ -156,7 +156,7 @@ cc_test(
         "testdata/bookstore_service.pb.txt",
     ],
     deps = [
-        ":bookstore_test_proto",
+        ":bookstore_cc_proto",
         ":request_translator_test_base",
         ":test_common",
         "//external:googletest_main",
@@ -174,7 +174,7 @@ cc_test(
         "testdata/bookstore_service.pb.txt",
     ],
     deps = [
-        ":bookstore_test_proto",
+        ":bookstore_cc_proto",
         ":request_translator_test_base",
         "//external:googletest_main",
         "//src:request_stream_translator",
@@ -191,7 +191,7 @@ cc_test(
         "testdata/bookstore_service.pb.txt",
     ],
     deps = [
-        ":bookstore_test_proto",
+        ":bookstore_cc_proto",
         ":request_translator_test_base",
         ":test_common",
         "//external:googletest_main",
@@ -222,7 +222,7 @@ cc_test(
         "testdata/bookstore_service.pb.txt",
     ],
     deps = [
-        ":bookstore_test_proto",
+        ":bookstore_cc_proto",
         ":test_common",
         "//external:googletest_main",
         "//src:message_reader",

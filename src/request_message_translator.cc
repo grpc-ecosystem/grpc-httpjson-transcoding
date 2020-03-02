@@ -24,8 +24,6 @@
 #include "grpc_transcoding/prefix_writer.h"
 #include "grpc_transcoding/request_weaver.h"
 
-namespace pb = ::google::protobuf;
-namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
 
 namespace google {
