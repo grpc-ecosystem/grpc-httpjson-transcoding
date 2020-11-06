@@ -523,19 +523,24 @@ TEST_F(PathMatcherTest, CustomVerbMatches) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch2) {
-  MethodInfo* verb = AddGetPath("/*/*:verb");
+  MethodInfo* verb = AddGetPath("/{a=*}/{b=*}:verb");
   Build();
-  EXPECT_EQ(LookupNoBindings("GET", "/some:verb/const:verb"), verb);
+  Bindings bindings;
+  EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
+  EXPECT_EQ(bindings.size(), 2);
+  EXPECT_EQ(bindings[0].value, "some:verb");
+  EXPECT_EQ(bindings[1].value, "const");
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch3) {
-  EXPECT_NE(nullptr, AddGetPath("/foo/*"));
+  MethodInfo* verb = AddGetPath("/foo/{a=*}");
   Build();
 
-  // This should match. But due to an implementation bug which
-  // blinkdly replacing last : with /, it will use /foo/other/verb
-  // to match /foo/* which will fail.
-  EXPECT_EQ(LookupNoBindings("GET", "/foo/other:verb"), nullptr);
+  // This is not custom verb since it was not configured.
+  Bindings bindings;
+  EXPECT_EQ(Lookup("GET", "/foo/other:verb", &bindings), verb);
+  EXPECT_EQ(bindings.size(), 1);
+  EXPECT_EQ(bindings[0].value, "other:verb");
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch4) {
