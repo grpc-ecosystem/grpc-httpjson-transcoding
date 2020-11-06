@@ -333,8 +333,7 @@ void ExtractBindingsFromQueryParameters(
 // - Strips off query string: "/a?foo=bar" --> "/a"
 // - Collapses extra slashes: "///" --> "/"
 std::vector<std::string> ExtractRequestParts(
-    std::string path,
-    const std::unordered_set<std::string>& custom_verbs) {
+    std::string path, const std::unordered_set<std::string>& custom_verbs) {
   // Remove query parameters.
   path = path.substr(0, path.find_first_of('?'));
 
@@ -407,7 +406,8 @@ Method PathMatcher<Method>::Lookup(
     const std::string& query_params,
     std::vector<VariableBinding>* variable_bindings,
     std::string* body_field_path) const {
-  const std::vector<std::string> parts = ExtractRequestParts(path, custom_verbs_);
+  const std::vector<std::string> parts =
+      ExtractRequestParts(path, custom_verbs_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
@@ -439,7 +439,8 @@ Method PathMatcher<Method>::Lookup(
 template <class Method>
 Method PathMatcher<Method>::Lookup(const std::string& http_method,
                                    const std::string& path) const {
-  const std::vector<std::string> parts = ExtractRequestParts(path, custom_verbs_);
+  const std::vector<std::string> parts =
+      ExtractRequestParts(path, custom_verbs_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
