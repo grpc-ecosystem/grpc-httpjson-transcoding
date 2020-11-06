@@ -553,6 +553,24 @@ TEST_F(PathMatcherTest, CustomVerbMatch4) {
   EXPECT_EQ(LookupNoBindings("GET", "/foo/other:verb/hello"), a);
 }
 
+TEST_F(PathMatcherTest, CustomVerbMatch5) {
+  MethodInfo* verb = AddGetPath("/{a=**}:verb");
+  MethodInfo* non_verb = AddGetPath("/{a=**}");
+  Build();
+  Bindings bindings;
+  EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
+  EXPECT_EQ(bindings.size(), 1);
+  EXPECT_EQ(bindings[0].value, "some:verb/const");
+  bindings.clear();
+  EXPECT_EQ(Lookup("GET", "/some:verb/const", &bindings), non_verb);
+  EXPECT_EQ(bindings.size(), 1);
+  EXPECT_EQ(bindings[0].value, "some:verb/const");
+  bindings.clear();
+  EXPECT_EQ(Lookup("GET", "/some:verb2/const:verb2", &bindings), non_verb);
+  EXPECT_EQ(bindings.size(), 1);
+  EXPECT_EQ(bindings[0].value, "some:verb2/const:verb2");
+}
+
 TEST_F(PathMatcherTest, RejectPartialMatches) {
   MethodInfo* prefix_middle_suffix = AddGetPath("/prefix/middle/suffix");
   MethodInfo* prefix_middle = AddGetPath("/prefix/middle");
