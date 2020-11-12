@@ -82,6 +82,7 @@ class PathMatcher {
   // The info associated with each method. The path matcher nodes
   // will hold pointers to MethodData objects in this vector.
   std::vector<std::unique_ptr<MethodData>> methods_;
+  bool fully_decode_reserved_expansion_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -113,6 +114,16 @@ class PathMatcherBuilder {
   bool Register(const std::string& http_method, const std::string& path,
                 const std::string& body_field_path, Method method);
 
+  // When set to true, URL path parameters will be fully URI-decoded except in
+  // cases of single segment matches in reserved expansion, where "%2F" will be
+  // left encoded.
+  //
+  // The default behavior is to not decode RFC 6570 reserved characters in multi
+  // segment matches.
+  void SetFullyDecodeReservedExpansion(bool value) {
+    fully_decode_reserved_expansion_ = value;
+  }
+
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
   // registered path-WrapperGraph pairs. Note the PathMatchBuilder instance
   // will be moved so cannot use after invoking Build().
@@ -133,6 +144,7 @@ class PathMatcherBuilder {
   std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
+  bool fully_decode_reserved_expansion_;
 
   friend class PathMatcher<Method>;
 };
@@ -260,7 +272,8 @@ std::string UrlUnescapeString(const std::string& part,
 template <class VariableBinding>
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings) {
+                             std::vector<VariableBinding>* bindings,
+                             const bool fully_decode_reserved_expansion) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -281,7 +294,8 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       // For multipart matches only unescape non-reserved characters.
-      binding.value += UrlUnescapeString(parts[i], !is_multipart);
+      binding.value += UrlUnescapeString(
+          parts[i], fully_decode_reserved_expansion || !is_multipart);
       if (i < end_segment - 1) {
         binding.value += "/";
       }
@@ -389,7 +403,9 @@ template <class Method>
 PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
-      methods_(std::move(builder.methods_)) {}
+      methods_(std::move(builder.methods_)),
+      fully_decode_reserved_expansion_(
+          builder.fully_decode_reserved_expansion_) {}
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
 // splits the request path into slash-separated path parts. Next, the method
@@ -424,7 +440,8 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings);
+    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
+                            fully_decode_reserved_expansion_);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
         variable_bindings);
@@ -461,7 +478,8 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
 // Initializes the builder with a root Path Segment
 template <class Method>
 PathMatcherBuilder<Method>::PathMatcherBuilder()
-    : root_ptr_(new PathMatcherNode()) {}
+    : root_ptr_(new PathMatcherNode()),
+      fully_decode_reserved_expansion_(false) {}
 
 template <class Method>
 PathMatcherPtr<Method> PathMatcherBuilder<Method>::Build() {

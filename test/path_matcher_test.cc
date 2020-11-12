@@ -64,8 +64,6 @@ std::string FieldPathToString(const FieldPath& fp) {
   return s;
 }
 
-}  // namespace
-
 std::ostream& operator<<(std::ostream& os, const Binding& b) {
   return os << "{ " << FieldPathToString(b.field_path) << "=" << b.value << "}";
 }
@@ -76,6 +74,8 @@ std::ostream& operator<<(std::ostream& os, const Bindings& bindings) {
   }
   return os;
 }
+
+}  // namespace
 
 namespace {
 
@@ -115,6 +115,10 @@ class PathMatcherTest : public ::testing::Test {
   }
 
   MethodInfo* AddGetPath(std::string path) { return AddPath("GET", path); }
+
+  void SetFullyDecodeReservedExpansion(bool value) {
+    builder_.SetFullyDecodeReservedExpansion(value);
+  }
 
   void Build() { matcher_ = builder_.Build(); }
 
@@ -371,6 +375,26 @@ TEST_F(PathMatcherTest, OnlyUnreservedCharsAreUnescapedForMultiSegmentMatch) {
   EXPECT_EQ(Bindings({Binding{
                 FieldPath{"x"},
                 "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"}}),
+            bindings);
+}
+
+TEST_F(PathMatcherTest,
+       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchFullyDecode) {
+  MethodInfo* a__c = AddGetPath("/a/{x=**}/c");
+  SetFullyDecodeReservedExpansion(true);
+  Build();
+
+  EXPECT_NE(nullptr, a__c);
+
+  Bindings bindings;
+  EXPECT_EQ(
+      Lookup("GET",
+             "/a/%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D/c",
+             &bindings),
+      a__c);
+
+  // All %XX are reserved characters, they should be decoded.
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "!#$&'()*+,/:;=?@[]"}}),
             bindings);
 }
 
@@ -758,6 +782,16 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
           Binding{FieldPath{"x"}, "hello"}, Binding{FieldPath{"y"}, "world"},
       }),
       bindings);
+}
+
+TEST(UrlUnescapeTest, SpecialCharacters) {
+  EXPECT_EQ(UrlUnescapeString("%2523", true), "%23");
+  EXPECT_EQ(UrlUnescapeString("%23", true), "#");
+  EXPECT_EQ(UrlUnescapeString("%2523", false), "%23");
+  EXPECT_EQ(UrlUnescapeString("%23", false), "%23");
+
+  EXPECT_EQ(UrlUnescapeString("%252525", true), "%2525");
+  EXPECT_EQ(UrlUnescapeString("%252525", false), "%2525");
 }
 
 }  // namespace
