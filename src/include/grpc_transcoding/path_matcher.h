@@ -224,20 +224,23 @@ inline int hex_digit_to_int(char c) {
 // also return what character is escaped.
 bool GetEscapedChar(const std::string& src, size_t i,
                     UrlUnescapeSpec unescape_spec, char* out) {
-  const bool unescape_slash_char =
-      unescape_spec == UrlUnescapeSpec::kAllCharacters;
-  const bool unescape_reserved_chars =
-      (unescape_spec == UrlUnescapeSpec::kAllCharacters) ||
-      (unescape_spec == UrlUnescapeSpec::kAllCharactersExceptSlash);
   if (i + 2 < src.size() && src[i] == '%') {
     if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
       char c =
           (hex_digit_to_int(src[i + 1]) << 4) | hex_digit_to_int(src[i + 2]);
-      if (!unescape_slash_char && c == '/') {
-        return false;
-      }
-      if (!unescape_reserved_chars && c != '/' && IsReservedChar(c)) {
-        return false;
+      switch (unescape_spec) {
+        case UrlUnescapeSpec::kAllCharactersExceptReserved:
+          if (IsReservedChar(c)) {
+            return false;
+          }
+          break;
+        case UrlUnescapeSpec::kAllCharactersExceptSlash:
+          if (c == '/') {
+            return false;
+          }
+          break;
+        case UrlUnescapeSpec::kAllCharacters:
+          break;
       }
       *out = c;
       return true;
