@@ -797,16 +797,6 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
       bindings);
 }
 
-TEST(UrlUnescapeTest, SpecialCharacters) {
-  // EXPECT_EQ(UrlUnescapeString("%2523", true), "%23");
-  // EXPECT_EQ(UrlUnescapeString("%23", true), "#");
-  // EXPECT_EQ(UrlUnescapeString("%2523", false), "%23");
-  // EXPECT_EQ(UrlUnescapeString("%23", false), "%23");
-
-  // EXPECT_EQ(UrlUnescapeString("%252525", true), "%2525");
-  // EXPECT_EQ(UrlUnescapeString("%252525", false), "%2525");
-}
-
 }  // namespace
 
 }  // namespace transcoding
