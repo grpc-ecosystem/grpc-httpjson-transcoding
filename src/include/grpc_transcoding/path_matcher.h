@@ -223,8 +223,12 @@ inline int hex_digit_to_int(char c) {
 // If the next three characters are an escaped character then this function will
 // also return what character is escaped.
 bool GetEscapedChar(const std::string& src, size_t i,
-                    bool unescape_reserved_chars, bool unescape_slash_char,
-                    char* out) {
+                    UrlUnescapeSpec unescape_spec, char* out) {
+  const bool unescape_slash_char =
+      unescape_spec == UrlUnescapeSpec::kAllCharacters;
+  const bool unescape_reserved_chars =
+      (unescape_spec == UrlUnescapeSpec::kAllCharacters) ||
+      (unescape_spec == UrlUnescapeSpec::kAllCharactersExceptSlash);
   if (i + 2 < src.size() && src[i] == '%') {
     if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
       char c =
@@ -246,15 +250,13 @@ bool GetEscapedChar(const std::string& src, size_t i,
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
 // false.
 std::string UrlUnescapeString(const std::string& part,
-                              bool unescape_reserved_chars,
-                              bool unescape_slash_char) {
+                              UrlUnescapeSpec unescape_spec) {
   std::string unescaped;
   // Check whether we need to escape at all.
   bool needs_unescaping = false;
   char ch = '\0';
   for (size_t i = 0; i < part.size(); ++i) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, unescape_slash_char,
-                       &ch)) {
+    if (GetEscapedChar(part, i, unescape_spec, &ch)) {
       needs_unescaping = true;
       break;
     }
@@ -270,8 +272,7 @@ std::string UrlUnescapeString(const std::string& part,
   char* p = begin;
 
   for (size_t i = 0; i < part.size();) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, unescape_slash_char,
-                       &ch)) {
+    if (GetEscapedChar(part, i, unescape_spec, &ch)) {
       *p++ = ch;
       i += 3;
     } else {
@@ -288,8 +289,7 @@ template <class VariableBinding>
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
                              std::vector<VariableBinding>* bindings,
-                             bool fully_decode_reserved_expansion,
-                             bool decode_slash_character) {
+                             UrlUnescapeSpec unescape_spec) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -307,12 +307,13 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     // multi-part match by checking if it->second.end_segment is negative.
     bool is_multipart =
         (end_segment - var.start_segment) > 1 || var.end_segment < 0;
+    const UrlUnescapeSpec var_unescape_spec =
+        is_multipart ? unescape_spec : UrlUnescapeSpec::kAllCharacters;
+
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       // For multipart matches only unescape non-reserved characters.
-      binding.value += UrlUnescapeString(
-          parts[i], fully_decode_reserved_expansion || !is_multipart,
-          decode_slash_character || !is_multipart);
+      binding.value += UrlUnescapeString(parts[i], var_unescape_spec);
       if (i < end_segment - 1) {
         binding.value += "/";
       }
@@ -345,7 +346,8 @@ void ExtractBindingsFromQueryParameters(
         // in the request, e.g. `book.author.name`.
         VariableBinding binding;
         split(name, '.', binding.field_path);
-        binding.value = UrlUnescapeString(param.substr(pos + 1), true, true);
+        binding.value = UrlUnescapeString(param.substr(pos + 1),
+                                          UrlUnescapeSpec::kAllCharacters);
         bindings->emplace_back(std::move(binding));
       }
     }
@@ -456,11 +458,8 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(
-        method_data->variables, parts, variable_bindings,
-        unescape_spec_ == UrlUnescapeSpec::kAllCharacters ||
-            unescape_spec_ == UrlUnescapeSpec::kAllCharactersExceptSlash,
-        unescape_spec_ == UrlUnescapeSpec::kAllCharacters);
+    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
+                            unescape_spec_);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
         variable_bindings);
