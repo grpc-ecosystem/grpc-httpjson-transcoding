@@ -64,8 +64,6 @@ std::string FieldPathToString(const FieldPath& fp) {
   return s;
 }
 
-}  // namespace
-
 std::ostream& operator<<(std::ostream& os, const Binding& b) {
   return os << "{ " << FieldPathToString(b.field_path) << "=" << b.value << "}";
 }
@@ -76,6 +74,8 @@ std::ostream& operator<<(std::ostream& os, const Bindings& bindings) {
   }
   return os;
 }
+
+}  // namespace
 
 namespace {
 
@@ -116,6 +116,10 @@ class PathMatcherTest : public ::testing::Test {
 
   MethodInfo* AddGetPath(std::string path) { return AddPath("GET", path); }
 
+  void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
+    builder_.SetUrlUnescapeSpec(unescape_spec);
+  }
+
   void Build() { matcher_ = builder_.Build(); }
 
   MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
@@ -144,6 +148,29 @@ class PathMatcherTest : public ::testing::Test {
                                    &body_field_path);
     EXPECT_EQ(0, bindings.size());
     return result;
+  }
+
+  void MultiSegmentMatchWithReservedCharactersBase(
+      std::string expected_component) {
+    MethodInfo* a__c = AddGetPath("/a/{x=*}/{y=**}/c");
+    Build();
+
+    EXPECT_NE(nullptr, a__c);
+
+    Bindings bindings;
+    EXPECT_EQ(
+        Lookup("GET",
+               "/a/%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D/"
+               "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D/c",
+               &bindings),
+        a__c);
+
+    EXPECT_EQ(
+        Bindings({// Single-part component is always fully decoded.
+                  Binding{FieldPath{"x"}, "!#$&'()*+,/:;=?@[]"},
+                  // Multi-part component depends on the builder configuration.
+                  Binding{FieldPath{"y"}, expected_component}}),
+        bindings);
   }
 
  private:
@@ -354,24 +381,37 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment2) {
             bindings);
 }
 
-TEST_F(PathMatcherTest, OnlyUnreservedCharsAreUnescapedForMultiSegmentMatch) {
-  MethodInfo* a__c = AddGetPath("/a/{x=**}/c");
-  Build();
-
-  EXPECT_NE(nullptr, a__c);
-
-  Bindings bindings;
-  EXPECT_EQ(
-      Lookup("GET",
-             "/a/%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D/c",
-             &bindings),
-      a__c);
-
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptReservedImplicit) {
   // All %XX are reserved characters, they should be intact.
-  EXPECT_EQ(Bindings({Binding{
-                FieldPath{"x"},
-                "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"}}),
-            bindings);
+  MultiSegmentMatchWithReservedCharactersBase(
+      "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D");
+}
+
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptReservedExplicit) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharactersExceptReserved);
+  // Set default value explicitly.
+  MultiSegmentMatchWithReservedCharactersBase(
+      "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D");
+}
+
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptSlash) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharactersExceptSlash);
+  // All %XX are reserved characters, all of them should be decoded except
+  // slash.
+  MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,%2F:;=?@[]");
+}
+
+TEST_F(PathMatcherTest,
+       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAll) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharacters);
+  // All %XX are reserved characters, they should be decoded.
+  MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,/:;=?@[]");
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
