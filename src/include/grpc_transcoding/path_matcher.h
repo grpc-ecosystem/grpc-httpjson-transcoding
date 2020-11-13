@@ -32,6 +32,18 @@ namespace transcoding {
 template <class Method>
 class PathMatcherBuilder;  // required for PathMatcher constructor
 
+enum class UrlUnescapeSpec {
+  // URL path parameters will not decode RFC 6570 reserved characters.
+  // This is the default behavior.
+  kAllCharactersExceptReserved = 0,
+  // URL path parameters will be fully URI-decoded except in
+  // cases of single segment matches in reserved expansion, where "%2F" will be
+  // left encoded.
+  kAllCharactersExceptSlash,
+  // URL path parameters will be fully URI-decoded.
+  kAllCharacters,
+};
+
 // The immutable, thread safe PathMatcher stores a mapping from a combination of
 // a service (host) name and a HTTP path to your method (MethodInfo*). It is
 // constructed with a PathMatcherBuilder and supports one operation: Lookup.
@@ -82,8 +94,7 @@ class PathMatcher {
   // The info associated with each method. The path matcher nodes
   // will hold pointers to MethodData objects in this vector.
   std::vector<std::unique_ptr<MethodData>> methods_;
-  bool fully_decode_reserved_expansion_;
-  bool always_decode_;
+  UrlUnescapeSpec unescape_spec_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -115,20 +126,9 @@ class PathMatcherBuilder {
   bool Register(const std::string& http_method, const std::string& path,
                 const std::string& body_field_path, Method method);
 
-  // When set to true, URL path parameters will be fully URI-decoded.
-  //
-  // The default behavior is to not decode RFC 6570 reserved characters in multi
-  // segment matches.
-  void SetAlwaysDecode(bool value) { always_decode_ = value; }
-
-  // When set to true, URL path parameters will be fully URI-decoded except in
-  // cases of single segment matches in reserved expansion, where "%2F" will be
-  // left encoded.
-  //
-  // The default behavior is to not decode RFC 6570 reserved characters in multi
-  // segment matches.
-  void SetFullyDecodeReservedExpansion(bool value) {
-    fully_decode_reserved_expansion_ = value;
+  // Change unescaping behavior, see UrlUnescapeSpec for available options.
+  void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
+    unescape_spec_ = unescape_spec;
   }
 
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
@@ -151,8 +151,7 @@ class PathMatcherBuilder {
   std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
-  bool always_decode_;
-  bool fully_decode_reserved_expansion_;
+  UrlUnescapeSpec unescape_spec_;
 
   friend class PathMatcher<Method>;
 };
@@ -421,9 +420,7 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)),
-      always_decode_(builder.always_decode_),
-      fully_decode_reserved_expansion_(
-          builder.fully_decode_reserved_expansion_) {}
+      unescape_spec_(builder.unescape_spec_) {}
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
 // splits the request path into slash-separated path parts. Next, the method
@@ -458,9 +455,11 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
-                            fully_decode_reserved_expansion_ || always_decode_,
-                            always_decode_);
+    ExtractBindingsFromPath(
+        method_data->variables, parts, variable_bindings,
+        unescape_spec_ == UrlUnescapeSpec::kAllCharacters ||
+            unescape_spec_ == UrlUnescapeSpec::kAllCharactersExceptSlash,
+        unescape_spec_ == UrlUnescapeSpec::kAllCharacters);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
         variable_bindings);
@@ -498,8 +497,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
 template <class Method>
 PathMatcherBuilder<Method>::PathMatcherBuilder()
     : root_ptr_(new PathMatcherNode()),
-      always_decode_(false),
-      fully_decode_reserved_expansion_(false) {}
+      unescape_spec_(UrlUnescapeSpec::kAllCharactersExceptReserved) {}
 
 template <class Method>
 PathMatcherPtr<Method> PathMatcherBuilder<Method>::Build() {

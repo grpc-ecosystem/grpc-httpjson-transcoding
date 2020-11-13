@@ -116,11 +116,9 @@ class PathMatcherTest : public ::testing::Test {
 
   MethodInfo* AddGetPath(std::string path) { return AddPath("GET", path); }
 
-  void SetFullyDecodeReservedExpansion(bool value) {
-    builder_.SetFullyDecodeReservedExpansion(value);
+  void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
+    builder_.SetUrlUnescapeSpec(unescape_spec);
   }
-
-  void SetAlwaysDecode(bool value) { builder_.SetAlwaysDecode(value); }
 
   void Build() { matcher_ = builder_.Build(); }
 
@@ -383,31 +381,36 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment2) {
             bindings);
 }
 
-TEST_F(PathMatcherTest, OnlyUnreservedCharsAreUnescapedForMultiSegmentMatch) {
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptReservedImplicit) {
   // All %XX are reserved characters, they should be intact.
   MultiSegmentMatchWithReservedCharactersBase(
       "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D");
 }
 
-TEST_F(PathMatcherTest,
-       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchAlwaysDecode) {
-  SetFullyDecodeReservedExpansion(true);
-  // All %XX are reserved characters, they should be decoded.
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptReservedExplicit) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharactersExceptReserved);
+  // Set default value explicitly.
+  MultiSegmentMatchWithReservedCharactersBase(
+      "%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D");
+}
+
+TEST_F(
+    PathMatcherTest,
+    OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAllExceptSlash) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharactersExceptSlash);
+  // All %XX are reserved characters, all of them should be decoded except
+  // slash.
   MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,%2F:;=?@[]");
 }
 
 TEST_F(PathMatcherTest,
-       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchFullyDecode) {
-  SetAlwaysDecode(true);
+       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchUnescapeAll) {
+  SetUrlUnescapeSpec(UrlUnescapeSpec::kAllCharacters);
   // All %XX are reserved characters, they should be decoded.
-  MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,/:;=?@[]");
-}
-
-TEST_F(PathMatcherTest,
-       OnlyUnreservedCharsAreUnescapedForMultiSegmentMatchAlwaysAndFully) {
-  SetAlwaysDecode(true);
-  SetFullyDecodeReservedExpansion(true);
-  // AlwaysDecode wins.
   MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,/:;=?@[]");
 }
 
