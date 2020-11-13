@@ -151,7 +151,8 @@ class PathMatcherBuilder {
   std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
-  UrlUnescapeSpec unescape_spec_;
+  UrlUnescapeSpec unescape_spec_ =
+      UrlUnescapeSpec::kAllCharactersExceptReserved;
 
   friend class PathMatcher<Method>;
 };
@@ -496,8 +497,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
 // Initializes the builder with a root Path Segment
 template <class Method>
 PathMatcherBuilder<Method>::PathMatcherBuilder()
-    : root_ptr_(new PathMatcherNode()),
-      unescape_spec_(UrlUnescapeSpec::kAllCharactersExceptReserved) {}
+    : root_ptr_(new PathMatcherNode()) {}
 
 template <class Method>
 PathMatcherPtr<Method> PathMatcherBuilder<Method>::Build() {
