@@ -83,6 +83,7 @@ class PathMatcher {
   // will hold pointers to MethodData objects in this vector.
   std::vector<std::unique_ptr<MethodData>> methods_;
   bool fully_decode_reserved_expansion_;
+  bool always_decode_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -114,6 +115,12 @@ class PathMatcherBuilder {
   bool Register(const std::string& http_method, const std::string& path,
                 const std::string& body_field_path, Method method);
 
+  // When set to true, URL path parameters will be fully URI-decoded.
+  //
+  // The default behavior is to not decode RFC 6570 reserved characters in multi
+  // segment matches.
+  void SetAlwaysDecode(bool value) { always_decode_ = value; }
+
   // When set to true, URL path parameters will be fully URI-decoded except in
   // cases of single segment matches in reserved expansion, where "%2F" will be
   // left encoded.
@@ -144,6 +151,7 @@ class PathMatcherBuilder {
   std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
+  bool always_decode_;
   bool fully_decode_reserved_expansion_;
 
   friend class PathMatcher<Method>;
@@ -215,12 +223,16 @@ inline int hex_digit_to_int(char c) {
 // If the next three characters are an escaped character then this function will
 // also return what character is escaped.
 bool GetEscapedChar(const std::string& src, size_t i,
-                    bool unescape_reserved_chars, char* out) {
+                    bool unescape_reserved_chars, bool unescape_slash_char,
+                    char* out) {
   if (i + 2 < src.size() && src[i] == '%') {
     if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
       char c =
           (hex_digit_to_int(src[i + 1]) << 4) | hex_digit_to_int(src[i + 2]);
-      if (!unescape_reserved_chars && IsReservedChar(c)) {
+      if (!unescape_slash_char && c == '/') {
+        return false;
+      }
+      if (!unescape_reserved_chars && c != '/' && IsReservedChar(c)) {
         return false;
       }
       *out = c;
@@ -234,13 +246,15 @@ bool GetEscapedChar(const std::string& src, size_t i,
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
 // false.
 std::string UrlUnescapeString(const std::string& part,
-                              bool unescape_reserved_chars) {
+                              bool unescape_reserved_chars,
+                              bool unescape_slash_char) {
   std::string unescaped;
   // Check whether we need to escape at all.
   bool needs_unescaping = false;
   char ch = '\0';
   for (size_t i = 0; i < part.size(); ++i) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, &ch)) {
+    if (GetEscapedChar(part, i, unescape_reserved_chars, unescape_slash_char,
+                       &ch)) {
       needs_unescaping = true;
       break;
     }
@@ -256,7 +270,8 @@ std::string UrlUnescapeString(const std::string& part,
   char* p = begin;
 
   for (size_t i = 0; i < part.size();) {
-    if (GetEscapedChar(part, i, unescape_reserved_chars, &ch)) {
+    if (GetEscapedChar(part, i, unescape_reserved_chars, unescape_slash_char,
+                       &ch)) {
       *p++ = ch;
       i += 3;
     } else {
@@ -273,7 +288,8 @@ template <class VariableBinding>
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
                              std::vector<VariableBinding>* bindings,
-                             const bool fully_decode_reserved_expansion) {
+                             bool fully_decode_reserved_expansion,
+                             bool decode_slash_character) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -295,7 +311,8 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       // For multipart matches only unescape non-reserved characters.
       binding.value += UrlUnescapeString(
-          parts[i], fully_decode_reserved_expansion || !is_multipart);
+          parts[i], fully_decode_reserved_expansion || !is_multipart,
+          decode_slash_character || !is_multipart);
       if (i < end_segment - 1) {
         binding.value += "/";
       }
@@ -328,7 +345,7 @@ void ExtractBindingsFromQueryParameters(
         // in the request, e.g. `book.author.name`.
         VariableBinding binding;
         split(name, '.', binding.field_path);
-        binding.value = UrlUnescapeString(param.substr(pos + 1), true);
+        binding.value = UrlUnescapeString(param.substr(pos + 1), true, true);
         bindings->emplace_back(std::move(binding));
       }
     }
@@ -404,6 +421,7 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)),
+      always_decode_(builder.always_decode_),
       fully_decode_reserved_expansion_(
           builder.fully_decode_reserved_expansion_) {}
 
@@ -441,7 +459,8 @@ Method PathMatcher<Method>::Lookup(
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
     ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
-                            fully_decode_reserved_expansion_);
+                            fully_decode_reserved_expansion_ || always_decode_,
+                            always_decode_);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
         variable_bindings);
@@ -479,6 +498,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
 template <class Method>
 PathMatcherBuilder<Method>::PathMatcherBuilder()
     : root_ptr_(new PathMatcherNode()),
+      always_decode_(false),
       fully_decode_reserved_expansion_(false) {}
 
 template <class Method>
