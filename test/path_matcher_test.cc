@@ -198,6 +198,7 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   MethodInfo* c_d__ = AddGetPath("/c/*/d/**");
   MethodInfo* c_de = AddGetPath("/c/*/d/e");
   MethodInfo* cfde = AddGetPath("/c/f/d/e");
+  MethodInfo* root = AddGetPath("/");
   Build();
 
   EXPECT_NE(nullptr, a__);
@@ -209,6 +210,7 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   EXPECT_EQ(LookupNoBindings("GET", "/a/b"), a__);
   EXPECT_EQ(LookupNoBindings("GET", "/a/b/c"), a__);
   EXPECT_EQ(LookupNoBindings("GET", "/b/c"), b_);
+  EXPECT_EQ(LookupNoBindings("GET", "/"), root);
 
   EXPECT_EQ(LookupNoBindings("GET", "b/c/d"), nullptr);
   EXPECT_EQ(LookupNoBindings("GET", "/c/u/d/v"), c_d__);
