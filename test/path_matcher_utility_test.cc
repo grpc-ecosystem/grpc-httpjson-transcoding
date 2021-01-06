@@ -215,3 +215,21 @@ TEST_F(PathMatcherUtilityTest, RegisterAdditionalBindings) {
   ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
                                                       &method2_));
 }
+
+TEST_F(PathMatcherUtilityTest, RegisterRootPath) {
+  HttpRule http_rule;
+  http_rule.set_get("/");
+  http_rule.set_body("body");
+  EXPECT_CALL(pmb,
+              Register(Eq("GET"), Eq("/"), Eq("body"),
+                       Eq(std::unordered_set<std::string>()), Eq(&method1_)))
+      .WillOnce(Return(true));
+  ASSERT_TRUE(
+      PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, &method1_));
+  EXPECT_CALL(
+      pmb, Register(Eq("GET"), Eq("/"), Eq("body"),
+                    Eq(std::unordered_set<std::string>{"key"}), Eq(&method2_)))
+      .WillOnce(Return(false));
+  ASSERT_FALSE(PathMatcherUtility::RegisterByHttpRule(pmb, http_rule, {"key"},
+                                                      &method2_));
+}
