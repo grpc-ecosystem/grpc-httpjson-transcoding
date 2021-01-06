@@ -193,12 +193,12 @@ TEST_F(PathMatcherTest, WildCardMatchesRoot) {
 
 TEST_F(PathMatcherTest, WildCardMatches) {
   // '*' only matches one path segment, but '**' matches the remaining path.
-  MethodInfo *a__ = AddGetPath("/a/**");
-  MethodInfo *b_ = AddGetPath("/b/*");
-  MethodInfo *c_d__ = AddGetPath("/c/*/d/**");
-  MethodInfo *c_de = AddGetPath("/c/*/d/e");
-  MethodInfo *cfde = AddGetPath("/c/f/d/e");
-  MethodInfo *root = AddGetPath("/");
+  MethodInfo* a__ = AddGetPath("/a/**");
+  MethodInfo* b_ = AddGetPath("/b/*");
+  MethodInfo* c_d__ = AddGetPath("/c/*/d/**");
+  MethodInfo* c_de = AddGetPath("/c/*/d/e");
+  MethodInfo* cfde = AddGetPath("/c/f/d/e");
+  MethodInfo* root = AddGetPath("/");
   Build();
 
   EXPECT_NE(nullptr, a__);
