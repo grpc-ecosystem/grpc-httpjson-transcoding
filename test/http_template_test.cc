@@ -524,6 +524,6 @@ TEST(HttpTemplate, ParseNonVerbTest) {
   ASSERT_EQ(nullptr, HttpTemplate::Parse("/a/{b=*}/**:"));
 }
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

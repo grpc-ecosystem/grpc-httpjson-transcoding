@@ -49,13 +49,13 @@ typedef std::vector<Binding> Bindings;
 typedef std::vector<std::string> FieldPath;
 class MethodInfo {};
 
-bool operator==(const Binding &b1, const Binding &b2) {
+bool operator==(const Binding& b1, const Binding& b2) {
   return b1.field_path == b2.field_path && b1.value == b2.value;
 }
 
-std::string FieldPathToString(const FieldPath &fp) {
+std::string FieldPathToString(const FieldPath& fp) {
   std::string s;
-  for (const auto &f : fp) {
+  for (const auto& f : fp) {
     if (!s.empty()) {
       s += ".";
     }
@@ -64,27 +64,27 @@ std::string FieldPathToString(const FieldPath &fp) {
   return s;
 }
 
-std::ostream &operator<<(std::ostream &os, const Binding &b) {
+std::ostream& operator<<(std::ostream& os, const Binding& b) {
   return os << "{ " << FieldPathToString(b.field_path) << "=" << b.value << "}";
 }
 
-std::ostream &operator<<(std::ostream &os, const Bindings &bindings) {
-  for (const auto &b : bindings) {
+std::ostream& operator<<(std::ostream& os, const Bindings& bindings) {
+  for (const auto& b : bindings) {
     os << b << std::endl;
   }
   return os;
 }
 
-} // namespace
+}  // namespace
 
 namespace {
 
 class PathMatcherTest : public ::testing::Test {
-protected:
+ protected:
   PathMatcherTest() {}
   ~PathMatcherTest() {}
 
-  MethodInfo *AddPathWithBodyFieldPath(std::string http_method,
+  MethodInfo* AddPathWithBodyFieldPath(std::string http_method,
                                        std::string http_template,
                                        std::string body_field_path) {
     auto method = new MethodInfo();
@@ -97,9 +97,9 @@ protected:
     return method;
   }
 
-  MethodInfo *AddPathWithSystemParams(
+  MethodInfo* AddPathWithSystemParams(
       std::string http_method, std::string http_template,
-      const std::unordered_set<std::string> *system_params) {
+      const std::unordered_set<std::string>* system_params) {
     auto method = new MethodInfo();
     if (!builder_.Register(http_method, http_template, std::string(),
                            *system_params, method)) {
@@ -110,11 +110,11 @@ protected:
     return method;
   }
 
-  MethodInfo *AddPath(std::string http_method, std::string http_template) {
+  MethodInfo* AddPath(std::string http_method, std::string http_template) {
     return AddPathWithBodyFieldPath(http_method, http_template, std::string());
   }
 
-  MethodInfo *AddGetPath(std::string path) { return AddPath("GET", path); }
+  MethodInfo* AddGetPath(std::string path) { return AddPath("GET", path); }
 
   void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
     builder_.SetUrlUnescapeSpec(unescape_spec);
@@ -122,26 +122,26 @@ protected:
 
   void Build() { matcher_ = builder_.Build(); }
 
-  MethodInfo *LookupWithBodyFieldPath(std::string method, std::string path,
-                                      Bindings *bindings,
-                                      std::string *body_field_path) {
+  MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
+                                      Bindings* bindings,
+                                      std::string* body_field_path) {
     return matcher_->Lookup(method, path, "", bindings, body_field_path);
   }
 
-  MethodInfo *Lookup(std::string method, std::string path, Bindings *bindings) {
+  MethodInfo* Lookup(std::string method, std::string path, Bindings* bindings) {
     std::string body_field_path;
     return matcher_->Lookup(method, path, std::string(), bindings,
                             &body_field_path);
   }
 
-  MethodInfo *LookupWithParams(std::string method, std::string path,
-                               std::string query_params, Bindings *bindings) {
+  MethodInfo* LookupWithParams(std::string method, std::string path,
+                               std::string query_params, Bindings* bindings) {
     std::string body_field_path;
     return matcher_->Lookup(method, path, query_params, bindings,
                             &body_field_path);
   }
 
-  MethodInfo *LookupNoBindings(std::string method, std::string path) {
+  MethodInfo* LookupNoBindings(std::string method, std::string path) {
     Bindings bindings;
     std::string body_field_path;
     auto result = matcher_->Lookup(method, path, std::string(), &bindings,
@@ -150,9 +150,9 @@ protected:
     return result;
   }
 
-  void
-  MultiSegmentMatchWithReservedCharactersBase(std::string expected_component) {
-    MethodInfo *a__c = AddGetPath("/a/{x=*}/{y=**}/c");
+  void MultiSegmentMatchWithReservedCharactersBase(
+      std::string expected_component) {
+    MethodInfo* a__c = AddGetPath("/a/{x=*}/{y=**}/c");
     Build();
 
     EXPECT_NE(nullptr, a__c);
@@ -173,15 +173,15 @@ protected:
         bindings);
   }
 
-private:
-  PathMatcherBuilder<MethodInfo *> builder_;
-  PathMatcherPtr<MethodInfo *> matcher_;
+ private:
+  PathMatcherBuilder<MethodInfo*> builder_;
+  PathMatcherPtr<MethodInfo*> matcher_;
   std::vector<std::unique_ptr<MethodInfo>> stored_methods_;
   std::unordered_set<std::string> empty_set_;
 };
 
 TEST_F(PathMatcherTest, WildCardMatchesRoot) {
-  MethodInfo *data = AddGetPath("/**");
+  MethodInfo* data = AddGetPath("/**");
   Build();
 
   EXPECT_NE(nullptr, data);
@@ -225,15 +225,15 @@ TEST_F(PathMatcherTest, WildCardMatches) {
 }
 
 TEST_F(PathMatcherTest, VariableBindings) {
-  MethodInfo *a_cde = AddGetPath("/a/{x}/c/d/e");
-  MethodInfo *a_b_c = AddGetPath("/{x=a/*}/b/{y=*}/c");
-  MethodInfo *ab_d__ = AddGetPath("/a/{x=b/*}/{y=d/**}");
-  MethodInfo *alpha_beta__gamma = AddGetPath("/alpha/{x=*}/beta/{y=**}/gamma");
-  MethodInfo *_a = AddGetPath("/{x=*}/a");
-  MethodInfo *__ab = AddGetPath("/{x=**}/a/b");
-  MethodInfo *ab_ = AddGetPath("/a/b/{x=*}");
-  MethodInfo *abc__ = AddGetPath("/a/b/c/{x=**}");
-  MethodInfo *_def__ = AddGetPath("/{x=*}/d/e/f/{y=**}");
+  MethodInfo* a_cde = AddGetPath("/a/{x}/c/d/e");
+  MethodInfo* a_b_c = AddGetPath("/{x=a/*}/b/{y=*}/c");
+  MethodInfo* ab_d__ = AddGetPath("/a/{x=b/*}/{y=d/**}");
+  MethodInfo* alpha_beta__gamma = AddGetPath("/alpha/{x=*}/beta/{y=**}/gamma");
+  MethodInfo* _a = AddGetPath("/{x=*}/a");
+  MethodInfo* __ab = AddGetPath("/{x=**}/a/b");
+  MethodInfo* ab_ = AddGetPath("/a/b/{x=*}");
+  MethodInfo* abc__ = AddGetPath("/a/b/c/{x=**}");
+  MethodInfo* _def__ = AddGetPath("/{x=*}/d/e/f/{y=**}");
   Build();
 
   EXPECT_NE(nullptr, a_cde);
@@ -254,11 +254,11 @@ TEST_F(PathMatcherTest, VariableBindings) {
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/hello/b/world/c", &bindings), a_b_c);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "a/hello"},
-                Binding{FieldPath{"y"}, "world"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "a/hello"}, Binding{FieldPath{"y"}, "world"},
+      }),
+      bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/zoo/d/animal/tiger", &bindings), ab_d__);
   EXPECT_EQ(Bindings({
@@ -269,11 +269,11 @@ TEST_F(PathMatcherTest, VariableBindings) {
 
   EXPECT_EQ(Lookup("GET", "/alpha/dog/beta/eat/bones/gamma", &bindings),
             alpha_beta__gamma);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "dog"},
-                Binding{FieldPath{"y"}, "eat/bones"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "dog"}, Binding{FieldPath{"y"}, "eat/bones"},
+      }),
+      bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/a", &bindings), _a);
   EXPECT_EQ(Bindings({
@@ -300,15 +300,15 @@ TEST_F(PathMatcherTest, VariableBindings) {
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/d/e/f/bar/baz", &bindings), _def__);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "foo"},
-                Binding{FieldPath{"y"}, "bar/baz"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "foo"}, Binding{FieldPath{"y"}, "bar/baz"},
+      }),
+      bindings);
 }
 
 TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegment) {
-  MethodInfo *a_c = AddGetPath("/a/{x}/c");
+  MethodInfo* a_c = AddGetPath("/a/{x}/c");
   Build();
 
   EXPECT_NE(nullptr, a_c);
@@ -333,10 +333,10 @@ char HexDigit(unsigned char digit, bool uppercase) {
   }
 }
 
-} // namespace
+}  // namespace {
 
 TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegmentAllAsciiChars) {
-  MethodInfo *a_c = AddGetPath("/{x}");
+  MethodInfo* a_c = AddGetPath("/{x}");
   Build();
 
   EXPECT_NE(nullptr, a_c);
@@ -358,7 +358,7 @@ TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegmentAllAsciiChars) {
 }
 
 TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment1) {
-  MethodInfo *ap_q_c = AddGetPath("/a/{x=p/*/q/*}/c");
+  MethodInfo* ap_q_c = AddGetPath("/a/{x=p/*/q/*}/c");
   Build();
 
   EXPECT_NE(nullptr, ap_q_c);
@@ -371,7 +371,7 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment1) {
 }
 
 TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment2) {
-  MethodInfo *a__c = AddGetPath("/a/{x=**}/c");
+  MethodInfo* a__c = AddGetPath("/a/{x=**}/c");
   Build();
 
   EXPECT_NE(nullptr, a__c);
@@ -417,12 +417,12 @@ TEST_F(PathMatcherTest,
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
-  MethodInfo *a_verb = AddGetPath("/a/{y=*}:verb");
-  MethodInfo *ad__verb = AddGetPath("/a/{y=d/**}:verb");
-  MethodInfo *_averb = AddGetPath("/{x=*}/a:verb");
-  MethodInfo *__bverb = AddGetPath("/{x=**}/b:verb");
-  MethodInfo *e_fverb = AddGetPath("/e/{x=*}/f:verb");
-  MethodInfo *g__hverb = AddGetPath("/g/{x=**}/h:verb");
+  MethodInfo* a_verb = AddGetPath("/a/{y=*}:verb");
+  MethodInfo* ad__verb = AddGetPath("/a/{y=d/**}:verb");
+  MethodInfo* _averb = AddGetPath("/{x=*}/a:verb");
+  MethodInfo* __bverb = AddGetPath("/{x=**}/b:verb");
+  MethodInfo* e_fverb = AddGetPath("/e/{x=*}/f:verb");
+  MethodInfo* g__hverb = AddGetPath("/g/{x=**}/h:verb");
   Build();
 
   EXPECT_NE(nullptr, a_verb);
@@ -453,17 +453,17 @@ TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
 }
 
 TEST_F(PathMatcherTest, ConstantSuffixesWithVariable) {
-  MethodInfo *ab__ = AddGetPath("/a/{x=b/**}");
-  MethodInfo *ab__z = AddGetPath("/a/{x=b/**}/z");
-  MethodInfo *ab__yz = AddGetPath("/a/{x=b/**}/y/z");
-  MethodInfo *ab__verb = AddGetPath("/a/{x=b/**}:verb");
-  MethodInfo *a__ = AddGetPath("/a/{x=**}");
-  MethodInfo *c_d__e = AddGetPath("/c/{x=*}/{y=d/**}/e");
-  MethodInfo *c_d__everb = AddGetPath("/c/{x=*}/{y=d/**}/e:verb");
-  MethodInfo *f___g = AddGetPath("/f/{x=*}/{y=**}/g");
-  MethodInfo *f___gverb = AddGetPath("/f/{x=*}/{y=**}/g:verb");
-  MethodInfo *ab_yz__foo = AddGetPath("/a/{x=b/*/y/z/**}/foo");
-  MethodInfo *ab___yzfoo = AddGetPath("/a/{x=b/*/**/y/z}/foo");
+  MethodInfo* ab__ = AddGetPath("/a/{x=b/**}");
+  MethodInfo* ab__z = AddGetPath("/a/{x=b/**}/z");
+  MethodInfo* ab__yz = AddGetPath("/a/{x=b/**}/y/z");
+  MethodInfo* ab__verb = AddGetPath("/a/{x=b/**}:verb");
+  MethodInfo* a__ = AddGetPath("/a/{x=**}");
+  MethodInfo* c_d__e = AddGetPath("/c/{x=*}/{y=d/**}/e");
+  MethodInfo* c_d__everb = AddGetPath("/c/{x=*}/{y=d/**}/e:verb");
+  MethodInfo* f___g = AddGetPath("/f/{x=*}/{y=**}/g");
+  MethodInfo* f___gverb = AddGetPath("/f/{x=*}/{y=**}/g:verb");
+  MethodInfo* ab_yz__foo = AddGetPath("/a/{x=b/*/y/z/**}/foo");
+  MethodInfo* ab___yzfoo = AddGetPath("/a/{x=b/*/**/y/z}/foo");
   Build();
 
   EXPECT_NE(nullptr, ab__);
@@ -540,11 +540,11 @@ TEST_F(PathMatcherTest, InvalidTemplates) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatches) {
-  MethodInfo *some_const_verb = AddGetPath("/some/const:verb");
-  MethodInfo *some__verb = AddGetPath("/some/*:verb");
-  MethodInfo *some__foo_verb = AddGetPath("/some/*/foo:verb");
-  MethodInfo *other__verb = AddGetPath("/other/**:verb");
-  MethodInfo *other__const_verb = AddGetPath("/other/**/const:verb");
+  MethodInfo* some_const_verb = AddGetPath("/some/const:verb");
+  MethodInfo* some__verb = AddGetPath("/some/*:verb");
+  MethodInfo* some__foo_verb = AddGetPath("/some/*/foo:verb");
+  MethodInfo* other__verb = AddGetPath("/other/**:verb");
+  MethodInfo* other__const_verb = AddGetPath("/other/**/const:verb");
   Build();
 
   EXPECT_NE(nullptr, some_const_verb);
@@ -565,7 +565,7 @@ TEST_F(PathMatcherTest, CustomVerbMatches) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch2) {
-  MethodInfo *verb = AddGetPath("/{a=*}/{b=*}:verb");
+  MethodInfo* verb = AddGetPath("/{a=*}/{b=*}:verb");
   Build();
   Bindings bindings;
   EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
@@ -575,7 +575,7 @@ TEST_F(PathMatcherTest, CustomVerbMatch2) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch3) {
-  MethodInfo *verb = AddGetPath("/foo/{a=*}");
+  MethodInfo* verb = AddGetPath("/foo/{a=*}");
   Build();
 
   // This is not custom verb since it was not configured.
@@ -586,7 +586,7 @@ TEST_F(PathMatcherTest, CustomVerbMatch3) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch4) {
-  MethodInfo *a = AddGetPath("/foo/*/hello");
+  MethodInfo* a = AddGetPath("/foo/*/hello");
   Build();
 
   EXPECT_NE(nullptr, a);
@@ -596,8 +596,8 @@ TEST_F(PathMatcherTest, CustomVerbMatch4) {
 }
 
 TEST_F(PathMatcherTest, CustomVerbMatch5) {
-  MethodInfo *verb = AddGetPath("/{a=**}:verb");
-  MethodInfo *non_verb = AddGetPath("/{a=**}");
+  MethodInfo* verb = AddGetPath("/{a=**}:verb");
+  MethodInfo* non_verb = AddGetPath("/{a=**}");
   Build();
   Bindings bindings;
   EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
@@ -614,9 +614,9 @@ TEST_F(PathMatcherTest, CustomVerbMatch5) {
 }
 
 TEST_F(PathMatcherTest, RejectPartialMatches) {
-  MethodInfo *prefix_middle_suffix = AddGetPath("/prefix/middle/suffix");
-  MethodInfo *prefix_middle = AddGetPath("/prefix/middle");
-  MethodInfo *prefix = AddGetPath("/prefix");
+  MethodInfo* prefix_middle_suffix = AddGetPath("/prefix/middle/suffix");
+  MethodInfo* prefix_middle = AddGetPath("/prefix/middle");
+  MethodInfo* prefix = AddGetPath("/prefix");
   Build();
 
   EXPECT_NE(nullptr, prefix_middle_suffix);
@@ -640,11 +640,11 @@ TEST_F(PathMatcherTest, LookupReturnsNullIfMatcherEmpty) {
 }
 
 TEST_F(PathMatcherTest, LookupSimplePaths) {
-  MethodInfo *pms = AddGetPath("/prefix/middle/suffix");
-  MethodInfo *pmo = AddGetPath("/prefix/middle/othersuffix");
-  MethodInfo *pos = AddGetPath("/prefix/othermiddle/suffix");
-  MethodInfo *oms = AddGetPath("/otherprefix/middle/suffix");
-  MethodInfo *os = AddGetPath("/otherprefix/suffix");
+  MethodInfo* pms = AddGetPath("/prefix/middle/suffix");
+  MethodInfo* pmo = AddGetPath("/prefix/middle/othersuffix");
+  MethodInfo* pos = AddGetPath("/prefix/othermiddle/suffix");
+  MethodInfo* oms = AddGetPath("/otherprefix/middle/suffix");
+  MethodInfo* os = AddGetPath("/otherprefix/suffix");
   Build();
 
   EXPECT_NE(nullptr, pms);
@@ -719,9 +719,9 @@ TEST_F(PathMatcherTest, BodyFieldPathTest) {
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithQueryParams) {
-  MethodInfo *a = AddGetPath("/a");
-  MethodInfo *a_b = AddGetPath("/a/{x}/b");
-  MethodInfo *a_b_c = AddGetPath("/a/{x}/b/{y}/c");
+  MethodInfo* a = AddGetPath("/a");
+  MethodInfo* a_b = AddGetPath("/a/{x}/b");
+  MethodInfo* a_b_c = AddGetPath("/a/{x}/b/{y}/c");
   Build();
 
   EXPECT_NE(nullptr, a);
@@ -737,27 +737,27 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParams) {
 
   EXPECT_EQ(LookupWithParams("GET", "/a/book/b", "y=shelf&z=author", &bindings),
             a_b);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "book"},
-                Binding{FieldPath{"y"}, "shelf"},
-                Binding{FieldPath{"z"}, "author"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "book"}, Binding{FieldPath{"y"}, "shelf"},
+          Binding{FieldPath{"z"}, "author"},
+      }),
+      bindings);
 
   EXPECT_EQ(LookupWithParams("GET", "/a/hello/b/endpoints/c",
                              "z=server&t=proxy", &bindings),
             a_b_c);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "hello"},
-                Binding{FieldPath{"y"}, "endpoints"},
-                Binding{FieldPath{"z"}, "server"},
-                Binding{FieldPath{"t"}, "proxy"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "hello"},
+          Binding{FieldPath{"y"}, "endpoints"},
+          Binding{FieldPath{"z"}, "server"}, Binding{FieldPath{"t"}, "proxy"},
+      }),
+      bindings);
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
-  MethodInfo *a = AddGetPath("/a");
+  MethodInfo* a = AddGetPath("/a");
   Build();
 
   EXPECT_NE(nullptr, a);
@@ -778,7 +778,7 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
 
 TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
   std::unordered_set<std::string> system_params{"key", "api_key"};
-  MethodInfo *a_b = AddPathWithSystemParams("GET", "/a/{x}/b", &system_params);
+  MethodInfo* a_b = AddPathWithSystemParams("GET", "/a/{x}/b", &system_params);
   Build();
 
   EXPECT_NE(nullptr, a_b);
@@ -787,23 +787,23 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
   EXPECT_EQ(LookupWithParams("GET", "/a/hello/b", "y=world&api_key=secret",
                              &bindings),
             a_b);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "hello"},
-                Binding{FieldPath{"y"}, "world"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "hello"}, Binding{FieldPath{"y"}, "world"},
+      }),
+      bindings);
   EXPECT_EQ(
       LookupWithParams("GET", "/a/hello/b", "key=secret&y=world", &bindings),
       a_b);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "hello"},
-                Binding{FieldPath{"y"}, "world"},
-            }),
-            bindings);
+  EXPECT_EQ(
+      Bindings({
+          Binding{FieldPath{"x"}, "hello"}, Binding{FieldPath{"y"}, "world"},
+      }),
+      bindings);
 }
 
-} // namespace
+}  // namespace
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

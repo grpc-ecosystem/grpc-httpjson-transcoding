@@ -40,7 +40,7 @@ namespace {
 // FieldPath = IDENT { "." IDENT } ;
 // Verb     = ":" LITERAL ;
 class Parser {
-public:
+ public:
   Parser(const std::string &input)
       : input_(input), tb_(0), te_(0), in_variable_(false) {}
 
@@ -73,7 +73,7 @@ public:
     return true;
   }
 
-private:
+ private:
   // Template = "/" Segments [ Verb ] ;
   bool ParseTemplate() {
     if (!Consume('/')) {
@@ -99,8 +99,7 @@ private:
     }
 
     for (;;) {
-      if (!Consume('/'))
-        break;
+      if (!Consume('/')) break;
       if (!ParseSegment()) {
         return false;
       }
@@ -115,25 +114,25 @@ private:
       return false;
     }
     switch (current_char()) {
-    case '*': {
-      Consume('*');
-      if (Consume('*')) {
-        // **
-        segments_.push_back("**");
-        if (in_variable_) {
-          return MarkVariableHasWildCardPath();
+      case '*': {
+        Consume('*');
+        if (Consume('*')) {
+          // **
+          segments_.push_back("**");
+          if (in_variable_) {
+            return MarkVariableHasWildCardPath();
+          }
+          return true;
+        } else {
+          segments_.push_back("*");
+          return true;
         }
-        return true;
-      } else {
-        segments_.push_back("*");
-        return true;
       }
-    }
 
-    case '{':
-      return ParseVariable();
-    default:
-      return ParseLiteralSegment();
+      case '{':
+        return ParseVariable();
+      default:
+        return ParseLiteralSegment();
     }
   }
 
@@ -189,10 +188,8 @@ private:
 
   // Verb     = ":" LITERAL ;
   bool ParseVerb() {
-    if (!Consume(':'))
-      return false;
-    if (!ParseLiteral(&verb_))
-      return false;
+    if (!Consume(':')) return false;
+    if (!ParseLiteral(&verb_)) return false;
     return true;
   }
 
@@ -205,14 +202,14 @@ private:
     while (NextChar()) {
       char c;
       switch (c = current_char()) {
-      case '.':
-      case '}':
-      case '=':
-        return result && AddFieldIdentifier(std::move(idf));
-      default:
-        Consume(c);
-        idf.push_back(c);
-        break;
+        case '.':
+        case '}':
+        case '=':
+          return result && AddFieldIdentifier(std::move(idf));
+        default:
+          Consume(c);
+          idf.push_back(c);
+          break;
       }
       result = true;
     }
@@ -230,14 +227,14 @@ private:
     for (;;) {
       char c;
       switch (c = current_char()) {
-      case '/':
-      case ':':
-      case '}':
-        return result;
-      default:
-        Consume(c);
-        lit->push_back(c);
-        break;
+        case '/':
+        case ':':
+        case '}':
+          return result;
+        default:
+          Consume(c);
+          lit->push_back(c);
+          break;
       }
 
       result = true;
@@ -362,7 +359,7 @@ private:
   std::vector<HttpTemplate::Variable> variables_;
 };
 
-} // namespace
+}  // namespace
 
 const char HttpTemplate::kSingleParameterKey[] = "/.";
 
@@ -384,6 +381,6 @@ std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string &ht) {
       std::move(p.segments()), std::move(p.verb()), std::move(p.variables())));
 }
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google
