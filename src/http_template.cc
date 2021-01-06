@@ -33,14 +33,14 @@ namespace {
 //   - what are the constraints on LITERAL and IDENT?
 //   - what is the character set for the grammar?
 //
-// Template = "/" Segments [ Verb ] ;
+// Template = "/" | "/" Segments [ Verb ] ;
 // Segments = Segment { "/" Segment } ;
 // Segment  = "*" | "**" | LITERAL | Variable ;
 // Variable = "{" FieldPath [ "=" Segments ] "}" ;
 // FieldPath = IDENT { "." IDENT } ;
 // Verb     = ":" LITERAL ;
 class Parser {
- public:
+public:
   Parser(const std::string &input)
       : input_(input), tb_(0), te_(0), in_variable_(false) {}
 
@@ -73,7 +73,7 @@ class Parser {
     return true;
   }
 
- private:
+private:
   // Template = "/" Segments [ Verb ] ;
   bool ParseTemplate() {
     if (!Consume('/')) {
@@ -99,7 +99,8 @@ class Parser {
     }
 
     for (;;) {
-      if (!Consume('/')) break;
+      if (!Consume('/'))
+        break;
       if (!ParseSegment()) {
         return false;
       }
@@ -114,25 +115,25 @@ class Parser {
       return false;
     }
     switch (current_char()) {
-      case '*': {
-        Consume('*');
-        if (Consume('*')) {
-          // **
-          segments_.push_back("**");
-          if (in_variable_) {
-            return MarkVariableHasWildCardPath();
-          }
-          return true;
-        } else {
-          segments_.push_back("*");
-          return true;
+    case '*': {
+      Consume('*');
+      if (Consume('*')) {
+        // **
+        segments_.push_back("**");
+        if (in_variable_) {
+          return MarkVariableHasWildCardPath();
         }
+        return true;
+      } else {
+        segments_.push_back("*");
+        return true;
       }
+    }
 
-      case '{':
-        return ParseVariable();
-      default:
-        return ParseLiteralSegment();
+    case '{':
+      return ParseVariable();
+    default:
+      return ParseLiteralSegment();
     }
   }
 
@@ -188,8 +189,10 @@ class Parser {
 
   // Verb     = ":" LITERAL ;
   bool ParseVerb() {
-    if (!Consume(':')) return false;
-    if (!ParseLiteral(&verb_)) return false;
+    if (!Consume(':'))
+      return false;
+    if (!ParseLiteral(&verb_))
+      return false;
     return true;
   }
 
@@ -202,14 +205,14 @@ class Parser {
     while (NextChar()) {
       char c;
       switch (c = current_char()) {
-        case '.':
-        case '}':
-        case '=':
-          return result && AddFieldIdentifier(std::move(idf));
-        default:
-          Consume(c);
-          idf.push_back(c);
-          break;
+      case '.':
+      case '}':
+      case '=':
+        return result && AddFieldIdentifier(std::move(idf));
+      default:
+        Consume(c);
+        idf.push_back(c);
+        break;
       }
       result = true;
     }
@@ -227,14 +230,14 @@ class Parser {
     for (;;) {
       char c;
       switch (c = current_char()) {
-        case '/':
-        case ':':
-        case '}':
-          return result;
-        default:
-          Consume(c);
-          lit->push_back(c);
-          break;
+      case '/':
+      case ':':
+      case '}':
+        return result;
+      default:
+        Consume(c);
+        lit->push_back(c);
+        break;
       }
 
       result = true;
@@ -359,7 +362,7 @@ class Parser {
   std::vector<HttpTemplate::Variable> variables_;
 };
 
-}  // namespace
+} // namespace
 
 const char HttpTemplate::kSingleParameterKey[] = "/.";
 
@@ -368,6 +371,10 @@ const char HttpTemplate::kWildCardPathPartKey[] = "*";
 const char HttpTemplate::kWildCardPathKey[] = "**";
 
 std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string &ht) {
+  if (ht == "/") {
+    return std::unique_ptr<HttpTemplate>(new HttpTemplate({}, {}, {}));
+  }
+
   Parser p(ht);
   if (!p.Parse() || !p.ValidateParts()) {
     return nullptr;
@@ -377,6 +384,6 @@ std::unique_ptr<HttpTemplate> HttpTemplate::Parse(const std::string &ht) {
       std::move(p.segments()), std::move(p.verb()), std::move(p.variables())));
 }
 
-}  // namespace transcoding
-}  // namespace grpc
-}  // namespace google
+} // namespace transcoding
+} // namespace grpc
+} // namespace google

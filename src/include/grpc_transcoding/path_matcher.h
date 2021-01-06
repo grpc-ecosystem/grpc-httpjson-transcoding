@@ -30,7 +30,7 @@ namespace grpc {
 namespace transcoding {
 
 template <class Method>
-class PathMatcherBuilder;  // required for PathMatcher constructor
+class PathMatcherBuilder; // required for PathMatcher constructor
 
 enum class UrlUnescapeSpec {
   // URL path parameters will not decode RFC 6570 reserved characters.
@@ -61,23 +61,22 @@ enum class UrlUnescapeSpec {
 //                                           url_path);
 //      if (method == nullptr)  failed to find it.
 //
-template <class Method>
-class PathMatcher {
- public:
+template <class Method> class PathMatcher {
+public:
   ~PathMatcher(){};
 
   // TODO: Do not template VariableBinding
   template <class VariableBinding>
-  Method Lookup(const std::string& http_method, const std::string& path,
-                const std::string& query_params,
-                std::vector<VariableBinding>* variable_bindings,
-                std::string* body_field_path) const;
+  Method Lookup(const std::string &http_method, const std::string &path,
+                const std::string &query_params,
+                std::vector<VariableBinding> *variable_bindings,
+                std::string *body_field_path) const;
 
-  Method Lookup(const std::string& http_method, const std::string& path) const;
+  Method Lookup(const std::string &http_method, const std::string &path) const;
 
- private:
+private:
   // Creates a Path Matcher with a Builder by moving the builder's root node.
-  explicit PathMatcher(PathMatcherBuilder<Method>&& builder);
+  explicit PathMatcher(PathMatcherBuilder<Method> &&builder);
 
   // A root node shared by all services, i.e. paths of all services will be
   // registered to this node.
@@ -96,7 +95,7 @@ class PathMatcher {
   std::vector<std::unique_ptr<MethodData>> methods_;
   UrlUnescapeSpec unescape_spec_;
 
- private:
+private:
   friend class PathMatcherBuilder<Method>;
 };
 
@@ -107,9 +106,8 @@ using PathMatcherPtr = std::unique_ptr<PathMatcher<Method>>;
 // instantiate an immutable, thread safe PathMatcher.
 //
 // The PathMatcherBuilder itself is NOT THREAD SAFE.
-template <class Method>
-class PathMatcherBuilder {
- public:
+template <class Method> class PathMatcherBuilder {
+public:
   PathMatcherBuilder();
   ~PathMatcherBuilder() {}
 
@@ -118,13 +116,13 @@ class PathMatcherBuilder {
   // Registrations are one-to-one. If this function is called more than once, it
   // replaces the existing method. Only the last registered method is stored.
   // Return false if path is an invalid http template.
-  bool Register(
-      const std::string& http_method, const std::string& path,
-      const std::string& body_field_path,
-      const std::unordered_set<std::string>& system_query_parameter_names,
-      Method method);
-  bool Register(const std::string& http_method, const std::string& path,
-                const std::string& body_field_path, Method method);
+  bool
+  Register(const std::string &http_method, const std::string &path,
+           const std::string &body_field_path,
+           const std::unordered_set<std::string> &system_query_parameter_names,
+           Method method);
+  bool Register(const std::string &http_method, const std::string &path,
+                const std::string &body_field_path, Method method);
 
   // Change unescaping behavior, see UrlUnescapeSpec for available options.
   void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
@@ -136,11 +134,11 @@ class PathMatcherBuilder {
   // will be moved so cannot use after invoking Build().
   PathMatcherPtr<Method> Build();
 
- private:
+private:
   // Inserts a path to a PathMatcherNode.
-  void InsertPathToNode(const PathMatcherNode::PathInfo& path,
-                        void* method_data, std::string http_method,
-                        bool mark_duplicates, PathMatcherNode* root_ptr);
+  void InsertPathToNode(const PathMatcherNode::PathInfo &path,
+                        void *method_data, std::string http_method,
+                        bool mark_duplicates, PathMatcherNode *root_ptr);
   // A root node shared by all services, i.e. paths of all services will be
   // registered to this node.
   std::unique_ptr<PathMatcherNode> root_ptr_;
@@ -159,8 +157,8 @@ class PathMatcherBuilder {
 
 namespace {
 
-std::vector<std::string>& split(const std::string& s, char delim,
-                                std::vector<std::string>& elems) {
+std::vector<std::string> &split(const std::string &s, char delim,
+                                std::vector<std::string> &elems) {
   std::stringstream ss(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
@@ -172,27 +170,27 @@ std::vector<std::string>& split(const std::string& s, char delim,
 inline bool IsReservedChar(char c) {
   // Reserved characters according to RFC 6570
   switch (c) {
-    case '!':
-    case '#':
-    case '$':
-    case '&':
-    case '\'':
-    case '(':
-    case ')':
-    case '*':
-    case '+':
-    case ',':
-    case '/':
-    case ':':
-    case ';':
-    case '=':
-    case '?':
-    case '@':
-    case '[':
-    case ']':
-      return true;
-    default:
-      return false;
+  case '!':
+  case '#':
+  case '$':
+  case '&':
+  case '\'':
+  case '(':
+  case ')':
+  case '*':
+  case '+':
+  case ',':
+  case '/':
+  case ':':
+  case ';':
+  case '=':
+  case '?':
+  case '@':
+  case '[':
+  case ']':
+    return true;
+  default:
+    return false;
   }
 }
 
@@ -222,25 +220,25 @@ inline int hex_digit_to_int(char c) {
 //
 // If the next three characters are an escaped character then this function will
 // also return what character is escaped.
-bool GetEscapedChar(const std::string& src, size_t i,
-                    UrlUnescapeSpec unescape_spec, char* out) {
+bool GetEscapedChar(const std::string &src, size_t i,
+                    UrlUnescapeSpec unescape_spec, char *out) {
   if (i + 2 < src.size() && src[i] == '%') {
     if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
       char c =
           (hex_digit_to_int(src[i + 1]) << 4) | hex_digit_to_int(src[i + 2]);
       switch (unescape_spec) {
-        case UrlUnescapeSpec::kAllCharactersExceptReserved:
-          if (IsReservedChar(c)) {
-            return false;
-          }
-          break;
-        case UrlUnescapeSpec::kAllCharactersExceptSlash:
-          if (c == '/') {
-            return false;
-          }
-          break;
-        case UrlUnescapeSpec::kAllCharacters:
-          break;
+      case UrlUnescapeSpec::kAllCharactersExceptReserved:
+        if (IsReservedChar(c)) {
+          return false;
+        }
+        break;
+      case UrlUnescapeSpec::kAllCharactersExceptSlash:
+        if (c == '/') {
+          return false;
+        }
+        break;
+      case UrlUnescapeSpec::kAllCharacters:
+        break;
       }
       *out = c;
       return true;
@@ -252,7 +250,7 @@ bool GetEscapedChar(const std::string& src, size_t i,
 // Unescapes string 'part' and returns the unescaped string. Reserved characters
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
 // false.
-std::string UrlUnescapeString(const std::string& part,
+std::string UrlUnescapeString(const std::string &part,
                               UrlUnescapeSpec unescape_spec) {
   std::string unescaped;
   // Check whether we need to escape at all.
@@ -271,8 +269,8 @@ std::string UrlUnescapeString(const std::string& part,
 
   unescaped.resize(part.size());
 
-  char* begin = &(unescaped)[0];
-  char* p = begin;
+  char *begin = &(unescaped)[0];
+  char *p = begin;
 
   for (size_t i = 0; i < part.size();) {
     if (GetEscapedChar(part, i, unescape_spec, &ch)) {
@@ -289,11 +287,11 @@ std::string UrlUnescapeString(const std::string& part,
 }
 
 template <class VariableBinding>
-void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
-                             const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings,
+void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable> &vars,
+                             const std::vector<std::string> &parts,
+                             std::vector<VariableBinding> *bindings,
                              UrlUnescapeSpec unescape_spec) {
-  for (const auto& var : vars) {
+  for (const auto &var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
     //
@@ -327,9 +325,9 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
 
 template <class VariableBinding>
 void ExtractBindingsFromQueryParameters(
-    const std::string& query_params,
-    const std::unordered_set<std::string>& system_params,
-    std::vector<VariableBinding>* bindings) {
+    const std::string &query_params,
+    const std::unordered_set<std::string> &system_params,
+    std::vector<VariableBinding> *bindings) {
   // The bindings in URL the query parameters have the following form:
   //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
   // Query parameters may also contain system parameters such as `api_key`.
@@ -337,7 +335,7 @@ void ExtractBindingsFromQueryParameters(
   //      book.id=123&book.author=Neal%20Stephenson&api_key=AIzaSyAz7fhBkC35D2M
   std::vector<std::string> params;
   split(query_params, '&', params);
-  for (const auto& param : params) {
+  for (const auto &param : params) {
     size_t pos = param.find('=');
     if (pos != 0 && pos != std::string::npos) {
       auto name = param.substr(0, pos);
@@ -368,8 +366,9 @@ void ExtractBindingsFromQueryParameters(
 //
 // - Strips off query string: "/a?foo=bar" --> "/a"
 // - Collapses extra slashes: "///" --> "/"
-std::vector<std::string> ExtractRequestParts(
-    std::string path, const std::unordered_set<std::string>& custom_verbs) {
+std::vector<std::string>
+ExtractRequestParts(std::string path,
+                    const std::unordered_set<std::string> &custom_verbs) {
   // Remove query parameters.
   path = path.substr(0, path.find_first_of('?'));
 
@@ -398,18 +397,19 @@ std::vector<std::string> ExtractRequestParts(
 }
 
 // Looks up on a PathMatcherNode.
-PathMatcherLookupResult LookupInPathMatcherNode(
-    const PathMatcherNode& root, const std::vector<std::string>& parts,
-    const HttpMethod& http_method) {
+PathMatcherLookupResult
+LookupInPathMatcherNode(const PathMatcherNode &root,
+                        const std::vector<std::string> &parts,
+                        const HttpMethod &http_method) {
   PathMatcherLookupResult result;
   root.LookupPath(parts.begin(), parts.end(), http_method, &result);
   return result;
 }
 
-PathMatcherNode::PathInfo TransformHttpTemplate(const HttpTemplate& ht) {
+PathMatcherNode::PathInfo TransformHttpTemplate(const HttpTemplate &ht) {
   PathMatcherNode::PathInfo::Builder builder;
 
-  for (const std::string& part : ht.segments()) {
+  for (const std::string &part : ht.segments()) {
     builder.AppendLiteralNode(part);
   }
   if (!ht.verb().empty()) {
@@ -419,10 +419,10 @@ PathMatcherNode::PathInfo TransformHttpTemplate(const HttpTemplate& ht) {
   return builder.Build();
 }
 
-}  // namespace
+} // namespace
 
 template <class Method>
-PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
+PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method> &&builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)),
@@ -438,11 +438,12 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
 // benefit)
 template <class Method>
 template <class VariableBinding>
-Method PathMatcher<Method>::Lookup(
-    const std::string& http_method, const std::string& path,
-    const std::string& query_params,
-    std::vector<VariableBinding>* variable_bindings,
-    std::string* body_field_path) const {
+Method
+PathMatcher<Method>::Lookup(const std::string &http_method,
+                            const std::string &path,
+                            const std::string &query_params,
+                            std::vector<VariableBinding> *variable_bindings,
+                            std::string *body_field_path) const {
   const std::vector<std::string> parts =
       ExtractRequestParts(path, custom_verbs_);
 
@@ -458,7 +459,7 @@ Method PathMatcher<Method>::Lookup(
   if (lookup_result.data == nullptr || lookup_result.is_multiple) {
     return nullptr;
   }
-  MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
+  MethodData *method_data = reinterpret_cast<MethodData *>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
     ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
@@ -475,8 +476,8 @@ Method PathMatcher<Method>::Lookup(
 
 // TODO: refactor common code with method above
 template <class Method>
-Method PathMatcher<Method>::Lookup(const std::string& http_method,
-                                   const std::string& path) const {
+Method PathMatcher<Method>::Lookup(const std::string &http_method,
+                                   const std::string &path) const {
   const std::vector<std::string> parts =
       ExtractRequestParts(path, custom_verbs_);
 
@@ -492,7 +493,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
   if (lookup_result.data == nullptr || lookup_result.is_multiple) {
     return nullptr;
   }
-  MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
+  MethodData *method_data = reinterpret_cast<MethodData *>(lookup_result.data);
   return method_data->method;
 }
 
@@ -508,8 +509,8 @@ PathMatcherPtr<Method> PathMatcherBuilder<Method>::Build() {
 
 template <class Method>
 void PathMatcherBuilder<Method>::InsertPathToNode(
-    const PathMatcherNode::PathInfo& path, void* method_data,
-    std::string http_method, bool mark_duplicates, PathMatcherNode* root_ptr) {
+    const PathMatcherNode::PathInfo &path, void *method_data,
+    std::string http_method, bool mark_duplicates, PathMatcherNode *root_ptr) {
   if (root_ptr->InsertPath(path, http_method, method_data, mark_duplicates)) {
     //    VLOG(3) << "Registered WrapperGraph for " <<
     //    http_template.as_string();
@@ -522,18 +523,16 @@ void PathMatcherBuilder<Method>::InsertPathToNode(
 // template into the trie.
 template <class Method>
 bool PathMatcherBuilder<Method>::Register(
-    const std::string& http_method, const std::string& http_template,
-    const std::string& body_field_path,
-    const std::unordered_set<std::string>& system_query_parameter_names,
+    const std::string &http_method, const std::string &http_template,
+    const std::string &body_field_path,
+    const std::unordered_set<std::string> &system_query_parameter_names,
     Method method) {
   std::unique_ptr<HttpTemplate> ht(HttpTemplate::Parse(http_template));
   if (nullptr == ht) {
     return false;
   }
   PathMatcherNode::PathInfo path_info = TransformHttpTemplate(*ht);
-  if (path_info.path_info().size() == 0) {
-    return false;
-  }
+
   // Create & initialize a MethodData struct. Then insert its pointer
   // into the path matcher trie.
   auto method_data = std::unique_ptr<MethodData>(new MethodData());
@@ -553,16 +552,16 @@ bool PathMatcherBuilder<Method>::Register(
 }
 
 template <class Method>
-bool PathMatcherBuilder<Method>::Register(const std::string& http_method,
-                                          const std::string& http_template,
-                                          const std::string& body_field_path,
+bool PathMatcherBuilder<Method>::Register(const std::string &http_method,
+                                          const std::string &http_template,
+                                          const std::string &body_field_path,
                                           Method method) {
   return Register(http_method, http_template, body_field_path,
                   std::unordered_set<std::string>(), method);
 }
 
-}  // namespace transcoding
-}  // namespace grpc
-}  // namespace google
+} // namespace transcoding
+} // namespace grpc
+} // namespace google
 
-#endif  // GRPC_TRANSCODING_PATH_MATCHER_H_
+#endif // GRPC_TRANSCODING_PATH_MATCHER_H_
