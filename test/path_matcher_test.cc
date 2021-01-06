@@ -206,11 +206,11 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   EXPECT_NE(nullptr, c_d__);
   EXPECT_NE(nullptr, c_de);
   EXPECT_NE(nullptr, cfde);
+  EXPECT_NE(nullptr, root);
 
   EXPECT_EQ(LookupNoBindings("GET", "/a/b"), a__);
   EXPECT_EQ(LookupNoBindings("GET", "/a/b/c"), a__);
   EXPECT_EQ(LookupNoBindings("GET", "/b/c"), b_);
-  EXPECT_EQ(LookupNoBindings("GET", "/"), root);
 
   EXPECT_EQ(LookupNoBindings("GET", "b/c/d"), nullptr);
   EXPECT_EQ(LookupNoBindings("GET", "/c/u/d/v"), c_d__);
@@ -222,6 +222,8 @@ TEST_F(PathMatcherTest, WildCardMatches) {
   EXPECT_EQ(LookupNoBindings("GET", "/c/x/d/e"), c_de);
   // Test that more specific match overrides wildcard "*"" match.
   EXPECT_EQ(LookupNoBindings("GET", "/c/f/d/e"), cfde);
+
+  EXPECT_EQ(LookupNoBindings("GET", "/"), root);
 }
 
 TEST_F(PathMatcherTest, VariableBindings) {
