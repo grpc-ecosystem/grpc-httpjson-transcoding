@@ -18,9 +18,9 @@
 load(
     "//:repositories.bzl",
     "absl_repositories",
-    "protobuf_repositories",
-    "googletest_repositories",
     "googleapis_repositories",
+    "googletest_repositories",
+    "protobuf_repositories",
 )
 
 absl_repositories()
@@ -30,3 +30,20 @@ protobuf_repositories()
 googletest_repositories()
 
 googleapis_repositories()
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
+rules_proto_dependencies()
+
+rules_proto_toolchains()
+
+load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
+
+switched_rules_by_language(
+    name = "com_google_googleapis_imports",
+    cc = True,
+)
