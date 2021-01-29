@@ -19,7 +19,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 ABSEIL_COMMIT = "99477fa9f1e89a7d8253c8aeee331864710d080c"
 ABSEIL_SHA256 = "495e8e1c481018126b2a84bfe36e273907ce282b135e7d161e138e463d295f3d"
 
-def absl_repositories(bind=True):
+def absl_repositories(bind = True):
     http_archive(
         name = "com_google_absl",
         strip_prefix = "abseil-cpp-" + ABSEIL_COMMIT,
@@ -92,22 +92,13 @@ cc_library(
         build_file_content = BUILD,
     )
 
+PROTOBUF_COMMIT = "3.10.1"  # Oct 29, 2019
+PROTOBUF_SHA256 = "6adf73fd7f90409e479d6ac86529ade2d45f50494c5c10f539226693cb8fe4f7"
 
-BAZEL_SKYLIB_RELEASE = "0.8.0"
-BAZEL_SKYLIB_SHA256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e"
+RULES_PROTO_SHA = "97d8af4dc474595af3900dd85cb3a29ad28cc313"
+RULES_PROTO_SHA256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208"
 
-PROTOBUF_COMMIT = "3.9.0"  # July 10, 2019
-PROTOBUF_SHA256 = "2ee9dcec820352671eb83e081295ba43f7a4157181dad549024d7070d079cf65"
-
-def protobuf_repositories(bind=True):
-    zlib_repositories(bind)
-
-    http_archive(
-        name = "bazel_skylib",
-        urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/" + BAZEL_SKYLIB_RELEASE + "/bazel-skylib." + BAZEL_SKYLIB_RELEASE + ".tar.gz"],
-        sha256 = BAZEL_SKYLIB_SHA256,
-    )
-
+def protobuf_repositories(bind = True):
     http_archive(
         name = "com_google_protobuf",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
@@ -115,41 +106,20 @@ def protobuf_repositories(bind=True):
         sha256 = PROTOBUF_SHA256,
     )
 
-    if bind:
-        native.bind(
-            name = "protoc",
-            actual = "@com_google_protobuf//:protoc",
-        )
-
-        native.bind(
-            name = "protobuf",
-            actual = "@com_google_protobuf//:protobuf",
-        )
-
-        native.bind(
-            name = "cc_wkt_protos",
-            actual = "@com_google_protobuf//:cc_wkt_protos",
-        )
-
-        native.bind(
-            name = "cc_wkt_protos_genproto",
-            actual = "@com_google_protobuf//:cc_wkt_protos_genproto",
-        )
-
-        native.bind(
-            name = "protobuf_compiler",
-            actual = "@com_google_protobuf//:protoc_lib",
-        )
-
-        native.bind(
-            name = "protobuf_clib",
-            actual = "@com_google_protobuf//:protoc_lib",
-        )
+    http_archive(
+        name = "rules_proto",
+        sha256 = RULES_PROTO_SHA256,
+        strip_prefix = "rules_proto-" + RULES_PROTO_SHA,
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
+            "https://github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
+        ],
+    )
 
 GOOGLETEST_COMMIT = "43863938377a9ea1399c0596269e0890b5c5515a"
 GOOGLETEST_SHA256 = "7c8ece456ad588c30160429498e108e2df6f42a30888b3ec0abf5d9792d9d3a0"
 
-def googletest_repositories(bind=True):
+def googletest_repositories(bind = True):
     BUILD = """
 # Copyright 2016 Google Inc. All Rights Reserved.
 #
@@ -235,100 +205,13 @@ cc_library(
             actual = "@googletest_git//:googletest_prod",
         )
 
-GOOGLEAPIS_COMMIT = "32a10f69e2c9ce15bba13ab1ff928bacebb25160" # May 20, 2019
-GOOGLEAPIS_SHA256 = "6861efa8619579e06e70dd4765cdf6cef1ecad6a1a2026ad750541e99552bf71"
+GOOGLEAPIS_COMMIT = "1d5522ad1056f16a6d593b8f3038d831e64daeea"  # Sept 03, 2020
+GOOGLEAPIS_SHA256 = "cd13e547cffaad217c942084fd5ae0985a293d0cce3e788c20796e5e2ea54758"
 
-def googleapis_repositories(protobuf_repo="@com_google_protobuf//", bind=True):
-    BUILD = """
-# Copyright 2016 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
-#
-
-licenses(["notice"])
-
-load("{0}:protobuf.bzl", "cc_proto_library")
-
-exports_files(glob(["google/**"]))
-
-cc_proto_library(
-    name = "http_api_protos",
-    srcs = [
-        "google/api/annotations.proto",
-        "google/api/http.proto",
-    ],
-    default_runtime = "//external:protobuf",
-    protoc = "//external:protoc",
-    visibility = ["//visibility:public"],
-    deps = ["{0}:cc_wkt_protos"],
-)
-
-cc_proto_library(
-    name = "service_config",
-    srcs = [
-        "google/api/auth.proto",
-        "google/api/backend.proto",
-        "google/api/billing.proto",
-        "google/api/consumer.proto",
-        "google/api/context.proto",
-        "google/api/control.proto",
-        "google/api/documentation.proto",
-        "google/api/endpoint.proto",
-        "google/api/label.proto",
-        "google/api/launch_stage.proto",
-        "google/api/log.proto",
-        "google/api/logging.proto",
-        "google/api/metric.proto",
-        "google/api/experimental/experimental.proto",
-        "google/api/experimental/authorization_config.proto",
-        "google/api/monitored_resource.proto",
-        "google/api/monitoring.proto",
-        "google/api/resource.proto",
-        "google/api/quota.proto",
-        "google/api/service.proto",
-        "google/api/source_info.proto",
-        "google/api/system_parameter.proto",
-        "google/api/usage.proto",
-    ],
-    include = ".",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":http_api_protos",
-        "//external:cc_wkt_protos",
-    ],
-    protoc = "//external:protoc",
-    default_runtime = "//external:protobuf",
-)
-""".format(protobuf_repo)
-
+def googleapis_repositories(bind = True):
     http_archive(
-        name = "googleapis_git",
-        patch_cmds = ["find . -type f -name '*BUILD*' | xargs rm"],
+        name = "com_google_googleapis",
         strip_prefix = "googleapis-" + GOOGLEAPIS_COMMIT,
         url = "https://github.com/googleapis/googleapis/archive/" + GOOGLEAPIS_COMMIT + ".tar.gz",
-        build_file_content = BUILD,
         sha256 = GOOGLEAPIS_SHA256,
     )
-
-    if bind:
-        native.bind(
-            name = "service_config",
-            actual = "@googleapis_git//:service_config",
-        )
-
-        native.bind(
-            name = "http_api_protos",
-            actual = "@googleapis_git//:http_api_protos",
-        )

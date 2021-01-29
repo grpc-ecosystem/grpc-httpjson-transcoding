@@ -25,8 +25,8 @@ cc_library(
         "include/",
     ],
     deps = [
-        "//external:protobuf",
-    ]
+        "@com_google_protobuf//:protobuf",
+    ],
 )
 
 cc_library(
@@ -38,7 +38,7 @@ cc_library(
         "include/grpc_transcoding/prefix_writer.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":protobuf",
@@ -55,7 +55,7 @@ cc_library(
         "include/grpc_transcoding/request_weaver.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":protobuf",
@@ -71,11 +71,11 @@ cc_library(
         "include/grpc_transcoding/message_stream.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":transcoder_input_stream",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -88,13 +88,13 @@ cc_library(
         "include/grpc_transcoding/request_message_translator.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":message_stream",
         ":prefix_writer",
-        ":request_weaver",
         ":protobuf",
+        ":request_weaver",
     ],
 )
 
@@ -107,25 +107,25 @@ cc_library(
         "include/grpc_transcoding/request_stream_translator.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":request_message_translator",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
 cc_library(
     name = "path_matcher",
     srcs = [
-        "path_matcher_node.cc",
         "include/grpc_transcoding/path_matcher_node.h",
+        "path_matcher_node.cc",
     ],
     hdrs = [
         "include/grpc_transcoding/path_matcher.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":http_template",
@@ -141,7 +141,7 @@ cc_library(
         "include/grpc_transcoding/http_template.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
 )
 
@@ -151,11 +151,11 @@ cc_library(
         "include/grpc_transcoding/path_matcher_utility.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":path_matcher",
-        "//external:http_api_protos",
+        "@com_google_googleapis//google/api:http_cc_proto",
     ],
 )
 
@@ -168,12 +168,12 @@ cc_library(
         "include/grpc_transcoding/json_request_translator.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":request_message_translator",
         ":request_stream_translator",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -186,11 +186,11 @@ cc_library(
         "include/grpc_transcoding/message_reader.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":transcoder_input_stream",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -203,12 +203,12 @@ cc_library(
         "include/grpc_transcoding/response_to_json_translator.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":message_reader",
         ":message_stream",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -218,10 +218,10 @@ cc_library(
         "include/grpc_transcoding/transcoder_input_stream.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -231,7 +231,7 @@ cc_library(
         "include/grpc_transcoding/transcoder.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
         ":json_request_translator",
@@ -239,7 +239,7 @@ cc_library(
         ":path_matcher_utility",
         ":response_to_json_translator",
         ":type_helper",
-        "//external:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -252,10 +252,10 @@ cc_library(
         "include/grpc_transcoding/type_helper.h",
     ],
     includes = [
-        "include/"
+        "include/",
     ],
     deps = [
-        "//external:protobuf",
         "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
     ],
 )

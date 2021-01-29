@@ -106,8 +106,8 @@ cc_test(
     deps = [
         ":test_common",
         "//external:googletest_main",
-        "//external:service_config",
         "//src:type_helper",
+        "@com_google_googleapis//google/api:service_cc_proto",
     ],
 )
 
@@ -118,9 +118,9 @@ cc_library(
     hdrs = ["test_common.h"],
     deps = [
         "//external:googletest",
-        "//external:protobuf",
-        "//external:service_config",
         "//src:transcoder_input_stream",
+        "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -139,10 +139,10 @@ cc_library(
         ":bookstore_cc_proto",
         ":test_common",
         "//external:googletest",
-        "//external:protobuf",
-        "//external:service_config",
         "//src:request_message_translator",
         "//src:type_helper",
+        "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
