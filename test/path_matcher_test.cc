@@ -53,6 +53,7 @@ bool operator==(const Binding& b1, const Binding& b2) {
   return b1.field_path == b2.field_path && b1.value == b2.value;
 }
 
+#if 0
 std::string FieldPathToString(const FieldPath& fp) {
   std::string s;
   for (const auto& f : fp) {
@@ -74,6 +75,7 @@ std::ostream& operator<<(std::ostream& os, const Bindings& bindings) {
   }
   return os;
 }
+#endif
 
 }  // namespace
 
@@ -429,7 +431,30 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
   EXPECT_NE(nullptr, verb);
 
   Bindings bindings;
+  // with the verb
   EXPECT_EQ(Lookup("GET", "/person:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/person/jason:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person/jason"}}), bindings);
+
+  // with the verb but with a different prefix
+  EXPECT_EQ(Lookup("GET", "/animal:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/animal/cat:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal/cat"}}), bindings);
+
+  // without a verb
+  EXPECT_EQ(Lookup("GET", "/person", &bindings), list_person);
+  EXPECT_EQ(Lookup("GET", "/person/jason", &bindings), get_person);
+  EXPECT_EQ(Lookup("GET", "/animal", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/animal/cat", &bindings), nullptr);
+
+  // with a non-verb
+  EXPECT_EQ(Lookup("GET", "/person:other", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/person/jason:other", &bindings), get_person);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:other"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/animal:other", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
 }
 
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
