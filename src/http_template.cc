@@ -335,12 +335,6 @@ class Parser {
         // this will allow the matcher code to reconstruct the variable
         // value based on the url segments.
         var.end_segment = (var.end_segment - segments_.size() - 1);
-
-        if (!verb_.empty()) {
-          // a custom verb will add an additional segment, so
-          // the end_postion needs a -1
-          --var.end_segment;
-        }
       }
     }
   }

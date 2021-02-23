@@ -418,6 +418,20 @@ TEST_F(PathMatcherTest,
   MultiSegmentMatchWithReservedCharactersBase("!#$&'()*+,/:;=?@[]");
 }
 
+TEST_F(PathMatcherTest, CustomVerbIssue) {
+  MethodInfo* list_person = AddGetPath("/person");
+  MethodInfo* get_person = AddGetPath("/person/{id=*}");
+  MethodInfo* verb = AddGetPath("/{x=**}:verb");
+  Build();
+
+  EXPECT_NE(nullptr, list_person);
+  EXPECT_NE(nullptr, get_person);
+  EXPECT_NE(nullptr, verb);
+
+  Bindings bindings;
+  EXPECT_EQ(Lookup("GET", "/person:verb", &bindings), verb);
+}
+
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
   MethodInfo* a_verb = AddGetPath("/a/{y=*}:verb");
   MethodInfo* ad__verb = AddGetPath("/a/{y=d/**}:verb");

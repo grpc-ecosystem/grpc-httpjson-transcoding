@@ -233,7 +233,7 @@ TEST(HttpTemplate, ParseTest16) {
   ASSERT_EQ(Segments({"a", "c", "**", "d", "e"}), ht->segments());
   ASSERT_EQ("verb", ht->verb());
   ASSERT_EQ(Variables({
-                Variable{1, -3, FieldPath{"b"}, true},
+                Variable{1, -2, FieldPath{"b"}, true},
             }),
             ht->Variables());
 }
@@ -399,7 +399,7 @@ TEST(HttpTemplate, VariableAndCustomVerbTests) {
   ASSERT_EQ(Segments({"**"}), ht->segments());
   ASSERT_EQ("myverb", ht->verb());
   ASSERT_EQ(Variables({
-                Variable{0, -2, FieldPath{"x"}, true},
+                Variable{0, -1, FieldPath{"x"}, true},
             }),
             ht->Variables());
 
@@ -409,7 +409,7 @@ TEST(HttpTemplate, VariableAndCustomVerbTests) {
   ASSERT_EQ(Segments({"**"}), ht->segments());
   ASSERT_EQ("myverb", ht->verb());
   ASSERT_EQ(Variables({
-                Variable{0, -2, FieldPath{"x", "y", "z"}, true},
+                Variable{0, -1, FieldPath{"x", "y", "z"}, true},
             }),
             ht->Variables());
 
@@ -419,7 +419,7 @@ TEST(HttpTemplate, VariableAndCustomVerbTests) {
   ASSERT_EQ(Segments({"a", "**", "b"}), ht->segments());
   ASSERT_EQ("custom", ht->verb());
   ASSERT_EQ(Variables({
-                Variable{0, -2, FieldPath{"x", "y", "z"}, true},
+                Variable{0, -1, FieldPath{"x", "y", "z"}, true},
             }),
             ht->Variables());
 
@@ -429,7 +429,7 @@ TEST(HttpTemplate, VariableAndCustomVerbTests) {
   ASSERT_EQ(Segments({"a", "**", "b", "c", "d"}), ht->segments());
   ASSERT_EQ("custom", ht->verb());
   ASSERT_EQ(Variables({
-                Variable{0, -4, FieldPath{"x", "y", "z"}, true},
+                Variable{0, -3, FieldPath{"x", "y", "z"}, true},
             }),
             ht->Variables());
 }
