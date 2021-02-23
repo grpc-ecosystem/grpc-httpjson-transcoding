@@ -53,6 +53,8 @@ bool operator==(const Binding& b1, const Binding& b2) {
   return b1.field_path == b2.field_path && b1.value == b2.value;
 }
 
+// These comment out code will be useful when debugging. It can be added as:
+//   std::cerr << Bingings;
 #if 0
 std::string FieldPathToString(const FieldPath& fp) {
   std::string s;
