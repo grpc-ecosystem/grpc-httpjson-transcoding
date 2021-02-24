@@ -369,7 +369,8 @@ void ExtractBindingsFromQueryParameters(
 // - Strips off query string: "/a?foo=bar" --> "/a"
 // - Collapses extra slashes: "///" --> "/"
 std::vector<std::string> ExtractRequestParts(
-    std::string path, const std::unordered_set<std::string>& custom_verbs) {
+    std::string path, const std::unordered_set<std::string>& custom_verbs,
+    std::string& verb) {
   // Remove query parameters.
   path = path.substr(0, path.find_first_of('?'));
 
@@ -378,11 +379,11 @@ std::vector<std::string> ExtractRequestParts(
   std::size_t last_colon_pos = path.find_last_of(':');
   std::size_t last_slash_pos = path.find_last_of('/');
   if (last_colon_pos != std::string::npos && last_colon_pos > last_slash_pos) {
-    std::string verb = path.substr(last_colon_pos + 1);
+    std::string tmp_verb = path.substr(last_colon_pos + 1);
     // only verb in the configured custom verbs, treat it as verb
-    // replace ":" with / as a separate segment.
-    if (custom_verbs.find(verb) != custom_verbs.end()) {
-      path[last_colon_pos] = '/';
+    if (custom_verbs.find(tmp_verb) != custom_verbs.end()) {
+      verb = tmp_verb;
+      path = path.substr(0, last_colon_pos);
     }
   }
 
@@ -412,9 +413,6 @@ PathMatcherNode::PathInfo TransformHttpTemplate(const HttpTemplate& ht) {
   for (const std::string& part : ht.segments()) {
     builder.AppendLiteralNode(part);
   }
-  if (!ht.verb().empty()) {
-    builder.AppendLiteralNode(ht.verb());
-  }
 
   return builder.Build();
 }
@@ -443,8 +441,9 @@ Method PathMatcher<Method>::Lookup(
     const std::string& query_params,
     std::vector<VariableBinding>* variable_bindings,
     std::string* body_field_path) const {
+  std::string verb;
   const std::vector<std::string> parts =
-      ExtractRequestParts(path, custom_verbs_);
+      ExtractRequestParts(path, custom_verbs_, verb);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
@@ -453,7 +452,7 @@ Method PathMatcher<Method>::Lookup(
   }
 
   PathMatcherLookupResult lookup_result =
-      LookupInPathMatcherNode(*root_ptr_, parts, http_method);
+      LookupInPathMatcherNode(*root_ptr_, parts, http_method + verb);
   // Return nullptr if nothing is found or the result is marked for duplication.
   if (lookup_result.data == nullptr || lookup_result.is_multiple) {
     return nullptr;
@@ -477,8 +476,9 @@ Method PathMatcher<Method>::Lookup(
 template <class Method>
 Method PathMatcher<Method>::Lookup(const std::string& http_method,
                                    const std::string& path) const {
+  std::string verb;
   const std::vector<std::string> parts =
-      ExtractRequestParts(path, custom_verbs_);
+      ExtractRequestParts(path, custom_verbs_, verb);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
@@ -487,7 +487,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
   }
 
   PathMatcherLookupResult lookup_result =
-      LookupInPathMatcherNode(*root_ptr_, parts, http_method);
+      LookupInPathMatcherNode(*root_ptr_, parts, http_method + verb);
   // Return nullptr if nothing is found or the result is marked for duplication.
   if (lookup_result.data == nullptr || lookup_result.is_multiple) {
     return nullptr;
@@ -540,7 +540,7 @@ bool PathMatcherBuilder<Method>::Register(
   method_data->body_field_path = body_field_path;
   method_data->system_query_parameter_names = system_query_parameter_names;
 
-  InsertPathToNode(path_info, method_data.get(), http_method, true,
+  InsertPathToNode(path_info, method_data.get(), http_method + ht->verb(), true,
                    root_ptr_.get());
   // Add the method_data to the methods_ vector for cleanup
   methods_.emplace_back(std::move(method_data));
