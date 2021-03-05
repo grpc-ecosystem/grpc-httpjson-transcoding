@@ -26,6 +26,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
+        ":test_common",
         "//external:googletest_main",
         "//src:http_template",
     ],
@@ -39,6 +40,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
+        ":test_common",
         "//external:googletest_main",
         "//src:path_matcher",
     ],
@@ -52,6 +54,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
+        ":test_common",
         "//external:googletest_main",
         "//src:path_matcher_utility",
     ],
@@ -64,6 +67,7 @@ cc_test(
         "prefix_writer_test.cc",
     ],
     deps = [
+        ":test_common",
         "//external:googletest_main",
         "//src:prefix_writer",
     ],
@@ -76,6 +80,7 @@ cc_test(
         "request_weaver_test.cc",
     ],
     deps = [
+        ":test_common",
         "//external:googletest_main",
         "//src:request_weaver",
         "@com_google_absl//absl/strings",
@@ -176,6 +181,7 @@ cc_test(
     deps = [
         ":bookstore_cc_proto",
         ":request_translator_test_base",
+        ":test_common",
         "//external:googletest_main",
         "//src:request_stream_translator",
     ],
