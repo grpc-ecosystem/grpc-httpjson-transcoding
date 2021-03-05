@@ -26,8 +26,8 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//external:googletest_main",
         "//src:http_template",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -39,8 +39,8 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//external:googletest_main",
         "//src:path_matcher",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -52,8 +52,8 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//external:googletest_main",
         "//src:path_matcher_utility",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -64,8 +64,9 @@ cc_test(
         "prefix_writer_test.cc",
     ],
     deps = [
-        "//external:googletest_main",
         "//src:prefix_writer",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -76,9 +77,9 @@ cc_test(
         "request_weaver_test.cc",
     ],
     deps = [
-        "//external:googletest_main",
         "//src:request_weaver",
         "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -105,9 +106,9 @@ cc_test(
     ],
     deps = [
         ":test_common",
-        "//external:googletest_main",
         "//src:type_helper",
         "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -117,9 +118,9 @@ cc_library(
     srcs = ["test_common.cc"],
     hdrs = ["test_common.h"],
     deps = [
-        "//external:googletest",
         "//src:transcoder_input_stream",
         "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -138,10 +139,10 @@ cc_library(
     deps = [
         ":bookstore_cc_proto",
         ":test_common",
-        "//external:googletest",
         "//src:request_message_translator",
         "//src:type_helper",
         "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -159,8 +160,8 @@ cc_test(
         ":bookstore_cc_proto",
         ":request_translator_test_base",
         ":test_common",
-        "//external:googletest_main",
         "//src:request_message_translator",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -176,8 +177,8 @@ cc_test(
     deps = [
         ":bookstore_cc_proto",
         ":request_translator_test_base",
-        "//external:googletest_main",
         "//src:request_stream_translator",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -194,8 +195,8 @@ cc_test(
         ":bookstore_cc_proto",
         ":request_translator_test_base",
         ":test_common",
-        "//external:googletest_main",
         "//src:json_request_translator",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -207,8 +208,8 @@ cc_test(
     ],
     deps = [
         ":test_common",
-        "//external:googletest_main",
         "//src:message_reader",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -224,10 +225,10 @@ cc_test(
     deps = [
         ":bookstore_cc_proto",
         ":test_common",
-        "//external:googletest_main",
         "//src:message_reader",
         "//src:response_to_json_translator",
         "//src:type_helper",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -239,7 +240,7 @@ cc_test(
     ],
     deps = [
         ":test_common",
-        "//external:googletest_main",
         "//src:message_stream",
+        "@com_google_googletest//:gtest_main",
     ],
 )
