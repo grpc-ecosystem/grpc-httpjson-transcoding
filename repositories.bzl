@@ -116,94 +116,16 @@ def protobuf_repositories(bind = True):
         ],
     )
 
-GOOGLETEST_COMMIT = "43863938377a9ea1399c0596269e0890b5c5515a"
-GOOGLETEST_SHA256 = "7c8ece456ad588c30160429498e108e2df6f42a30888b3ec0abf5d9792d9d3a0"
+GOOGLETEST_COMMIT = "703bd9caab50b139428cea1aaff9974ebee5742e"  # v1.10.0: Oct 2, 2019
+GOOGLETEST_SHA256 = "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d"
 
 def googletest_repositories(bind = True):
-    BUILD = """
-# Copyright 2016 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
-#
-
-cc_library(
-    name = "googletest",
-    srcs = [
-        "googletest/src/gtest-all.cc",
-        "googlemock/src/gmock-all.cc",
-    ],
-    hdrs = glob([
-        "googletest/include/**/*.h",
-        "googlemock/include/**/*.h",
-        "googletest/src/*.cc",
-        "googletest/src/*.h",
-        "googlemock/src/*.cc",
-    ]),
-    includes = [
-        "googlemock",
-        "googletest",
-        "googletest/include",
-        "googlemock/include",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-cc_library(
-    name = "googletest_main",
-    srcs = ["googlemock/src/gmock_main.cc"],
-    visibility = ["//visibility:public"],
-    linkopts = [
-        "-lpthread",
-    ],
-    deps = [":googletest"],
-)
-
-cc_library(
-    name = "googletest_prod",
-    hdrs = [
-        "googletest/include/gtest/gtest_prod.h",
-    ],
-    includes = [
-        "googletest/include",
-    ],
-    visibility = ["//visibility:public"],
-)
-"""
     http_archive(
-        name = "googletest_git",
+        name = "com_google_googletest",
         strip_prefix = "googletest-" + GOOGLETEST_COMMIT,
-        build_file_content = BUILD,
         url = "https://github.com/google/googletest/archive/" + GOOGLETEST_COMMIT + ".tar.gz",
         sha256 = GOOGLETEST_SHA256,
     )
-
-    if bind:
-        native.bind(
-            name = "googletest",
-            actual = "@googletest_git//:googletest",
-        )
-
-        native.bind(
-            name = "googletest_main",
-            actual = "@googletest_git//:googletest_main",
-        )
-
-        native.bind(
-            name = "googletest_prod",
-            actual = "@googletest_git//:googletest_prod",
-        )
 
 GOOGLEAPIS_COMMIT = "1d5522ad1056f16a6d593b8f3038d831e64daeea"  # Sept 03, 2020
 GOOGLEAPIS_SHA256 = "cd13e547cffaad217c942084fd5ae0985a293d0cce3e788c20796e5e2ea54758"
