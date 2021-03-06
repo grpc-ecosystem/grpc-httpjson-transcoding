@@ -62,7 +62,7 @@ std::ostream &operator<<(std::ostream &os, const Variables &vars) {
 }
 
 TEST(HttpTemplate, ParseTest1) {
-  auto ht = HttpTemplate::Parse("/shelves/{shelf}/books/{book}");
+  auto ht = HttpTemplate::Parse("/shelves/{shelf}/books/{book_INVALID}");
   ASSERT_NE(nullptr, ht);
   ASSERT_EQ(Segments({"shelves", "*", "books", "*"}), ht->segments());
   ASSERT_EQ(Variables({
