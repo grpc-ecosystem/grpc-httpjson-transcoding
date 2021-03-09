@@ -15,6 +15,7 @@
 ################################################################################
 #
 load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+load("@rules_fuzzing//fuzzing:cc_defs.bzl", "cc_fuzz_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -28,6 +29,17 @@ cc_test(
     deps = [
         "//src:http_template",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_fuzz_test(
+    name = "http_template_fuzz_test",
+    srcs = [
+        "http_template_fuzz_test.cc",
+    ],
+    corpus = glob(["http_template_fuzz_test_corpus/**"]),
+    deps = [
+        "//src:http_template",
     ],
 )
 
