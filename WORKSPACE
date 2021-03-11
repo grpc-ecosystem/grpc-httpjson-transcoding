@@ -23,6 +23,27 @@ load(
     "protobuf_repositories",
 )
 
+# See
+# https://github.com/bazelbuild/rules_fuzzing/blob/master/README.md#configuring-the-workspace.
+# The fuzzing rules must be first because if they are not, bazel will
+# pull in incompatible versions of absl and rules_python.
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_fuzzing",
+    sha256 = "a5734cb42b1b69395c57e0bbd32ade394d5c3d6afbfe782b24816a96da24660d",
+    strip_prefix = "rules_fuzzing-0.1.1",
+    urls = ["https://github.com/bazelbuild/rules_fuzzing/archive/v0.1.1.zip"],
+)
+
+load("@rules_fuzzing//fuzzing:repositories.bzl", "rules_fuzzing_dependencies")
+
+rules_fuzzing_dependencies()
+
+load("@rules_fuzzing//fuzzing:init.bzl", "rules_fuzzing_init")
+
+rules_fuzzing_init()
+
 absl_repositories()
 
 protobuf_repositories()

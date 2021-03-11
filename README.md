@@ -19,6 +19,10 @@ following commands build and test sources:
 $ bazel build //...
 $ bazel test //...
 ```
+## Toolchain
+
+The Bazel build system defaults to using clang 10 to enable reproducible builds.
+
 
 # Contribution
 See [CONTRIBUTING.md](CONTRIBUTING.md).
