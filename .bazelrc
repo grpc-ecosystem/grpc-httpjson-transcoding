@@ -1,6 +1,6 @@
 # Force the use of Clang for C++ builds.
-build --action_env=CC=clang
-build --action_env=CXX=clang++
+build --action_env=CC=clang-10
+build --action_env=CXX=clang++-10
 
 # Define the --config=asan-libfuzzer configuration.
 build:asan-libfuzzer --@rules_fuzzing//fuzzing:cc_engine=@rules_fuzzing//fuzzing/engines:libfuzzer
