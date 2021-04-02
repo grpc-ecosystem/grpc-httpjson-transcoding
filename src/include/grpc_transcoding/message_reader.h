@@ -86,7 +86,7 @@ class MessageReader {
   // The caller should only read `kGrpcDelimiterByteSize` bytes from this
   // pointer.
   //
-  // The called should only call this method if `NextMessage()` provides a
+  // The caller should only call this method if `NextMessage()` provides a
   // non-nullptr result and `Status()` is OK. Otherwise the underlying memory
   // contents may be uninitialized.
   unsigned char* LastDelimiter() { return delimiter_; }
