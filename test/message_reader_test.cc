@@ -222,394 +222,192 @@ class MessageReaderTest : public ::testing::Test {
   std::vector<std::string> messages_;
 };
 
-TEST_F(MessageReaderTest, OneMessage
-) {
-AddMessage("SimpleMessage");
+TEST_F(MessageReaderTest, OneMessage) {
+  AddMessage("SimpleMessage");
 
-auto tc = Build();
-EXPECT_TRUE(tc
-->Test(1, 1.0));
-EXPECT_TRUE(tc
-->Test(2, 1.0));
-EXPECT_TRUE(tc
-->Test(3, 1.0));
-EXPECT_TRUE(tc
-->Test(4, 0.1));
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 1.0));
+  EXPECT_TRUE(tc->Test(4, 0.1));
 }
 
-TEST_F(MessageReaderTest, ThreeMessages
-) {
-AddMessage("Message1");
-AddMessage("Message2");
-AddMessage("Message3");
+TEST_F(MessageReaderTest, ThreeMessages) {
+  AddMessage("Message1");
+  AddMessage("Message2");
+  AddMessage("Message3");
 
-auto tc = Build();
-EXPECT_TRUE(tc
-->Test(1, 1.0));
-EXPECT_TRUE(tc
-->Test(2, 1.0));
-EXPECT_TRUE(tc
-->Test(3, 1.0));
-EXPECT_TRUE(tc
-->Test(4, 0.2));
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 1.0));
+  EXPECT_TRUE(tc->Test(4, 0.2));
 }
 
-TEST_F(MessageReaderTest, TenKMessages
-) {
-for (
-size_t i = 1;
-i < 10000; ++i) {
-AddMessage("Message" +
-std::to_string(i)
-);
-}
-auto tc = Build();
-EXPECT_TRUE(tc
-->Test(1, 1.0));
+TEST_F(MessageReaderTest, TenKMessages) {
+  for (size_t i = 1; i < 10000; ++i) {
+    AddMessage("Message" + std::to_string(i));
+  }
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
 }
 
-TEST_F(MessageReaderTest, DifferentSizesAllInOneStream
-) {
-auto sizes = {0, 1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
+TEST_F(MessageReaderTest, DifferentSizesAllInOneStream) {
+  auto sizes = {0, 1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
 
-for (
-auto size
-: sizes) {
-AddMessage(GenerateInput("abcdefg", size)
-);
-}
-auto tc = Build();
-EXPECT_TRUE(tc
-->Test(1, 1.0));
+  for (auto size : sizes) {
+    AddMessage(GenerateInput("abcdefg", size));
+  }
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
 }
 
-TEST_F(MessageReaderTest, DifferentSizesEachInItsOwnStream
-) {
-auto sizes = {0, 1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
+TEST_F(MessageReaderTest, DifferentSizesEachInItsOwnStream) {
+  auto sizes = {0, 1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
 
-for (
-auto size
-: sizes) {
-AddMessage(GenerateInput("abcdefg", size)
-);
-auto tc = Build();
-EXPECT_TRUE(tc
-->Test(1, 1.0));
-if (size < 50) {
-EXPECT_TRUE(tc
-->Test(2, 1.0));
-EXPECT_TRUE(tc
-->Test(3, 1.0));
-}
-}
+  for (auto size : sizes) {
+    AddMessage(GenerateInput("abcdefg", size));
+    auto tc = Build();
+    EXPECT_TRUE(tc->Test(1, 1.0));
+    if (size < 50) {
+      EXPECT_TRUE(tc->Test(2, 1.0));
+      EXPECT_TRUE(tc->Test(3, 1.0));
+    }
+  }
 }
 
-TEST_F(MessageReaderTest, OneByteChunks
-) {
-AddMessage("Message1");
-AddMessage("Message2");
-AddMessage("Message3");
+TEST_F(MessageReaderTest, OneByteChunks) {
+  AddMessage("Message1");
+  AddMessage("Message2");
+  AddMessage("Message3");
 
-auto tc = Build();
-auto tr = tc->NewRun();
+  auto tc = Build();
+  auto tr = tc->NewRun();
 
-for (
-size_t i = 0;
-i<tr->
-TotalInputSize();
-++i) {
-tr->AddChunk(1);
-EXPECT_TRUE(tr
-->
-Test()
-);
-}
-tr->
-FinishInputStream();
-EXPECT_TRUE(tr
-->
-Test()
-);
+  for (size_t i = 0; i < tr->TotalInputSize(); ++i) {
+    tr->AddChunk(1);
+    EXPECT_TRUE(tr->Test());
+  }
+  tr->FinishInputStream();
+  EXPECT_TRUE(tr->Test());
 }
 
-TEST_F(MessageReaderTest, DirectTest
-) {
-TestZeroCopyInputStream input_stream;
-MessageReader reader(&input_stream);
+TEST_F(MessageReaderTest, DirectTest) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
 
-std::string message1 = "This is a message";
-std::string message2 = "This is a different message";
-std::string message3 = "This is another message";
-std::string message4 = "This is yet another message";
+  std::string message1 = "This is a message";
+  std::string message2 = "This is a different message";
+  std::string message3 = "This is another message";
+  std::string message4 = "This is yet another message";
 
-// Nothing yet
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // Nothing yet
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Add the delimiter for the first message
-input_stream.
-AddChunk(SizeToDelimiter(message1.size())
-);
+  // Add the delimiter for the first message
+  input_stream.AddChunk(SizeToDelimiter(message1.size()));
 
-// Still nothing
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // Still nothing
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Add the message itself
-input_stream.
-AddChunk(message1);
+  // Add the message itself
+  input_stream.AddChunk(message1);
 
-// Now message1 must be available
-auto message1_stream = reader.NextMessage();
-ASSERT_NE(nullptr, message1_stream.
-get()
-);
-EXPECT_EQ(message1, ReadAllFromStream(message1_stream.get())
-);
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // Now message1 must be available
+  auto message1_stream = reader.NextMessage();
+  ASSERT_NE(nullptr, message1_stream.get());
+  EXPECT_EQ(message1, ReadAllFromStream(message1_stream.get()));
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Add part of the message2
-input_stream.
-AddChunk(SizeToDelimiter(message2.size())
-);
-input_stream.
-AddChunk(message2
-.substr(0, 10));
+  // Add part of the message2
+  input_stream.AddChunk(SizeToDelimiter(message2.size()));
+  input_stream.AddChunk(message2.substr(0, 10));
 
-// No message should be available
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // No message should be available
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Add the rest of the second message
-input_stream.
-AddChunk(message2
-.substr(10));
+  // Add the rest of the second message
+  input_stream.AddChunk(message2.substr(10));
 
-// Now the message2 is available
-auto message2_stream = reader.NextMessage();
-ASSERT_NE(nullptr, message2_stream.
-get()
-);
-EXPECT_EQ(message2, ReadAllFromStream(message2_stream.get())
-);
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // Now the message2 is available
+  auto message2_stream = reader.NextMessage();
+  ASSERT_NE(nullptr, message2_stream.get());
+  EXPECT_EQ(message2, ReadAllFromStream(message2_stream.get()));
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Adding both message3 & message4 in one shot and Finish the stream
-input_stream.
-AddChunk(SizeToDelimiter(message3.size())
-);
-input_stream.
-AddChunk(message3);
-input_stream.
-AddChunk(SizeToDelimiter(message4.size())
-);
-input_stream.
-AddChunk(message4);
-input_stream.
-Finish();
+  // Adding both message3 & message4 in one shot and Finish the stream
+  input_stream.AddChunk(SizeToDelimiter(message3.size()));
+  input_stream.AddChunk(message3);
+  input_stream.AddChunk(SizeToDelimiter(message4.size()));
+  input_stream.AddChunk(message4);
+  input_stream.Finish();
 
-// Not finished yet as we still have messages to read
-EXPECT_FALSE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // Not finished yet as we still have messages to read
+  EXPECT_FALSE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 
-// Now both message3 & message4 must be available
-auto message3_stream = reader.NextMessage();
-ASSERT_NE(nullptr, message3_stream.
-get()
-);
-EXPECT_EQ(message3, ReadAllFromStream(message3_stream.get())
-);
-EXPECT_FALSE(reader
-.
-Finished()
-);
+  // Now both message3 & message4 must be available
+  auto message3_stream = reader.NextMessage();
+  ASSERT_NE(nullptr, message3_stream.get());
+  EXPECT_EQ(message3, ReadAllFromStream(message3_stream.get()));
+  EXPECT_FALSE(reader.Finished());
 
-auto message4_stream = reader.NextMessage();
-ASSERT_NE(nullptr, message4_stream.
-get()
-);
-EXPECT_EQ(message4, ReadAllFromStream(message4_stream.get())
-);
+  auto message4_stream = reader.NextMessage();
+  ASSERT_NE(nullptr, message4_stream.get());
+  EXPECT_EQ(message4, ReadAllFromStream(message4_stream.get()));
 
-// All done, the reader must be finished
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_TRUE(reader
-.
-Finished()
-);
-EXPECT_TRUE(reader
-.
-Status()
-.
-ok()
-);
+  // All done, the reader must be finished
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_TRUE(reader.Finished());
+  EXPECT_TRUE(reader.Status().ok());
 }
 
-TEST_F(MessageReaderTest, IncompleteFrameHeader
-) {
-TestZeroCopyInputStream input_stream;
-MessageReader reader(&input_stream);
+TEST_F(MessageReaderTest, IncompleteFrameHeader) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
 
-input_stream.AddChunk("\x0a");
-input_stream.
-Finish();
+  input_stream.AddChunk("\x0a");
+  input_stream.Finish();
 
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Status()
-.
-ok()
-);
-EXPECT_EQ(reader
-.
-Status()
-.
-error_message(),
-"Incomplete gRPC frame header received");
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(),
+            "Incomplete gRPC frame header received");
 }
 
-TEST_F(MessageReaderTest, InvalidFrameFlag
-) {
-TestZeroCopyInputStream input_stream;
-MessageReader reader(&input_stream);
+TEST_F(MessageReaderTest, InvalidFrameFlag) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
 
-input_stream.
-AddChunk(std::string("\x0A\x00\x00\x00\x00", 5)
-);
-input_stream.
-Finish();
+  input_stream.AddChunk(std::string("\x0A\x00\x00\x00\x00", 5));
+  input_stream.Finish();
 
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Status()
-.
-ok()
-);
-EXPECT_EQ(reader
-.
-Status()
-.
-error_message(),
-"Unsupported gRPC frame flag: 10");
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(), "Unsupported gRPC frame flag: 10");
 }
 
-TEST_F(MessageReaderTest, IncompleteFrame
-) {
-TestZeroCopyInputStream input_stream;
-MessageReader reader(&input_stream);
+TEST_F(MessageReaderTest, IncompleteFrame) {
+  TestZeroCopyInputStream input_stream;
+  MessageReader reader(&input_stream);
 
-input_stream.
-AddChunk(std::string("\x00\x00\x00\x00\x05\x00", 6)
-);
-input_stream.
-Finish();
+  input_stream.AddChunk(std::string("\x00\x00\x00\x00\x05\x00", 6));
+  input_stream.Finish();
 
-EXPECT_EQ(nullptr, reader.
-NextMessage()
-.
-get()
-);
-EXPECT_FALSE(reader
-.
-Status()
-.
-ok()
-);
-EXPECT_EQ(reader
-.
-Status()
-.
-error_message(),
-"Incomplete gRPC frame expected size: 5 actual size: 1");
+  EXPECT_EQ(nullptr, reader.NextMessage().get());
+  EXPECT_FALSE(reader.Status().ok());
+  EXPECT_EQ(reader.Status().error_message(),
+            "Incomplete gRPC frame expected size: 5 actual size: 1");
 }
 
 }  // namespace
