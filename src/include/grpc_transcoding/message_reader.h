@@ -76,15 +76,18 @@ class MessageReader {
   //       NextMessage() again.
   // NOTE: the caller should check `Status()` is OK after calling this method.
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage() {
-    unsigned char delimiter[kGrpcDelimiterByteSize];
-    return NextMessage(delimiter);
+    // Buffer is not used.
+    unsigned char* delimiter_buffer;
+    return NextMessage(&delimiter_buffer);
   }
 
   // An overload that also outputs the gRPC message delimiter for the parsed
-  // message. The caller must ensure the buffer has `kGrpcDelimiterByteSize`
-  // bytes of space.
+  // message. The caller must NOT take ownership of the buffer. The buffer is
+  // guaranteed to have `kGrpcDelimiterByteSize` bytes.
+  // NOTE: the caller must check the return is not nullptr before consuming
+  //       the `delimiter_buffer`.
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage(
-      unsigned char* delimiter_buffer);
+      unsigned char** delimiter_buffer);
 
   ::google::protobuf::util::Status Status() const { return status_; }
 
@@ -102,6 +105,8 @@ class MessageReader {
   bool finished_;
   // Status
   ::google::protobuf::util::Status status_;
+
+  unsigned char delimiter_[kGrpcDelimiterByteSize] = {0};
 
   MessageReader(const MessageReader&) = delete;
   MessageReader& operator=(const MessageReader&) = delete;

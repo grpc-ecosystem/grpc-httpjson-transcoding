@@ -95,8 +95,8 @@ class MessageReaderTestRun {
         return false;
       }
       // Read the message
-      unsigned char delimiter[kGrpcDelimiterByteSize] = {0};
-      auto stream = reader_->NextMessage(delimiter);
+      unsigned char* delimiter_buffer;
+      auto stream = reader_->NextMessage(&delimiter_buffer);
       EXPECT_TRUE(reader_->Status().ok());
       if (!stream) {
         ADD_FAILURE() << "No message available" << std::endl;
@@ -110,7 +110,7 @@ class MessageReaderTestRun {
       }
       // Match the delimiter.
       std::string delimiter_string =
-          std::string(reinterpret_cast<char*>(delimiter),
+          std::string(reinterpret_cast<const char*>(delimiter_buffer),
                       kGrpcDelimiterByteSize);
       if (delimiter_string != next_expected_->delimiter) {
         EXPECT_EQ(delimiter_string, next_expected_->delimiter);
