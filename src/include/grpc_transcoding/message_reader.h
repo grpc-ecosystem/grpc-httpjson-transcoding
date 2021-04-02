@@ -84,7 +84,7 @@ class MessageReader {
   // An overload that also outputs the gRPC message delimiter for the parsed
   // message. The caller must NOT take ownership of the buffer. The buffer is
   // guaranteed to have `kGrpcDelimiterByteSize` bytes.
-  // NOTE: the caller must check the return is not nullptr before consuming
+  // NOTE: the caller must check the return is NOT nullptr before consuming
   //       the `delimiter_buffer`.
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage(
       unsigned char** delimiter_buffer);
