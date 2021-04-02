@@ -77,7 +77,7 @@ uint32_t DelimiterToSize(const unsigned char* delimiter) {
 
 }  // namespace
 
-std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
+std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage(unsigned char* delimiter) {
   if (Finished()) {
     // The stream has ended
     return nullptr;
@@ -99,19 +99,19 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
     }
 
     // Try to read the delimiter
-    if (!ReadStream(in_, delimiter_, kGrpcDelimiterByteSize)) {
+    if (!ReadStream(in_, delimiter, kGrpcDelimiterByteSize)) {
       finished_ = true;
       return nullptr;
     }
 
-    if (delimiter_[0] != 0) {
+    if (delimiter[0] != 0) {
       status_ = google::protobuf::util::Status(
           google::protobuf::util::error::INTERNAL,
-          "Unsupported gRPC frame flag: " + std::to_string(delimiter_[0]));
+          "Unsupported gRPC frame flag: " + std::to_string(delimiter[0]));
       return nullptr;
     }
 
-    current_message_size_ = DelimiterToSize(delimiter_);
+    current_message_size_ = DelimiterToSize(delimiter);
     have_current_message_size_ = true;
   }
 

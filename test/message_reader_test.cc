@@ -47,7 +47,7 @@ struct ExpectedAt {
   // The position in the input, after which this message is expected
   size_t at;
   std::string message;
-  std::string last_delimiter;
+  std::string delimiter;
 };
 
 // MessageReaderTestRun tests a single MessageReader processing the input as
@@ -95,7 +95,8 @@ class MessageReaderTestRun {
         return false;
       }
       // Read the message
-      auto stream = reader_->NextMessage();
+      unsigned char delimiter[kGrpcDelimiterByteSize] = {0};
+      auto stream = reader_->NextMessage(delimiter);
       EXPECT_TRUE(reader_->Status().ok());
       if (!stream) {
         ADD_FAILURE() << "No message available" << std::endl;
@@ -107,11 +108,14 @@ class MessageReaderTestRun {
         EXPECT_EQ(next_expected_->message, message);
         return false;
       }
-      // Match the delimiter to the last parsed delimiter.
-      const std::string last_delimiter =
-          std::string(reinterpret_cast<const char*>(reader_->LastDelimiter()),
+      // Match the delimiter.
+      std::string delimiter_string =
+          std::string(reinterpret_cast<char*>(delimiter),
                       kGrpcDelimiterByteSize);
-      EXPECT_EQ(last_delimiter, next_expected_->last_delimiter);
+      if (delimiter_string != next_expected_->delimiter) {
+        EXPECT_EQ(delimiter_string, next_expected_->delimiter);
+        return false;
+      }
       // Move to the next expected message
       ++next_expected_;
     }
