@@ -25,6 +25,10 @@ namespace grpc {
 
 namespace transcoding {
 
+// The number of bytes in the delimiter for gRPC wire format's
+// `Length-Prefixed-Message`.
+constexpr size_t kGrpcDelimiterByteSize = 5;
+
 // MessageReader helps extract full messages from a ZeroCopyInputStream of
 // messages in gRPC wire format (http://www.grpc.io/docs/guides/wire.html). Each
 // message is returned in a ZeroCopyInputStream. MessageReader doesn't advance
@@ -78,6 +82,15 @@ class MessageReader {
   // false.
   bool Finished() const { return finished_ || !status_.ok(); }
 
+  // Returns the last gRPC message delimiter processed by this reader.
+  // The caller should only read `kGrpcDelimiterByteSize` bytes from this
+  // pointer.
+  //
+  // The called should only call this method if `NextMessage()` provides a
+  // non-nullptr result and `Status()` is OK. Otherwise the underlying memory
+  // contents may be uninitialized.
+  unsigned char* LastDelimiter() { return delimiter_; }
+
  private:
   TranscoderInputStream* in_;
   // The size of the current message.
@@ -88,6 +101,8 @@ class MessageReader {
   bool finished_;
   // Status
   ::google::protobuf::util::Status status_;
+  // The last gRPC message delimiter processed by this reader.
+  unsigned char delimiter_[kGrpcDelimiterByteSize] = {0};
 
   MessageReader(const MessageReader&) = delete;
   MessageReader& operator=(const MessageReader&) = delete;
