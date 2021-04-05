@@ -98,7 +98,8 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
       return nullptr;
     }
 
-    // Try to read the delimiter
+    // Try to read the delimiter.
+    memset(delimiter_, 0, kGrpcDelimiterByteSize);
     if (!ReadStream(in_, delimiter_, kGrpcDelimiterByteSize)) {
       finished_ = true;
       return nullptr;
@@ -134,6 +135,13 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
   // limit it to current_message_size_ bytes to cover only the current message.
   return std::unique_ptr<pbio::ZeroCopyInputStream>(
       new pbio::LimitingInputStream(in_, current_message_size_));
+}
+
+MessageAndGrpcFrame MessageReader::NextMessageAndGrpcFrame() {
+  MessageAndGrpcFrame out;
+  out.message = NextMessage();
+  memcpy(out.grpc_frame, delimiter_, kGrpcDelimiterByteSize);
+  return out;
 }
 
 }  // namespace transcoding

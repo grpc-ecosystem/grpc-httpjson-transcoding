@@ -29,6 +29,13 @@ namespace transcoding {
 // `Length-Prefixed-Message`.
 constexpr size_t kGrpcDelimiterByteSize = 5;
 
+// Return type that contains both the proto message and the preceding gRPC data
+// frame.
+struct MessageAndGrpcFrame {
+  std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> message;
+  unsigned char grpc_frame[kGrpcDelimiterByteSize];
+};
+
 // MessageReader helps extract full messages from a ZeroCopyInputStream of
 // messages in gRPC wire format (http://www.grpc.io/docs/guides/wire.html). Each
 // message is returned in a ZeroCopyInputStream. MessageReader doesn't advance
@@ -78,16 +85,10 @@ class MessageReader {
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage();
 
   // An overload that also outputs the gRPC message delimiter for the parsed
-  // message. The caller must NOT take ownership of the buffer. The buffer is
-  // guaranteed to have `kGrpcDelimiterByteSize` bytes.
-  // NOTE: the caller must check the return is NOT nullptr before consuming
-  //       the `delimiter_buffer`.
-  std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> NextMessage(
-      unsigned char** delimiter_buffer) {
-    auto out = NextMessage();
-    *delimiter_buffer = delimiter_;
-    return out;
-  }
+  // message. The caller is free to take ownership of contents in `grpc_frame`.
+  // NOTE: the caller must check the `message` is NOT nullptr and the `Status()`
+  //       is OK before consuming the `grpc_frame`.
+  MessageAndGrpcFrame NextMessageAndGrpcFrame();
 
   ::google::protobuf::util::Status Status() const { return status_; }
 
