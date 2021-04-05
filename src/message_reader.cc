@@ -77,7 +77,7 @@ uint32_t DelimiterToSize(const unsigned char* delimiter) {
 
 }  // namespace
 
-std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage(unsigned char** delimiter_buffer) {
+std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
   if (Finished()) {
     // The stream has ended
     return nullptr;
@@ -129,8 +129,6 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage(unsigned c
 
   // Reset the have_current_message_size_ for the next message
   have_current_message_size_ = false;
-
-  *delimiter_buffer = delimiter_;
 
   // We have a message! Use LimitingInputStream to wrap the input stream and
   // limit it to current_message_size_ bytes to cover only the current message.
