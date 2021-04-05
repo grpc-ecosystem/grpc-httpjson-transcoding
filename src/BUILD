@@ -214,7 +214,7 @@ cc_library(
 
 cc_library(
     name = "transcoder_input_stream",
-    srcs = [
+    hdrs = [
         "include/grpc_transcoding/transcoder_input_stream.h",
     ],
     includes = [

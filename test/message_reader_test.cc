@@ -47,6 +47,7 @@ struct ExpectedAt {
   // The position in the input, after which this message is expected
   size_t at;
   std::string message;
+  std::string delimiter;
 };
 
 // MessageReaderTestRun tests a single MessageReader processing the input as
@@ -87,23 +88,31 @@ class MessageReaderTestRun {
     // While we still have expected messages before or at the current position
     // try to match.
     while (next_expected_ != std::end(expected_) &&
-           next_expected_->at <= position_) {
+        next_expected_->at <= position_) {
       // Must not be finished as we expect a message
       if (reader_->Finished()) {
         ADD_FAILURE() << "Finished unexpectedly" << std::endl;
         return false;
       }
       // Read the message
-      auto stream = reader_->NextMessage();
+      MessageAndGrpcFrame result = reader_->NextMessageAndGrpcFrame();
       EXPECT_TRUE(reader_->Status().ok());
-      if (!stream) {
+      if (!result.message) {
         ADD_FAILURE() << "No message available" << std::endl;
         return false;
       }
       // Match the message with the expected message
-      auto message = ReadAllFromStream(stream.get());
+      auto message = ReadAllFromStream(result.message.get());
       if (next_expected_->message != message) {
         EXPECT_EQ(next_expected_->message, message);
+        return false;
+      }
+      // Match the delimiter.
+      std::string delimiter_string =
+          std::string(reinterpret_cast<const char*>(result.grpc_frame),
+                      kGrpcDelimiterByteSize);
+      if (delimiter_string != next_expected_->delimiter) {
+        EXPECT_EQ(delimiter_string, next_expected_->delimiter);
         return false;
       }
       // Move to the next expected message
@@ -150,7 +159,8 @@ class MessageReaderTestCase {
       input_ += message;
       // Remember that we should expect this message after input_.size() bytes
       // are processed.
-      expected_.emplace_back(ExpectedAt{input_.size(), message});
+      expected_.emplace_back(ExpectedAt{input_.size(), message,
+                                        SizeToDelimiter(message.size())});
     }
   }
 

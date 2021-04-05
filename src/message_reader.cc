@@ -85,8 +85,8 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
 
   // Check if we have the current message size. If not try to read it.
   if (!have_current_message_size_) {
-    const size_t kDelimiterSize = 5;
-    if (in_->BytesAvailable() < static_cast<pb::int64>(kDelimiterSize)) {
+    if (in_->BytesAvailable()
+        < static_cast<pb::int64>(kGrpcDelimiterByteSize)) {
       // We don't have 5 bytes available to read the length of the message.
       // Find out whether the stream is finished and return false.
       finished_ = in_->Finished();
@@ -98,21 +98,21 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
       return nullptr;
     }
 
-    // Try to read the delimiter
-    unsigned char delimiter[kDelimiterSize] = {0};
-    if (!ReadStream(in_, delimiter, sizeof(delimiter))) {
+    // Try to read the delimiter.
+    memset(delimiter_, 0, kGrpcDelimiterByteSize);
+    if (!ReadStream(in_, delimiter_, kGrpcDelimiterByteSize)) {
       finished_ = true;
       return nullptr;
     }
 
-    if (delimiter[0] != 0) {
+    if (delimiter_[0] != 0) {
       status_ = google::protobuf::util::Status(
           google::protobuf::util::error::INTERNAL,
-          "Unsupported gRPC frame flag: " + std::to_string(delimiter[0]));
+          "Unsupported gRPC frame flag: " + std::to_string(delimiter_[0]));
       return nullptr;
     }
 
-    current_message_size_ = DelimiterToSize(delimiter);
+    current_message_size_ = DelimiterToSize(delimiter_);
     have_current_message_size_ = true;
   }
 
@@ -135,6 +135,13 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
   // limit it to current_message_size_ bytes to cover only the current message.
   return std::unique_ptr<pbio::ZeroCopyInputStream>(
       new pbio::LimitingInputStream(in_, current_message_size_));
+}
+
+MessageAndGrpcFrame MessageReader::NextMessageAndGrpcFrame() {
+  MessageAndGrpcFrame out;
+  out.message = NextMessage();
+  memcpy(out.grpc_frame, delimiter_, kGrpcDelimiterByteSize);
+  return out;
 }
 
 }  // namespace transcoding
