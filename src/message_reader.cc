@@ -92,7 +92,7 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
       finished_ = in_->Finished();
       if (finished_ && in_->BytesAvailable() != 0) {
         status_ = google::protobuf::util::Status(
-            google::protobuf::util::error::INTERNAL,
+            google::protobuf::util::StatusCode::kInternal,
             "Incomplete gRPC frame header received");
       }
       return nullptr;
@@ -107,7 +107,7 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
 
     if (delimiter_[0] != 0) {
       status_ = google::protobuf::util::Status(
-          google::protobuf::util::error::INTERNAL,
+          google::protobuf::util::StatusCode::kInternal,
           "Unsupported gRPC frame flag: " + std::to_string(delimiter_[0]));
       return nullptr;
     }
@@ -119,7 +119,7 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
   if (in_->BytesAvailable() < static_cast<pb::int64>(current_message_size_)) {
     if (in_->Finished()) {
       status_ = google::protobuf::util::Status(
-          google::protobuf::util::error::INTERNAL,
+          google::protobuf::util::StatusCode::kInternal,
           "Incomplete gRPC frame expected size: " +
               std::to_string(current_message_size_) + " actual size: " +
               std::to_string(in_->BytesAvailable()));

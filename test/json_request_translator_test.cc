@@ -34,8 +34,6 @@ namespace transcoding {
 namespace testing {
 namespace {
 
-namespace pberr = google::protobuf::util::error;
-
 // TranslationTestCase helps us build translation test cases and validate the
 // translation output.
 //
@@ -486,7 +484,7 @@ TEST_F(JsonRequestTranslatorTest, ErrorInvalidJson) {
       AddChunk(invalid);
       Finish();
       EXPECT_TRUE(Tester().ExpectNone());
-      EXPECT_TRUE(Tester().ExpectStatusEq(pberr::INVALID_ARGUMENT));
+      EXPECT_TRUE(Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument));
     }
   }
 }
@@ -735,7 +733,7 @@ TEST_F(JsonRequestTranslatorTest, StreamingErrorNotAnArray) {
   AddChunk(R"({"name" : "1"})");
   Finish();
   EXPECT_TRUE(Tester().ExpectNone());
-  EXPECT_TRUE(Tester().ExpectStatusEq(pberr::INVALID_ARGUMENT));
+  EXPECT_TRUE(Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

@@ -107,7 +107,7 @@ bool ResponseToJsonTranslator::TranslateMessage(
       // output JSON with a '['.
       if (!WriteChar(&json_stream, '[')) {
         status_ = ::google::protobuf::util::Status(
-            ::google::protobuf::util::error::INTERNAL,
+            ::google::protobuf::util::StatusCode::kInternal,
             "Failed to build the response message.");
         return false;
       }
@@ -116,7 +116,7 @@ bool ResponseToJsonTranslator::TranslateMessage(
       // For streaming calls add a ',' before each message except the first.
       if (!WriteChar(&json_stream, ',')) {
         status_ = ::google::protobuf::util::Status(
-            ::google::protobuf::util::error::INTERNAL,
+            ::google::protobuf::util::StatusCode::kInternal,
             "Failed to build the response message.");
         return false;
       }

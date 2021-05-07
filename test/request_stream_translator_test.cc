@@ -521,7 +521,7 @@ TEST_F(RequestStreamTranslatorTest, Error1) {
   SetMessageType("Shelf");
   Build();
   Input().StartObject("");
-  Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
 }
 
 TEST_F(RequestStreamTranslatorTest, Error2) {
@@ -530,7 +530,7 @@ TEST_F(RequestStreamTranslatorTest, Error2) {
   Build();
   Input().StartList("");
   Input().EndObject();
-  Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
 }
 
 TEST_F(RequestStreamTranslatorTest, Error3) {
@@ -538,7 +538,7 @@ TEST_F(RequestStreamTranslatorTest, Error3) {
   SetMessageType("Shelf");
   Build();
   Input().EndList();
-  Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
 }
 
 TEST_F(RequestStreamTranslatorTest, Error4) {
@@ -546,7 +546,7 @@ TEST_F(RequestStreamTranslatorTest, Error4) {
   SetMessageType("Shelf");
   Build();
   Input().EndObject();
-  Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
 }
 
 TEST_F(RequestStreamTranslatorTest, Error5) {
@@ -556,7 +556,7 @@ TEST_F(RequestStreamTranslatorTest, Error5) {
   Input().StartList("");
   Input().StartList("");
   Input().EndObject();
-  Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
 }
 
 TEST_F(RequestStreamTranslatorTest, Error6) {
@@ -570,7 +570,7 @@ TEST_F(RequestStreamTranslatorTest, Error6) {
   Input().EndList();
   // google::protobuf::ProtoStreamObjectWriter for some reason accepts EndList()
   // instead of EndObject(). Should be an error instead.
-  // Tester().ExpectStatusEq(google::protobuf::util::error::INVALID_ARGUMENT);
+  // Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument);
   Tester().ExpectNextEq<Shelf>(R"( theme : "Russian" )");
 }
 

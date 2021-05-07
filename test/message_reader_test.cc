@@ -384,7 +384,7 @@ TEST_F(MessageReaderTest, IncompleteFrameHeader) {
 
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Status().ok());
-  EXPECT_EQ(reader.Status().error_message(),
+  EXPECT_EQ(reader.Status().message(),
             "Incomplete gRPC frame header received");
 }
 
@@ -397,7 +397,7 @@ TEST_F(MessageReaderTest, InvalidFrameFlag) {
 
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Status().ok());
-  EXPECT_EQ(reader.Status().error_message(), "Unsupported gRPC frame flag: 10");
+  EXPECT_EQ(reader.Status().message(), "Unsupported gRPC frame flag: 10");
 }
 
 TEST_F(MessageReaderTest, IncompleteFrame) {
@@ -409,7 +409,7 @@ TEST_F(MessageReaderTest, IncompleteFrame) {
 
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Status().ok());
-  EXPECT_EQ(reader.Status().error_message(),
+  EXPECT_EQ(reader.Status().message(),
             "Incomplete gRPC frame expected size: 5 actual size: 1");
 }
 

@@ -28,7 +28,6 @@ namespace transcoding {
 
 namespace pb = google::protobuf;
 namespace pbutil = google::protobuf::util;
-namespace pberr = google::protobuf::util::error;
 namespace pbconv = google::protobuf::util::converter;
 
 RequestStreamTranslator::RequestStreamTranslator(
@@ -67,7 +66,7 @@ RequestStreamTranslator* RequestStreamTranslator::StartObject(
   }
   if (depth_ == 0) {
     // In depth_ == 0 case we expect only StartList()
-    status_ = pbutil::Status(pberr::INVALID_ARGUMENT,
+    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
                              "Expected an array instead of an object");
     return this;
   }
@@ -89,7 +88,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndObject() {
   --depth_;
   if (depth_ < 1) {
     status_ =
-        pbutil::Status(pberr::INVALID_ARGUMENT, "Mismatched end of object.");
+        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Mismatched end of object.");
     return this;
   }
   translator_->Input().EndObject();
@@ -131,7 +130,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndList() {
   --depth_;
   if (depth_ < 0) {
     status_ =
-        pbutil::Status(pberr::INVALID_ARGUMENT, "Mismatched end of array.");
+        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Mismatched end of array.");
     return this;
   }
   if (depth_ == 0) {
@@ -252,7 +251,7 @@ void RequestStreamTranslator::EndMessageTranslator() {
   } else {
     // This shouldn't happen unless something like StartList(), StartObject(),
     // EndList() has been called
-    status_ = pbutil::Status(pberr::INVALID_ARGUMENT, "Invalid object");
+    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Invalid object");
   }
   translator_.reset();
 }
@@ -265,7 +264,7 @@ void RequestStreamTranslator::RenderData(internal::string_view name,
   }
   if (depth_ == 0) {
     // In depth_ == 0 case we expect only a StartList()
-    status_ = pbutil::Status(pberr::INVALID_ARGUMENT,
+    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
                              "Expected an array instead of a scalar value.");
   } else if (depth_ == 1) {
     // This means we have an array of scalar values. This can happen if the HTTP
