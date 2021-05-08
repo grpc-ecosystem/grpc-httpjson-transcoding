@@ -264,7 +264,7 @@ bool JsonToStruct(const std::string& json, pb::Struct* message) {
       type_resolver.get(), "type.googleapis.com/google.protobuf.Struct", json,
       &binary);
   if (!status.ok()) {
-    ADD_FAILURE() << "Error: " << status.error_message() << std::endl
+    ADD_FAILURE() << "Error: " << status.message() << std::endl
                   << "Failed to parse \"" << json << "\"." << std::endl;
     return false;
   }

@@ -32,7 +32,7 @@ ProtoStreamTester::ProtoStreamTester(MessageStream& stream, bool delimiters)
 
 bool ProtoStreamTester::ExpectNone() {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::error::OK)) {
+  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
     return false;
   }
   std::string message;
@@ -46,7 +46,7 @@ bool ProtoStreamTester::ExpectNone() {
 
 bool ProtoStreamTester::ExpectFinishedEq(bool expected) {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::error::OK)) {
+  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
     return false;
   }
   if (expected != stream_.Finished()) {
@@ -78,7 +78,7 @@ unsigned DelimiterToSize(const unsigned char* delimiter) {
 
 bool ProtoStreamTester::ValidateDelimiter(const std::string& message) {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::error::OK)) {
+  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
     return false;
   }
   if (message.size() < kDelimiterSize) {
@@ -98,13 +98,13 @@ bool ProtoStreamTester::ValidateDelimiter(const std::string& message) {
   return true;
 }
 
-bool ProtoStreamTester::ExpectStatusEq(int error_code) {
-  if (error_code != stream_.Status().error_code()) {
+bool ProtoStreamTester::ExpectStatusEq(google::protobuf::util::StatusCode error_code) {
+  if (error_code != stream_.Status().code()) {
     ADD_FAILURE()
         << "ObjectTranslatorTest::ValidateStatus: Status doesn't match "
            "expected: "
-        << error_code << " actual: " << stream_.Status().error_code() << " - "
-        << stream_.Status().error_message() << std::endl;
+        << static_cast<int>(error_code) << " actual: " << static_cast<int>(stream_.Status().code()) << " - "
+        << stream_.Status().message() << std::endl;
     return false;
   }
   return true;

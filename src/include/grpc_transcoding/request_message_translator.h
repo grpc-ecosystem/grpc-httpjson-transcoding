@@ -135,7 +135,7 @@ class RequestMessageTranslator : public MessageStream {
   class StatusErrorListener
       : public ::google::protobuf::util::converter::ErrorListener {
    public:
-    StatusErrorListener() : status_(::google::protobuf::util::Status::OK) {}
+    StatusErrorListener() {}
     virtual ~StatusErrorListener() {}
 
     ::google::protobuf::util::Status status() const { return status_; }

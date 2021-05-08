@@ -447,7 +447,7 @@ TEST_F(RequestMessageTranslatorTest, UnexpectedScalarBody) {
   Input().RenderString("", "History");
 
   EXPECT_TRUE(Tester().ExpectStatusEq(
-      ::google::protobuf::util::error::INVALID_ARGUMENT));
+      ::google::protobuf::util::StatusCode::kInvalidArgument));
 }
 
 TEST_F(RequestMessageTranslatorTest, UnexpectedList) {
@@ -457,7 +457,7 @@ TEST_F(RequestMessageTranslatorTest, UnexpectedList) {
   Input().StartList("")->EndList();
 
   EXPECT_TRUE(Tester().ExpectStatusEq(
-      ::google::protobuf::util::error::INVALID_ARGUMENT));
+      ::google::protobuf::util::StatusCode::kInvalidArgument));
 }
 
 TEST_F(RequestMessageTranslatorTest, IgnoreUnkownFields) {

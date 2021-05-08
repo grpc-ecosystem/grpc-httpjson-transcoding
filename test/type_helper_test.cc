@@ -163,8 +163,8 @@ class ServiceConfigBasedTypeHelperTest : public ::testing::Test {
 
     auto status = helper_->ResolveFieldPath(*type, field_path_str, field_path);
     if (!status.ok()) {
-      ADD_FAILURE() << "Error " << status.error_code() << " - "
-                    << status.error_message() << std::endl;
+      ADD_FAILURE() << "Error " << static_cast<int>(status.code()) << " - "
+                    << status.message() << std::endl;
       return false;
     }
 

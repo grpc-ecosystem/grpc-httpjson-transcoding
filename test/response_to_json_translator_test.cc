@@ -36,7 +36,6 @@ namespace testing {
 namespace {
 
 namespace pbutil = ::google::protobuf::util;
-namespace pberr = ::google::protobuf::util::error;
 
 // A helper structure to store a single expected chunk of json and its position
 struct ExpectedAt {
@@ -92,7 +91,7 @@ class ResponseToJsonTranslatorTestRun {
            next_expected_->at <= position_) {
       // Check the status first
       if (!translator_->Status().ok()) {
-        ADD_FAILURE() << "Error: " << translator_->Status().error_message()
+        ADD_FAILURE() << "Error: " << translator_->Status().message()
                       << std::endl;
         return false;
       }
@@ -145,7 +144,7 @@ class ResponseToJsonTranslatorTestRun {
 
     // Check the status
     if (!translator_->Status().ok()) {
-      ADD_FAILURE() << "Error: " << translator_->Status().error_message()
+      ADD_FAILURE() << "Error: " << translator_->Status().message()
                     << std::endl;
       return false;
     }
@@ -646,7 +645,7 @@ TEST_F(ResponseToJsonTranslatorTest, ErrorInvalidType) {
   // Call NextMessage() to trigger the error
   std::string message;
   EXPECT_FALSE(translator.NextMessage(&message));
-  EXPECT_EQ(pberr::NOT_FOUND, translator.Status().error_code());
+  EXPECT_EQ(pbutil::StatusCode::kNotFound, translator.Status().code());
 }
 
 TEST_F(ResponseToJsonTranslatorTest, DirectTest) {
@@ -819,7 +818,7 @@ TEST_F(ResponseToJsonTranslatorTest, Streaming5KMessages) {
 
   // Check the status
   EXPECT_TRUE(translator.Status().ok())
-      << "Error " << translator.Status().error_message() << std::endl;
+      << "Error " << translator.Status().message() << std::endl;
 
   // Match the output array
   EXPECT_TRUE(ExpectJsonArrayEq(expected_json_array, actual_json_array));
@@ -844,7 +843,7 @@ TEST_F(ResponseToJsonTranslatorTest, IncompleteFrameHeader) {
   std::string actual;
   EXPECT_FALSE(translator.NextMessage(&actual));
   EXPECT_FALSE(translator.Status().ok());
-  EXPECT_EQ(translator.Status().error_message(),
+  EXPECT_EQ(translator.Status().message(),
             "Incomplete gRPC frame header received");
 }
 
@@ -867,7 +866,7 @@ TEST_F(ResponseToJsonTranslatorTest, InvalidFrameFlag) {
   std::string actual;
   EXPECT_FALSE(translator.NextMessage(&actual));
   EXPECT_FALSE(translator.Status().ok());
-  EXPECT_EQ(translator.Status().error_message(),
+  EXPECT_EQ(translator.Status().message(),
             "Unsupported gRPC frame flag: 10");
 }
 
@@ -890,7 +889,7 @@ TEST_F(ResponseToJsonTranslatorTest, IncompleteFrame) {
   std::string actual;
   EXPECT_FALSE(translator.NextMessage(&actual));
   EXPECT_FALSE(translator.Status().ok());
-  EXPECT_EQ(translator.Status().error_message(),
+  EXPECT_EQ(translator.Status().message(),
             "Incomplete gRPC frame expected size: 5 actual size: 1");
 }
 

@@ -27,7 +27,6 @@
 
 namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
-namespace pberr = ::google::protobuf::util::error;
 
 namespace google {
 namespace grpc {
@@ -63,7 +62,7 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
       }
       return pbutil::Status();
     } else {
-      return pbutil::Status(pberr::NOT_FOUND,
+      return pbutil::Status(pbutil::StatusCode::kNotFound,
                             "Type '" + type_url + "' cannot be found.");
     }
   }
@@ -78,7 +77,7 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
       }
       return pbutil::Status();
     } else {
-      return pbutil::Status(pberr::NOT_FOUND,
+      return pbutil::Status(pbutil::StatusCode::kNotFound,
                             "Enum '" + type_url + "' cannot be found.");
     }
   }
@@ -159,7 +158,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
     // Find the field by name in the current type
     auto field = Info()->FindField(current_type, field_names[i]);
     if (nullptr == field) {
-      return pbutil::Status(pberr::INVALID_ARGUMENT,
+      return pbutil::Status(pbutil::StatusCode::kInvalidArgument,
                             "Could not find field \"" + field_names[i] +
                                 "\" in the type \"" + current_type->name() +
                                 "\".");
@@ -170,7 +169,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
       // If this is not the last field in the path, it must be a message
       if (google::protobuf::Field::TYPE_MESSAGE != field->kind()) {
         return pbutil::Status(
-            pberr::INVALID_ARGUMENT,
+            pbutil::StatusCode::kInvalidArgument,
             "Encountered a non-leaf field \"" + field->name() +
                 "\" that is not a message while parsing a field path");
       }
@@ -178,14 +177,14 @@ pbutil::Status TypeHelper::ResolveFieldPath(
       // Update the type of the current message
       current_type = Info()->GetTypeByTypeUrl(field->type_url());
       if (nullptr == current_type) {
-        return pbutil::Status(pberr::INVALID_ARGUMENT,
+        return pbutil::Status(pbutil::StatusCode::kInvalidArgument,
                               "Cannot find the type \"" + field->type_url() +
                                   "\" while parsing a field path.");
       }
     }
   }
   *field_path_out = std::move(field_path);
-  return pbutil::Status::OK;
+  return pbutil::Status();
 }
 
 }  // namespace transcoding

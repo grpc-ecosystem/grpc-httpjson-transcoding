@@ -133,7 +133,7 @@ void RequestMessageTranslator::StatusErrorListener::InvalidName(
     const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
     internal::string_view unknown_name, internal::string_view message) {
   status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::error::INVALID_ARGUMENT,
+      ::google::protobuf::util::StatusCode::kInvalidArgument,
       loc.ToString() + ": " + std::string(message));
 }
 
@@ -141,7 +141,7 @@ void RequestMessageTranslator::StatusErrorListener::InvalidValue(
     const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
     internal::string_view type_name, internal::string_view value) {
   status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::error::INVALID_ARGUMENT,
+      ::google::protobuf::util::StatusCode::kInvalidArgument,
       loc.ToString() + ": invalid value " + std::string(value) + " for type " +
           std::string(type_name));
 }
@@ -150,7 +150,7 @@ void RequestMessageTranslator::StatusErrorListener::MissingField(
     const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
     internal::string_view missing_name) {
   status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::error::INVALID_ARGUMENT,
+      ::google::protobuf::util::StatusCode::kInvalidArgument,
       loc.ToString() + ": missing field " + std::string(missing_name));
 }
 
