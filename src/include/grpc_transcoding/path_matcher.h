@@ -94,7 +94,8 @@ class PathMatcher {
   // The info associated with each method. The path matcher nodes
   // will hold pointers to MethodData objects in this vector.
   std::vector<std::unique_ptr<MethodData>> methods_;
-  UrlUnescapeSpec unescape_spec_;
+  UrlUnescapeSpec path_unescape_spec_;
+  bool query_param_unescape_plus_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -127,8 +128,14 @@ class PathMatcherBuilder {
                 const std::string& body_field_path, Method method);
 
   // Change unescaping behavior, see UrlUnescapeSpec for available options.
-  void SetUrlUnescapeSpec(UrlUnescapeSpec unescape_spec) {
-    unescape_spec_ = unescape_spec;
+  // This only applies to path, not query parameters.
+  void SetUrlUnescapeSpec(UrlUnescapeSpec path_unescape_spec) {
+    path_unescape_spec_ = path_unescape_spec;
+  }
+  // If true, unescape '+' in query parameters to space. Default is false.
+  // To support [HTML 2.0 or RFC1866](https://tools.ietf.org/html/rfc1866#section-8.2.1).
+  void SetQueryParamUnescapePlus(bool query_param_unescape_plus) {
+    query_param_unescape_plus_ = query_param_unescape_plus;
   }
 
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
@@ -151,8 +158,9 @@ class PathMatcherBuilder {
   std::unordered_set<std::string> custom_verbs_;
   typedef typename PathMatcher<Method>::MethodData MethodData;
   std::vector<std::unique_ptr<MethodData>> methods_;
-  UrlUnescapeSpec unescape_spec_ =
+  UrlUnescapeSpec path_unescape_spec_ =
       UrlUnescapeSpec::kAllCharactersExceptReserved;
+  bool query_param_unescape_plus_ = false;
 
   friend class PathMatcher<Method>;
 };
@@ -222,8 +230,21 @@ inline int hex_digit_to_int(char c) {
 //
 // If the next three characters are an escaped character then this function will
 // also return what character is escaped.
-bool GetEscapedChar(const std::string& src, size_t i,
-                    UrlUnescapeSpec unescape_spec, char* out) {
+//
+// If unescape_plus is true, unescape '+' to space.
+//
+// return value: 0: not unescaped, >0: unescaped, number of used original characters.
+// It can only be followings:
+// * 0: not unescaped, use the original character.
+// * 1: unescaped,  '+' -> space, only replace 1 original character.
+// * 3: unescaped percent-encoded "%HH" > c,  replaces 3 original characters.
+//
+int GetEscapedChar(const std::string& src, size_t i,
+                   UrlUnescapeSpec unescape_spec, bool unescape_plus, char* out) {
+  if (unescape_plus && src[i] == '+') {
+    *out = ' ';
+    return 1;
+  }
   if (i + 2 < src.size() && src[i] == '%') {
     if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
       char c =
@@ -231,35 +252,35 @@ bool GetEscapedChar(const std::string& src, size_t i,
       switch (unescape_spec) {
         case UrlUnescapeSpec::kAllCharactersExceptReserved:
           if (IsReservedChar(c)) {
-            return false;
+            return 0;
           }
           break;
         case UrlUnescapeSpec::kAllCharactersExceptSlash:
           if (c == '/') {
-            return false;
+            return 0;
           }
           break;
         case UrlUnescapeSpec::kAllCharacters:
           break;
       }
       *out = c;
-      return true;
+      return 3;
     }
   }
-  return false;
+  return 0;
 }
 
 // Unescapes string 'part' and returns the unescaped string. Reserved characters
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
 // false.
 std::string UrlUnescapeString(const std::string& part,
-                              UrlUnescapeSpec unescape_spec) {
+                              UrlUnescapeSpec unescape_spec, bool unescape_plus) {
   std::string unescaped;
   // Check whether we need to escape at all.
   bool needs_unescaping = false;
   char ch = '\0';
   for (size_t i = 0; i < part.size(); ++i) {
-    if (GetEscapedChar(part, i, unescape_spec, &ch)) {
+    if (GetEscapedChar(part, i, unescape_spec, unescape_plus, &ch) > 0) {
       needs_unescaping = true;
       break;
     }
@@ -275,9 +296,10 @@ std::string UrlUnescapeString(const std::string& part,
   char* p = begin;
 
   for (size_t i = 0; i < part.size();) {
-    if (GetEscapedChar(part, i, unescape_spec, &ch)) {
+    int skip = GetEscapedChar(part, i, unescape_spec, unescape_plus, &ch);
+    if (skip > 0) {
       *p++ = ch;
-      i += 3;
+      i += skip;
     } else {
       *p++ = part[i];
       i += 1;
@@ -291,8 +313,8 @@ std::string UrlUnescapeString(const std::string& part,
 template <class VariableBinding>
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
-                             std::vector<VariableBinding>* bindings,
-                             UrlUnescapeSpec unescape_spec) {
+                             UrlUnescapeSpec unescape_spec,
+                             std::vector<VariableBinding>* bindings) {
   for (const auto& var : vars) {
     // Determine the subpath bound to the variable based on the
     // [start_segment, end_segment) segment range of the variable.
@@ -316,7 +338,7 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
     // Joins parts with "/"  to form a path string.
     for (size_t i = var.start_segment; i < end_segment; ++i) {
       // For multipart matches only unescape non-reserved characters.
-      binding.value += UrlUnescapeString(parts[i], var_unescape_spec);
+      binding.value += UrlUnescapeString(parts[i], var_unescape_spec, false);
       if (i < end_segment - 1) {
         binding.value += "/";
       }
@@ -329,6 +351,7 @@ template <class VariableBinding>
 void ExtractBindingsFromQueryParameters(
     const std::string& query_params,
     const std::unordered_set<std::string>& system_params,
+    bool query_param_unescape_plus,
     std::vector<VariableBinding>* bindings) {
   // The bindings in URL the query parameters have the following form:
   //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
@@ -350,7 +373,8 @@ void ExtractBindingsFromQueryParameters(
         VariableBinding binding;
         split(name, '.', binding.field_path);
         binding.value = UrlUnescapeString(param.substr(pos + 1),
-                                          UrlUnescapeSpec::kAllCharacters);
+                                          UrlUnescapeSpec::kAllCharacters,
+                                          query_param_unescape_plus);
         bindings->emplace_back(std::move(binding));
       }
     }
@@ -424,7 +448,8 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
     : root_ptr_(std::move(builder.root_ptr_)),
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)),
-      unescape_spec_(builder.unescape_spec_) {}
+      path_unescape_spec_(builder.path_unescape_spec_),
+      query_param_unescape_plus_(builder.query_param_unescape_plus_) {}
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
 // splits the request path into slash-separated path parts. Next, the method
@@ -460,11 +485,11 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts, variable_bindings,
-                            unescape_spec_);
+    ExtractBindingsFromPath(method_data->variables, parts,
+                            path_unescape_spec_, variable_bindings);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
-        variable_bindings);
+        query_param_unescape_plus_, variable_bindings);
   }
   if (body_field_path != nullptr) {
     *body_field_path = method_data->body_field_path;
