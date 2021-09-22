@@ -225,6 +225,19 @@ cc_test(
     ],
 )
 
+cc_fuzz_test(
+    name = "message_reader_fuzz_test",
+    testonly = 1,
+    srcs = [
+        "message_reader_fuzz_test.cc",
+    ],
+    corpus = glob(["message_reader_fuzz_test_corpus/**"]),
+    deps = [
+        ":test_common",
+        "//src:message_reader",
+    ],
+)
+
 cc_test(
     name = "response_to_json_translator_test",
     size = "small",
