@@ -124,6 +124,10 @@ class PathMatcherTest : public ::testing::Test {
     builder_.SetUrlUnescapeSpec(unescape_spec);
   }
 
+  void SetQueryParamUnescapePlus(bool query_param_unescape_plus) {
+    builder_.SetQueryParamUnescapePlus(query_param_unescape_plus);
+  }
+
   void Build() { matcher_ = builder_.Build(); }
 
   MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
@@ -320,9 +324,10 @@ TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegment) {
   EXPECT_NE(nullptr, a_c);
 
   Bindings bindings;
-  EXPECT_EQ(Lookup("GET", "/a/p%20q%2Fr/c", &bindings), a_c);
+  // Also test '+',  make sure it is not unescaped
+  EXPECT_EQ(Lookup("GET", "/a/p%20q%2Fr+/c", &bindings), a_c);
   EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "p q/r"},
+                Binding{FieldPath{"x"}, "p q/r+"},
             }),
             bindings);
 }
@@ -383,9 +388,10 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment2) {
   EXPECT_NE(nullptr, a__c);
 
   Bindings bindings;
-  EXPECT_EQ(Lookup("GET", "/a/p/foo%20foo/q/bar%2Fbar/c", &bindings), a__c);
-  // space (%20) is escaped, but slash (%2F) isn't.
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar"}}),
+  // Also test '+',  make sure it is not unescaped
+  EXPECT_EQ(Lookup("GET", "/a/p/foo%20foo/q/bar%2Fbar+/c", &bindings), a__c);
+  // space (%20) is unescaped, but slash (%2F) isn't. nor +
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar+"}}),
             bindings);
 }
 
@@ -815,6 +821,42 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=%24%25%2F%20%0A", &bindings), a);
   EXPECT_EQ(Bindings({
                 Binding{FieldPath{"x"}, "$%/ \n"},
+            }),
+            bindings);
+}
+
+TEST_F(PathMatcherTest, QueryParameterNotUnescapePlus) {
+  MethodInfo* a = AddGetPath("/a");
+  Build();
+
+  EXPECT_NE(nullptr, a);
+
+  Bindings bindings;
+  // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
+  // By default, only unescape percent-encoded %HH,  but not '+'
+  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings), a);
+  EXPECT_EQ(Bindings({
+                Binding{FieldPath{"x"}, "Hello+world"},
+                Binding{FieldPath{"y"}, "++ "},
+            }),
+            bindings);
+}
+
+TEST_F(PathMatcherTest, QueryParameterUnescapePlus) {
+  MethodInfo* a = AddGetPath("/a");
+  // Enable query_param_unescape_plus to unescape '+'
+  SetQueryParamUnescapePlus(true);
+  Build();
+
+  EXPECT_NE(nullptr, a);
+
+  Bindings bindings;
+  // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
+  // Unescape percent-encoded %HH, and convert '+' to space
+  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings), a);
+  EXPECT_EQ(Bindings({
+                Binding{FieldPath{"x"}, "Hello world"},
+                Binding{FieldPath{"y"}, "+  "},
             }),
             bindings);
 }
