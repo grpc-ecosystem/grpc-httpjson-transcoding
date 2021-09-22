@@ -234,10 +234,6 @@ inline int hex_digit_to_int(char c) {
 // If unescape_plus is true, unescape '+' to space.
 //
 // return value: 0: not unescaped, >0: unescaped, number of used original characters.
-// It can only be followings:
-// * 0: not unescaped, use the original character.
-// * 1: unescaped,  '+' -> space, only replace 1 original character.
-// * 3: unescaped percent-encoded "%HH" > c,  replaces 3 original characters.
 //
 int GetEscapedChar(const std::string& src, size_t i,
                    UrlUnescapeSpec unescape_spec, bool unescape_plus, char* out) {
