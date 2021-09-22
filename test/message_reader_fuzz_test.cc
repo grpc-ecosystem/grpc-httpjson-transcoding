@@ -26,14 +26,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       input_stream.AddChunk(provider.ConsumeRandomLengthString(100));
     }
 
-    // Run the message reader a few times.
-    for (int i = 0; i < provider.ConsumeIntegralInRange(0, 5); i++) {
-      (void) reader.NextMessageAndGrpcFrame();
+    // Run the message reader to get the next message.
+    (void) reader.NextMessageAndGrpcFrame();
 
-      // Handle end of input or error due to malformed bytes.
-      if (reader.Finished()) {
-        return 0;
-      }
+    // Handle end of input or error due to malformed bytes.
+    if (reader.Finished()) {
+      return 0;
     }
   }
 
