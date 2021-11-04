@@ -16,14 +16,14 @@
 //
 #include "grpc_transcoding/type_helper.h"
 
-#include "absl/strings/str_split.h"
+#include <string>
+#include <unordered_map>
 
+#include "absl/strings/str_split.h"
+#include "absl/synchronization/mutex.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
-
-#include <string>
-#include <unordered_map>
 
 namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
@@ -32,6 +32,7 @@ namespace google {
 namespace grpc {
 
 namespace transcoding {
+namespace {
 
 const char DEFAULT_URL_PREFIX[] = "type.googleapis.com/";
 
@@ -108,9 +109,46 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
   SimpleTypeResolver& operator=(const SimpleTypeResolver&) = delete;
 };
 
+class LockedTypeInfo : public pbconv::TypeInfo {
+ public:
+  LockedTypeInfo(pbconv::TypeInfo* type_info) : type_info_(type_info) {}
+
+  pbutil::StatusOr<const google::protobuf::Type*> ResolveTypeUrl(
+      google::protobuf::StringPiece type_url) const override {
+    absl::MutexLock lock(&mutex_);
+    return type_info_->ResolveTypeUrl(type_url);
+  }
+
+  const google::protobuf::Type* GetTypeByTypeUrl(
+      google::protobuf::StringPiece type_url) const override {
+    absl::MutexLock lock(&mutex_);
+    return type_info_->GetTypeByTypeUrl(type_url);
+  }
+
+  const google::protobuf::Enum* GetEnumByTypeUrl(
+      google::protobuf::StringPiece type_url) const override {
+    absl::MutexLock lock(&mutex_);
+    return type_info_->GetEnumByTypeUrl(type_url);
+  }
+
+  const google::protobuf::Field* FindField(
+      const google::protobuf::Type* type,
+      google::protobuf::StringPiece camel_case_name) const override {
+    absl::MutexLock lock(&mutex_);
+    return type_info_->FindField(type, camel_case_name);
+  }
+
+ private:
+  mutable absl::Mutex mutex_;
+  std::unique_ptr<pbconv::TypeInfo> type_info_ ABSL_GUARDED_BY(mutex_);
+};
+
+}  // namespace
+
 TypeHelper::TypeHelper(pbutil::TypeResolver* type_resolver)
     : type_resolver_(type_resolver),
-      type_info_(pbconv::TypeInfo::NewTypeInfo(type_resolver)) {}
+      type_info_(
+          new LockedTypeInfo(pbconv::TypeInfo::NewTypeInfo(type_resolver))) {}
 
 TypeHelper::~TypeHelper() {
   type_info_.reset();
@@ -123,7 +161,8 @@ pbconv::TypeInfo* TypeHelper::Info() const { return type_info_.get(); }
 
 void TypeHelper::Initialize() {
   type_resolver_ = new SimpleTypeResolver();
-  type_info_.reset(pbconv::TypeInfo::NewTypeInfo(type_resolver_));
+  type_info_.reset(
+      new LockedTypeInfo(pbconv::TypeInfo::NewTypeInfo(type_resolver_)));
 }
 
 void TypeHelper::AddType(const google::protobuf::Type& t) {

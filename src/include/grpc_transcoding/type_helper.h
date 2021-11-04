@@ -27,11 +27,10 @@ namespace grpc {
 
 namespace transcoding {
 
-class SimpleTypeResolver;
-
 // Provides ::google::protobuf::util::TypeResolver and
 // ::google::protobuf::util::converter::TypeInfo implementations based on a
 // collection of types and a collection of enums.
+// This object is thread-safe
 class TypeHelper {
  public:
   template <typename Types, typename Enums>
@@ -76,10 +75,6 @@ class TypeHelper {
   void AddType(const ::google::protobuf::Type& t);
   void AddEnum(const ::google::protobuf::Enum& e);
 
-  // We can't use a unique_ptr<SimpleTypeResolver> as the default deleter of
-  // unique_ptr requires the type to be defined when the unique_ptr destructor
-  // is called. In our case it's called from the template constructor below
-  // (most likely as a part of stack unwinding when an exception occurs).
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::unique_ptr<::google::protobuf::util::converter::TypeInfo> type_info_;
 
