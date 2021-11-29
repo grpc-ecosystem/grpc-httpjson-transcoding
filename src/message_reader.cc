@@ -141,6 +141,7 @@ MessageAndGrpcFrame MessageReader::NextMessageAndGrpcFrame() {
   MessageAndGrpcFrame out;
   out.message = NextMessage();
   memcpy(out.grpc_frame, delimiter_, kGrpcDelimiterByteSize);
+  out.message_size = current_message_size_;
   return out;
 }
 

@@ -115,6 +115,12 @@ class MessageReaderTestRun {
         EXPECT_EQ(delimiter_string, next_expected_->delimiter);
         return false;
       }
+      // Match the message size.
+      if (result.message_size != next_expected_->message.size()) {
+        EXPECT_EQ(
+            result.message_size, next_expected_->message.size());
+        return false;
+      }
       // Move to the next expected message
       ++next_expected_;
     }

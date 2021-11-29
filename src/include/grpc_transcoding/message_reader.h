@@ -34,6 +34,8 @@ constexpr size_t kGrpcDelimiterByteSize = 5;
 struct MessageAndGrpcFrame {
   std::unique_ptr<::google::protobuf::io::ZeroCopyInputStream> message;
   unsigned char grpc_frame[kGrpcDelimiterByteSize];
+  // The size (in bytes) of the full gRPC message, excluding the frame header.
+  uint32_t message_size;
 };
 
 // MessageReader helps extract full messages from a ZeroCopyInputStream of
