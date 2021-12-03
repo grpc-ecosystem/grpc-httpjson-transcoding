@@ -96,6 +96,7 @@ class PathMatcher {
   std::vector<std::unique_ptr<MethodData>> methods_;
   UrlUnescapeSpec path_unescape_spec_;
   bool query_param_unescape_plus_;
+  bool check_unregistered_custom_verb_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -133,9 +134,16 @@ class PathMatcherBuilder {
     path_unescape_spec_ = path_unescape_spec;
   }
   // If true, unescape '+' in query parameters to space. Default is false.
-  // To support [HTML 2.0 or RFC1866](https://tools.ietf.org/html/rfc1866#section-8.2.1).
+  // To support [HTML 2.0 or
+  // RFC1866](https://tools.ietf.org/html/rfc1866#section-8.2.1).
   void SetQueryParamUnescapePlus(bool query_param_unescape_plus) {
     query_param_unescape_plus_ = query_param_unescape_plus;
+  }
+
+  // If true, try to match the custom verb even if it is unregistered. By
+  // default, only match when it is registered.
+  void SetCheckUnregisteredCustomVerb(bool check_unregistered_custom_verb) {
+    check_unregistered_custom_verb_ = check_unregistered_custom_verb;
   }
 
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
@@ -161,6 +169,7 @@ class PathMatcherBuilder {
   UrlUnescapeSpec path_unescape_spec_ =
       UrlUnescapeSpec::kAllCharactersExceptReserved;
   bool query_param_unescape_plus_ = false;
+  bool check_unregistered_custom_verb_ = false;
 
   friend class PathMatcher<Method>;
 };
@@ -233,10 +242,12 @@ inline int hex_digit_to_int(char c) {
 //
 // If unescape_plus is true, unescape '+' to space.
 //
-// return value: 0: not unescaped, >0: unescaped, number of used original characters.
+// return value: 0: not unescaped, >0: unescaped, number of used original
+// characters.
 //
 int GetEscapedChar(const std::string& src, size_t i,
-                   UrlUnescapeSpec unescape_spec, bool unescape_plus, char* out) {
+                   UrlUnescapeSpec unescape_spec, bool unescape_plus,
+                   char* out) {
   if (unescape_plus && src[i] == '+') {
     *out = ' ';
     return 1;
@@ -270,7 +281,8 @@ int GetEscapedChar(const std::string& src, size_t i,
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
 // false.
 std::string UrlUnescapeString(const std::string& part,
-                              UrlUnescapeSpec unescape_spec, bool unescape_plus) {
+                              UrlUnescapeSpec unescape_spec,
+                              bool unescape_plus) {
   std::string unescaped;
   // Check whether we need to escape at all.
   bool needs_unescaping = false;
@@ -347,8 +359,7 @@ template <class VariableBinding>
 void ExtractBindingsFromQueryParameters(
     const std::string& query_params,
     const std::unordered_set<std::string>& system_params,
-    bool query_param_unescape_plus,
-    std::vector<VariableBinding>* bindings) {
+    bool query_param_unescape_plus, std::vector<VariableBinding>* bindings) {
   // The bindings in URL the query parameters have the following form:
   //      <field_path1>=value1&<field_path2>=value2&...&<field_pathN>=valueN
   // Query parameters may also contain system parameters such as `api_key`.
@@ -390,7 +401,7 @@ void ExtractBindingsFromQueryParameters(
 // - Collapses extra slashes: "///" --> "/"
 std::vector<std::string> ExtractRequestParts(
     std::string path, const std::unordered_set<std::string>& custom_verbs,
-    std::string& verb) {
+    std::string& verb, bool check_unregistered_custom_verb) {
   // Remove query parameters.
   path = path.substr(0, path.find_first_of('?'));
 
@@ -400,8 +411,10 @@ std::vector<std::string> ExtractRequestParts(
   std::size_t last_slash_pos = path.find_last_of('/');
   if (last_colon_pos != std::string::npos && last_colon_pos > last_slash_pos) {
     std::string tmp_verb = path.substr(last_colon_pos + 1);
-    // only verb in the configured custom verbs, treat it as verb
-    if (custom_verbs.find(tmp_verb) != custom_verbs.end()) {
+    // Only when chek_unregistered_custom_verb=true or the verb is in the
+    // configured custom verbs, treat it as verb
+    if (check_unregistered_custom_verb ||
+        custom_verbs.find(tmp_verb) != custom_verbs.end()) {
       verb = tmp_verb;
       path = path.substr(0, last_colon_pos);
     }
@@ -445,7 +458,9 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
       custom_verbs_(std::move(builder.custom_verbs_)),
       methods_(std::move(builder.methods_)),
       path_unescape_spec_(builder.path_unescape_spec_),
-      query_param_unescape_plus_(builder.query_param_unescape_plus_) {}
+      query_param_unescape_plus_(builder.query_param_unescape_plus_),
+      check_unregistered_custom_verb_(builder.check_unregistered_custom_verb_) {
+}
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
 // splits the request path into slash-separated path parts. Next, the method
@@ -463,8 +478,8 @@ Method PathMatcher<Method>::Lookup(
     std::vector<VariableBinding>* variable_bindings,
     std::string* body_field_path) const {
   std::string verb;
-  const std::vector<std::string> parts =
-      ExtractRequestParts(path, custom_verbs_, verb);
+  const std::vector<std::string> parts = ExtractRequestParts(
+      path, custom_verbs_, verb, check_unregistered_custom_verb_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
@@ -481,8 +496,8 @@ Method PathMatcher<Method>::Lookup(
   MethodData* method_data = reinterpret_cast<MethodData*>(lookup_result.data);
   if (variable_bindings != nullptr) {
     variable_bindings->clear();
-    ExtractBindingsFromPath(method_data->variables, parts,
-                            path_unescape_spec_, variable_bindings);
+    ExtractBindingsFromPath(method_data->variables, parts, path_unescape_spec_,
+                            variable_bindings);
     ExtractBindingsFromQueryParameters(
         query_params, method_data->system_query_parameter_names,
         query_param_unescape_plus_, variable_bindings);
@@ -498,8 +513,8 @@ template <class Method>
 Method PathMatcher<Method>::Lookup(const std::string& http_method,
                                    const std::string& path) const {
   std::string verb;
-  const std::vector<std::string> parts =
-      ExtractRequestParts(path, custom_verbs_, verb);
+  const std::vector<std::string> parts = ExtractRequestParts(
+      path, custom_verbs_, verb, check_unregistered_custom_verb_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
