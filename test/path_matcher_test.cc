@@ -128,8 +128,8 @@ class PathMatcherTest : public ::testing::Test {
     builder_.SetQueryParamUnescapePlus(query_param_unescape_plus);
   }
 
-  void SetCheckUnregisteredCustomVerb(bool check_unregistered_custom_verb) {
-    builder_.SetCheckUnregisteredCustomVerb(check_unregistered_custom_verb);
+  void SetMatchUnregisteredCustomVerb(bool match_unregistered_custom_verb) {
+    builder_.SetMatchUnregisteredCustomVerb(match_unregistered_custom_verb);
   }
 
   void Build() { matcher_ = builder_.Build(); }
@@ -471,8 +471,8 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
 
 
 
-TEST_F(PathMatcherTest, CheckUnregisteredCustomVerb) {
-  SetCheckUnregisteredCustomVerb(true);
+TEST_F(PathMatcherTest, MatchUnregisteredCustomVerb) {
+  SetMatchUnregisteredCustomVerb(true);
   MethodInfo* get_person_1 = AddGetPath("/person/{id=*}");
   MethodInfo* get_person_2 = AddGetPath("/person/**");
   MethodInfo* get_person_3 = AddGetPath("/person/{id=*}/name");

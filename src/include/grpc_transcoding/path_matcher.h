@@ -96,7 +96,7 @@ class PathMatcher {
   std::vector<std::unique_ptr<MethodData>> methods_;
   UrlUnescapeSpec path_unescape_spec_;
   bool query_param_unescape_plus_;
-  bool check_unregistered_custom_verb_;
+  bool match_unregistered_custom_verb_;
 
  private:
   friend class PathMatcherBuilder<Method>;
@@ -142,8 +142,8 @@ class PathMatcherBuilder {
 
   // If true, try to match the custom verb even if it is unregistered. By
   // default, only match when it is registered.
-  void SetCheckUnregisteredCustomVerb(bool check_unregistered_custom_verb) {
-    check_unregistered_custom_verb_ = check_unregistered_custom_verb;
+  void SetMatchUnregisteredCustomVerb(bool match_unregistered_custom_verb) {
+    match_unregistered_custom_verb_ = match_unregistered_custom_verb;
   }
 
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
@@ -169,7 +169,7 @@ class PathMatcherBuilder {
   UrlUnescapeSpec path_unescape_spec_ =
       UrlUnescapeSpec::kAllCharactersExceptReserved;
   bool query_param_unescape_plus_ = false;
-  bool check_unregistered_custom_verb_ = false;
+  bool match_unregistered_custom_verb_ = false;
 
   friend class PathMatcher<Method>;
 };
@@ -401,7 +401,7 @@ void ExtractBindingsFromQueryParameters(
 // - Collapses extra slashes: "///" --> "/"
 std::vector<std::string> ExtractRequestParts(
     std::string path, const std::unordered_set<std::string>& custom_verbs,
-    std::string& verb, bool check_unregistered_custom_verb) {
+    std::string& verb, bool match_unregistered_custom_verb) {
   // Remove query parameters.
   path = path.substr(0, path.find_first_of('?'));
 
@@ -413,7 +413,7 @@ std::vector<std::string> ExtractRequestParts(
     std::string tmp_verb = path.substr(last_colon_pos + 1);
     // Only when chek_unregistered_custom_verb=true or the verb is in the
     // configured custom verbs, treat it as verb
-    if (check_unregistered_custom_verb ||
+    if (match_unregistered_custom_verb ||
         custom_verbs.find(tmp_verb) != custom_verbs.end()) {
       verb = tmp_verb;
       path = path.substr(0, last_colon_pos);
@@ -459,7 +459,7 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
       methods_(std::move(builder.methods_)),
       path_unescape_spec_(builder.path_unescape_spec_),
       query_param_unescape_plus_(builder.query_param_unescape_plus_),
-      check_unregistered_custom_verb_(builder.check_unregistered_custom_verb_) {
+      match_unregistered_custom_verb_(builder.match_unregistered_custom_verb_) {
 }
 
 // Lookup is a wrapper method for the recursive node Lookup. First, the wrapper
@@ -479,7 +479,7 @@ Method PathMatcher<Method>::Lookup(
     std::string* body_field_path) const {
   std::string verb;
   const std::vector<std::string> parts = ExtractRequestParts(
-      path, custom_verbs_, verb, check_unregistered_custom_verb_);
+      path, custom_verbs_, verb, match_unregistered_custom_verb_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
@@ -514,7 +514,7 @@ Method PathMatcher<Method>::Lookup(const std::string& http_method,
                                    const std::string& path) const {
   std::string verb;
   const std::vector<std::string> parts = ExtractRequestParts(
-      path, custom_verbs_, verb, check_unregistered_custom_verb_);
+      path, custom_verbs_, verb, match_unregistered_custom_verb_);
 
   // If service_name has not been registered to ESP and strict_service_matching_
   // is set to false, tries to lookup the method in all registered services.
