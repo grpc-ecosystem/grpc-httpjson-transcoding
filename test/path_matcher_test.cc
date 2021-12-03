@@ -470,6 +470,7 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
 }
 
 
+
 TEST_F(PathMatcherTest, CheckUnregisteredCustomVerb) {
   SetCheckUnregisteredCustomVerb(true);
   MethodInfo* get_person_1 = AddGetPath("/person/{id=*}");
@@ -489,10 +490,11 @@ TEST_F(PathMatcherTest, CheckUnregisteredCustomVerb) {
   EXPECT_EQ(Lookup("GET", "/person/jason:verb", &bindings), verb);
   EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person/jason"}}), bindings);
 
-    EXPECT_EQ(Lookup("GET", "/person/jason/name", &bindings), get_person_3);
-    // Path matcher doesn't do sanity check on the verb appearing in the middle segment.
-    EXPECT_EQ(Lookup("GET", "/person/jason:verb/name", &bindings), get_person_3);
-    EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:verb"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/person/jason/name", &bindings), get_person_3);
+  // For the wrong-format url where the verb appears in the middle segment, the
+  // path matcher still regard it as a segment.
+  EXPECT_EQ(Lookup("GET", "/person/jason:verb/name", &bindings), get_person_3);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:verb"}}), bindings);
 
   // with the verb but with a different prefix
   EXPECT_EQ(Lookup("GET", "/animal:verb", &bindings), verb);
