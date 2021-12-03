@@ -128,6 +128,10 @@ class PathMatcherTest : public ::testing::Test {
     builder_.SetQueryParamUnescapePlus(query_param_unescape_plus);
   }
 
+  void SetMatchUnregisteredCustomVerb(bool match_unregistered_custom_verb) {
+    builder_.SetMatchUnregisteredCustomVerb(match_unregistered_custom_verb);
+  }
+
   void Build() { matcher_ = builder_.Build(); }
 
   MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
@@ -464,6 +468,47 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
   EXPECT_EQ(Lookup("GET", "/animal:other", &bindings), nullptr);
   EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
 }
+
+
+
+TEST_F(PathMatcherTest, MatchUnregisteredCustomVerb) {
+  SetMatchUnregisteredCustomVerb(true);
+  MethodInfo* get_person_1 = AddGetPath("/person/{id=*}");
+  MethodInfo* get_person_2 = AddGetPath("/person/**");
+  MethodInfo* get_person_3 = AddGetPath("/person/{id=*}/name");
+  MethodInfo* verb = AddGetPath("/{x=**}:verb");
+  Build();
+
+  EXPECT_NE(nullptr, get_person_1);
+  EXPECT_NE(nullptr, get_person_2);
+  EXPECT_NE(nullptr, verb);
+
+  Bindings bindings;
+  // with the verb
+  EXPECT_EQ(Lookup("GET", "/person:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/person/jason:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person/jason"}}), bindings);
+
+  EXPECT_EQ(Lookup("GET", "/person/jason/name", &bindings), get_person_3);
+  // For the wrong-format url where the verb appears in the middle segment, the
+  // path matcher still regard it as a segment.
+  EXPECT_EQ(Lookup("GET", "/person/jason:verb/name", &bindings), get_person_3);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:verb"}}), bindings);
+
+  // with the verb but with a different prefix
+  EXPECT_EQ(Lookup("GET", "/animal:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal"}}), bindings);
+  EXPECT_EQ(Lookup("GET", "/animal/cat:verb", &bindings), verb);
+  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal/cat"}}), bindings);
+
+  // with a non-verb
+  EXPECT_EQ(Lookup("GET", "/person:other", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/person/jason:other", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/animal:other", &bindings), nullptr);
+  EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
+}
+
 
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
   MethodInfo* a_verb = AddGetPath("/a/{y=*}:verb");
