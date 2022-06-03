@@ -374,6 +374,9 @@ void ExtractBindingsFromQueryParameters(
       // Make sure the query parameter is not a system parameter (e.g.
       // `api_key`) before adding the binding.
       if (system_params.find(name) == std::end(system_params)) {
+        name = UrlUnescapeString(name,
+                                 UrlUnescapeSpec::kAllCharacters,
+                                 /*query_param_unescape_plus=*/false);
         // The name of the parameter is a field path, which is a dot-delimited
         // sequence of field names that identify the (potentially deep) field
         // in the request, e.g. `book.author.name`.

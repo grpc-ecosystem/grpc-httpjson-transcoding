@@ -868,6 +868,12 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
                 Binding{FieldPath{"x"}, "$%/ \n"},
             }),
             bindings);
+
+  EXPECT_EQ(LookupWithParams("GET", "/a", "shelf.search%5Bfield%5D=Hello%20world", &bindings), a);
+  EXPECT_EQ(Bindings({
+        Binding{FieldPath{"shelf","search[field]"}, "Hello world"},
+            }),
+            bindings);
 }
 
 TEST_F(PathMatcherTest, QueryParameterNotUnescapePlus) {
