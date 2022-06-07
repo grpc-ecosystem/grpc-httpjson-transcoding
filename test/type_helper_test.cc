@@ -163,8 +163,6 @@ class ServiceConfigBasedTypeHelperTest : public ::testing::Test {
 
     auto status = helper_->ResolveFieldPath(*type, field_path_str, field_path);
     if (!status.ok()) {
-      ADD_FAILURE() << "Error " << static_cast<int>(status.code()) << " - "
-                    << status.message() << std::endl;
       return false;
     }
 
@@ -334,6 +332,28 @@ TEST_F(ServiceConfigBasedTypeHelperTest, ResolveFieldPathTests) {
   EXPECT_EQ("author_info", field_path[1]->name());
   EXPECT_EQ("bio", field_path[2]->name());
   EXPECT_EQ("year_born", field_path[3]->name());
+}
+
+TEST_F(ServiceConfigBasedTypeHelperTest, ResolveFieldEncodedPathTests) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+
+  std::vector<const google::protobuf::Field*> field_path;
+
+  // json_name = "search%5Bencoded%5D", "search[encode]" should fail
+  EXPECT_FALSE(ResolveFieldPath("SearchShelf", "search[encoded]", &field_path));
+
+  EXPECT_TRUE(ResolveFieldPath("SearchShelf", "search%5Bencoded%5D", &field_path));
+  ASSERT_EQ(1, field_path.size());
+  EXPECT_EQ("search_encoded", field_path[0]->name());
+
+  // json_name = "search[decoded]", "search%5Bdecoded%5D" should work
+  EXPECT_TRUE(ResolveFieldPath("SearchShelf", "search%5Bdecoded%5D", &field_path));
+  ASSERT_EQ(1, field_path.size());
+  EXPECT_EQ("search_decoded", field_path[0]->name());
+
+  EXPECT_TRUE(ResolveFieldPath("SearchShelf", "search[decoded]", &field_path));
+  ASSERT_EQ(1, field_path.size());
+  EXPECT_EQ("search_decoded", field_path[0]->name());
 }
 
 }  // namespace

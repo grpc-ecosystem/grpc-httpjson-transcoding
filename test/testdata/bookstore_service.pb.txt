@@ -176,6 +176,32 @@ types {
   }
 }
 types {
+  name: "SearchShelf"
+  fields {
+    kind: TYPE_INT64
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "shelf"
+    json_name: "shelf"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 2
+    name: "search_encoded"
+    json_name: "search%5Bencoded%5D"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 3
+    name: "search_decoded"
+    json_name: "search[decoded]"
+  }
+  source_context {
+  }
+}
+types {
   name: "ListShelvesResponse"
   fields {
     kind: TYPE_MESSAGE

@@ -75,6 +75,9 @@ class TypeHelper {
   void AddType(const ::google::protobuf::Type& t);
   void AddEnum(const ::google::protobuf::Enum& e);
 
+  const google::protobuf::Field* FindField(const google::protobuf::Type* type,
+                                           google::protobuf::StringPiece name) const;
+
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::unique_ptr<::google::protobuf::util::converter::TypeInfo> type_info_;
 
