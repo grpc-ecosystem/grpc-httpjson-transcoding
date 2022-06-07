@@ -21,6 +21,7 @@
 
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
+#include "grpc_transcoding/percent_encoding.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
@@ -182,6 +183,20 @@ pbutil::Status TypeHelper::ResolveFieldPath(
   return ResolveFieldPath(type, field_names, field_path_out);
 }
 
+const google::protobuf::Field* TypeHelper::FindField(
+    const google::protobuf::Type* type, google::protobuf::StringPiece name) const {
+  auto* field = Info()->FindField(type, name);
+  if (field != nullptr) {
+    return field;
+  }
+  // The name may be UrlEscaped, try to un-escape it and lookup.
+  absl::string_view name_view(name.data(), name.size());
+  if (IsUrlEscapedString(name_view)) {
+    field = Info()->FindField(type, UrlUnescapeString(name_view));
+  }
+  return field;
+}
+
 pbutil::Status TypeHelper::ResolveFieldPath(
     const google::protobuf::Type& type,
     const std::vector<std::string>& field_names,
@@ -195,7 +210,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
 
   for (size_t i = 0; i < field_names.size(); ++i) {
     // Find the field by name in the current type
-    auto field = Info()->FindField(current_type, field_names[i]);
+    auto field = FindField(current_type, field_names[i]);
     if (nullptr == field) {
       return pbutil::Status(pbutil::StatusCode::kInvalidArgument,
                             "Could not find field \"" + field_names[i] +

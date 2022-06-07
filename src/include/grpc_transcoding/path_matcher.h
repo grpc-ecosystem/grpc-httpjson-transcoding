@@ -24,6 +24,7 @@
 
 #include "http_template.h"
 #include "path_matcher_node.h"
+#include "percent_encoding.h"
 
 namespace google {
 namespace grpc {
@@ -31,18 +32,6 @@ namespace transcoding {
 
 template <class Method>
 class PathMatcherBuilder;  // required for PathMatcher constructor
-
-enum class UrlUnescapeSpec {
-  // URL path parameters will not decode RFC 6570 reserved characters.
-  // This is the default behavior.
-  kAllCharactersExceptReserved = 0,
-  // URL path parameters will be fully URI-decoded except in
-  // cases of single segment matches in reserved expansion, where "%2F" will be
-  // left encoded.
-  kAllCharactersExceptSlash,
-  // URL path parameters will be fully URI-decoded.
-  kAllCharacters,
-};
 
 // The immutable, thread safe PathMatcher stores a mapping from a combination of
 // a service (host) name and a HTTP path to your method (MethodInfo*). It is
@@ -184,138 +173,6 @@ std::vector<std::string>& split(const std::string& s, char delim,
     elems.push_back(item);
   }
   return elems;
-}
-
-inline bool IsReservedChar(char c) {
-  // Reserved characters according to RFC 6570
-  switch (c) {
-    case '!':
-    case '#':
-    case '$':
-    case '&':
-    case '\'':
-    case '(':
-    case ')':
-    case '*':
-    case '+':
-    case ',':
-    case '/':
-    case ':':
-    case ';':
-    case '=':
-    case '?':
-    case '@':
-    case '[':
-    case ']':
-      return true;
-    default:
-      return false;
-  }
-}
-
-// Check if an ASCII character is a hex digit.  We can't use ctype's
-// isxdigit() because it is affected by locale. This function is applied
-// to the escaped characters in a url, not to natural-language
-// strings, so locale should not be taken into account.
-inline bool ascii_isxdigit(char c) {
-  return ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') ||
-         ('0' <= c && c <= '9');
-}
-
-inline int hex_digit_to_int(char c) {
-  /* Assume ASCII. */
-  int x = static_cast<unsigned char>(c);
-  if (x > '9') {
-    x += 9;
-  }
-  return x & 0xf;
-}
-
-// This is a helper function for UrlUnescapeString. It takes a string and
-// the index of where we are within that string.
-//
-// The function returns true if the next three characters are of the format:
-// "%[0-9A-Fa-f]{2}".
-//
-// If the next three characters are an escaped character then this function will
-// also return what character is escaped.
-//
-// If unescape_plus is true, unescape '+' to space.
-//
-// return value: 0: not unescaped, >0: unescaped, number of used original
-// characters.
-//
-int GetEscapedChar(const std::string& src, size_t i,
-                   UrlUnescapeSpec unescape_spec, bool unescape_plus,
-                   char* out) {
-  if (unescape_plus && src[i] == '+') {
-    *out = ' ';
-    return 1;
-  }
-  if (i + 2 < src.size() && src[i] == '%') {
-    if (ascii_isxdigit(src[i + 1]) && ascii_isxdigit(src[i + 2])) {
-      char c =
-          (hex_digit_to_int(src[i + 1]) << 4) | hex_digit_to_int(src[i + 2]);
-      switch (unescape_spec) {
-        case UrlUnescapeSpec::kAllCharactersExceptReserved:
-          if (IsReservedChar(c)) {
-            return 0;
-          }
-          break;
-        case UrlUnescapeSpec::kAllCharactersExceptSlash:
-          if (c == '/') {
-            return 0;
-          }
-          break;
-        case UrlUnescapeSpec::kAllCharacters:
-          break;
-      }
-      *out = c;
-      return 3;
-    }
-  }
-  return 0;
-}
-
-// Unescapes string 'part' and returns the unescaped string. Reserved characters
-// (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
-// false.
-std::string UrlUnescapeString(const std::string& part,
-                              UrlUnescapeSpec unescape_spec,
-                              bool unescape_plus) {
-  std::string unescaped;
-  // Check whether we need to escape at all.
-  bool needs_unescaping = false;
-  char ch = '\0';
-  for (size_t i = 0; i < part.size(); ++i) {
-    if (GetEscapedChar(part, i, unescape_spec, unescape_plus, &ch) > 0) {
-      needs_unescaping = true;
-      break;
-    }
-  }
-  if (!needs_unescaping) {
-    unescaped = part;
-    return unescaped;
-  }
-
-  unescaped.resize(part.size());
-
-  char* begin = &(unescaped)[0];
-  char* p = begin;
-
-  for (size_t i = 0; i < part.size();) {
-    int skip = GetEscapedChar(part, i, unescape_spec, unescape_plus, &ch);
-    if (skip > 0) {
-      *p++ = ch;
-      i += skip;
-    } else {
-      *p++ = part[i];
-      i += 1;
-    }
-  }
-
-  unescaped.resize(p - begin);
-  return unescaped;
 }
 
 template <class VariableBinding>
