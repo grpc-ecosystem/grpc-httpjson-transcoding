@@ -19,6 +19,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/str_format.h"
+
+#include "google/protobuf/stubs/mathutil.h"
+#include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/datapiece.h"
 #include "google/protobuf/util/internal/object_writer.h"
@@ -31,10 +35,141 @@ namespace transcoding {
 namespace pb = google::protobuf;
 namespace pbconv = google::protobuf::util::converter;
 
+namespace {
+
+pb::util::Status bindingFailureStatus(internal::string_view field_name,
+                                      internal::string_view type,
+                                      const pbconv::DataPiece& value) {
+  return pb::util::Status(
+      pb::util::StatusCode::kInvalidArgument,
+      pb::StrCat("Failed to convert binding value ", field_name, ":",
+                 value.ValueAsStringOrDefault(""),
+                 " to ", type));
+}
+
+pb::util::Status isEqual(internal::string_view field_name,
+                         const pbconv::DataPiece& value_in_body,
+                         const pbconv::DataPiece& value_in_binding) {
+  bool value_is_same = true;
+  switch (value_in_body.type()) {
+    case pbconv::DataPiece::TYPE_INT32: {
+      pb::util::StatusOr<int32_t> status = value_in_binding.ToInt32();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "int32", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToInt32().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_INT64: {
+      pb::util::StatusOr<uint32_t> status = value_in_binding.ToInt64();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "int64", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToInt64().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_UINT32: {
+      pb::util::StatusOr<uint32_t> status = value_in_binding.ToUint32();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "uint32", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToUint32().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_UINT64: {
+      pb::util::StatusOr<uint32_t> status = value_in_binding.ToUint64();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "uint64", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToUint64().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_DOUBLE: {
+      pb::util::StatusOr<double> status = value_in_binding.ToDouble();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "double", value_in_binding);
+      }
+      if (!pb::MathUtil::AlmostEquals<double>(status.value(),
+                                              value_in_body.ToDouble().value())) {
+
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_FLOAT: {
+      pb::util::StatusOr<float> status = value_in_binding.ToFloat();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "float", value_in_binding);
+      }
+      if (!pb::MathUtil::AlmostEquals<float>(status.value(),
+                                             value_in_body.ToFloat().value())) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_BOOL: {
+      pb::util::StatusOr<bool> status = value_in_binding.ToBool();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "bool", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToBool().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_STRING: {
+      pb::util::StatusOr<std::string> status = value_in_binding.ToString();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "string", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToString().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    case pbconv::DataPiece::TYPE_BYTES: {
+      pb::util::StatusOr<std::string> status = value_in_binding.ToBytes();
+      if (!status.ok()) {
+        return bindingFailureStatus(field_name, "bytes", value_in_binding);
+      }
+      if (status.value() != value_in_body.ToBytes().value()) {
+        value_is_same = false;
+      }
+      break;
+    }
+    default:break;
+  }
+  if (!value_is_same) {
+    return pb::util::Status(
+        pb::util::StatusCode::kInvalidArgument,
+        absl::StrFormat("The binding value %s of the field %s is "
+                        "conflicting with the value %s in the body.",
+                        value_in_binding.ValueAsStringOrDefault(""), std::string(field_name),
+                        value_in_body.ValueAsStringOrDefault("")));
+  }
+  return pb::util::OkStatus();
+}
+
+}  // namespace
+
 RequestWeaver::RequestWeaver(std::vector<BindingInfo> bindings,
-                             pbconv::ObjectWriter* ow)
-    : root_(), current_(), ow_(ow), non_actionable_depth_(0) {
-  for (const auto& b : bindings) {
+                             pbconv::ObjectWriter* ow,
+                             StatusErrorListener* el, bool report_collisions)
+    : root_(),
+      current_(),
+      ow_(ow),
+      non_actionable_depth_(0),
+      error_listener_(el),
+      report_collisions_(report_collisions) {
+  for (const auto& b: bindings) {
     Bind(std::move(b.field_path), std::move(b.value));
   }
 }
@@ -87,7 +222,8 @@ RequestWeaver* RequestWeaver::EndList() {
 RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
                                          bool value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderBool(name, value);
   return this;
@@ -96,7 +232,8 @@ RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
                                           google::protobuf::int32 value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderInt32(name, value);
   return this;
@@ -105,7 +242,8 @@ RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
                                            google::protobuf::uint32 value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderUint32(name, value);
   return this;
@@ -114,7 +252,8 @@ RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
                                           google::protobuf::int64 value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderInt64(name, value);
   return this;
@@ -123,7 +262,8 @@ RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
                                            google::protobuf::uint64 value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderUint64(name, value);
   return this;
@@ -132,7 +272,8 @@ RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderDouble(internal::string_view name,
                                            double value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderDouble(name, value);
   return this;
@@ -141,7 +282,8 @@ RequestWeaver* RequestWeaver::RenderDouble(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
                                           float value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderFloat(name, value);
   return this;
@@ -150,16 +292,14 @@ RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
 RequestWeaver* RequestWeaver::RenderString(internal::string_view name,
                                            internal::string_view value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value, true);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderString(name, value);
   return this;
 }
 
 RequestWeaver* RequestWeaver::RenderNull(internal::string_view name) {
-  if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
-  }
   ow_->RenderNull(name);
   return this;
 }
@@ -167,7 +307,8 @@ RequestWeaver* RequestWeaver::RenderNull(internal::string_view name) {
 RequestWeaver* RequestWeaver::RenderBytes(internal::string_view name,
                                           internal::string_view value) {
   if (non_actionable_depth_ == 0) {
-    CollisionCheck(name);
+    pbconv::DataPiece value_in_body = pbconv::DataPiece(value, true);
+    CollisionCheck(name, value_in_body);
   }
   ow_->RenderBytes(name, value);
   return this;
@@ -189,13 +330,13 @@ void RequestWeaver::Bind(std::vector<const pb::Field*> field_path,
 }
 
 void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
-  for (const auto& data : info->bindings) {
+  for (const auto& data: info->bindings) {
     pbconv::ObjectWriter::RenderDataPieceTo(
         pbconv::DataPiece(internal::string_view(data.second), true),
         internal::string_view(data.first->name()), ow_);
   }
   info->bindings.clear();
-  for (auto& msg : info->messages) {
+  for (auto& msg: info->messages) {
     // Enter into the message only if there are bindings or submessages left
     if (!msg.second.bindings.empty() || !msg.second.messages.empty()) {
       ow_->StartObject(msg.first->name());
@@ -206,7 +347,8 @@ void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
   info->messages.clear();
 }
 
-void RequestWeaver::CollisionCheck(internal::string_view name) {
+void RequestWeaver::CollisionCheck(internal::string_view name,
+                                   const pbconv::DataPiece& value_in_body) {
   if (current_.empty()) return;
 
   for (auto it = current_.top()->bindings.begin();
@@ -216,9 +358,14 @@ void RequestWeaver::CollisionCheck(internal::string_view name) {
         pbconv::ObjectWriter::RenderDataPieceTo(
             pbconv::DataPiece(internal::string_view(it->second), true), name,
             ow_);
-      } else {
-        // TODO: Report collision error. For now we just ignore
-        // the conflicting binding.
+      } else if (report_collisions_) {
+        pbconv::DataPiece value_in_binding =
+            pbconv::DataPiece(internal::string_view(it->second), true);
+        pb::util::Status compare_status =
+            isEqual(name, value_in_body, value_in_binding);
+        if (!compare_status.ok()) {
+          error_listener_->set_status(compare_status);
+        }
       }
       it = current_.top()->bindings.erase(it);
       continue;

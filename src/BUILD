@@ -59,6 +59,9 @@ cc_library(
     ],
     deps = [
         ":protobuf",
+        ":status_error_listener",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
@@ -273,5 +276,23 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_library(
+    name = "status_error_listener",
+    srcs = [
+        "status_error_listener.cc",
+    ],
+    hdrs = [
+        "include/grpc_transcoding/status_error_listener.h",
+    ],
+    includes = [
+        "include/",
+    ],
+    deps = [
+        ":protobuf",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )

@@ -95,6 +95,19 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "status_error_listener_test",
+    size = "small",
+    srcs = [
+        "status_error_listener_test.cc",
+    ],
+    deps = [
+        "//src:status_error_listener",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 proto_library(
     name = "bookstore_proto",
     testonly = 1,

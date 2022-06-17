@@ -24,6 +24,7 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 
+#include "grpc_transcoding/status_error_listener.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/expecting_objectwriter.h"
 #include "gtest/gtest.h"
@@ -37,6 +38,7 @@ namespace {
 
 using google::protobuf::Field;
 using ::testing::InSequence;
+using ::testing::HasSubstr;
 
 class RequestWeaverTest : public ::testing::Test {
  protected:
@@ -54,9 +56,12 @@ class RequestWeaverTest : public ::testing::Test {
         RequestWeaver::BindingInfo{field_path, std::move(value)});
   }
 
-  std::unique_ptr<RequestWeaver> Create() {
+  std::unique_ptr<RequestWeaver> Create(bool report_collisions) {
     return std::unique_ptr<RequestWeaver>(
-        new RequestWeaver(std::move(bindings_), &mock_));
+        new RequestWeaver(std::move(bindings_),
+                          &mock_,
+                          &error_listener_,
+                          report_collisions));
   }
 
   google::protobuf::util::converter::MockObjectWriter mock_;
@@ -66,6 +71,7 @@ class RequestWeaverTest : public ::testing::Test {
  private:
   std::vector<RequestWeaver::BindingInfo> bindings_;
   std::list<Field> fields_;
+  StatusErrorListener error_listener_;
 
   Field CreateField(std::string name) {
     Field::Cardinality card;
@@ -102,7 +108,7 @@ TEST_F(RequestWeaverTest, PassThrough) {
   expect_.EndObject();  // A
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
   w->StartObject("");
   w->StartObject("A");
   w->RenderString("x", "a");
@@ -118,6 +124,8 @@ TEST_F(RequestWeaverTest, PassThrough) {
   w->EndObject();
   w->EndObject();
   w->EndObject();
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level0Bindings) {
@@ -141,12 +149,14 @@ TEST_F(RequestWeaverTest, Level0Bindings) {
   expect_.RenderString("_z", "c");
   expect_.EndObject();
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->RenderInt32("i", 10);
   w->RenderString("x", "d");
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level1Bindings) {
@@ -180,7 +190,7 @@ TEST_F(RequestWeaverTest, Level1Bindings) {
   expect_.EndObject();  // B
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->RenderString("x", "d");
@@ -191,6 +201,8 @@ TEST_F(RequestWeaverTest, Level1Bindings) {
   w->RenderString("z", "f");
   w->EndObject();  // B
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level2Bindings) {
@@ -237,7 +249,7 @@ TEST_F(RequestWeaverTest, Level2Bindings) {
   expect_.EndObject();  // "D"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartObject("A");
@@ -255,6 +267,8 @@ TEST_F(RequestWeaverTest, Level2Bindings) {
   w->EndObject();  // "E"
   w->EndObject();  // "D"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level2WeaveNewSubTree) {
@@ -292,7 +306,7 @@ TEST_F(RequestWeaverTest, Level2WeaveNewSubTree) {
   expect_.EndObject();  // "A"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->RenderString("x", "b");
@@ -303,6 +317,8 @@ TEST_F(RequestWeaverTest, Level2WeaveNewSubTree) {
   w->EndObject();  // "C"
   w->EndObject();  // "D"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, MixedBindings) {
@@ -334,7 +350,7 @@ TEST_F(RequestWeaverTest, MixedBindings) {
   expect_.RenderString("_x", "a");
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartObject("A");
@@ -344,6 +360,8 @@ TEST_F(RequestWeaverTest, MixedBindings) {
   w->EndObject();  // "B"
   w->EndObject();  // "A"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, MoreMixedBindings) {
@@ -388,7 +406,7 @@ TEST_F(RequestWeaverTest, MoreMixedBindings) {
   expect_.EndObject();  // "C"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartObject("A");
@@ -398,6 +416,8 @@ TEST_F(RequestWeaverTest, MoreMixedBindings) {
   w->RenderString("y", "e");
   w->EndObject();  // "B"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, CollisionIgnored) {
@@ -416,11 +436,227 @@ TEST_F(RequestWeaverTest, CollisionIgnored) {
   expect_.EndObject();  // "A"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartObject("A");
   w->RenderString("x", "b");
+  w->EndObject();  // "A"
+  w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+}
+
+TEST_F(RequestWeaverTest, CollisionReportedInvalidBinding) {
+  Bind("A.bool_field", "true1");
+  Bind("A.int32_field", "abc");
+  Bind("A.uint32_field", "abc");
+  Bind("A.int64_field", "abc");
+  Bind("A.uint64_field", "abc");
+  Bind("A.float_field", "abc");
+  Bind("A.double_field", "abc");
+
+  expect_.StartObject("");
+  expect_.StartObject("A");
+  expect_.RenderBool("bool_field", false);
+  expect_.RenderInt32("int32_field", -3);
+  expect_.RenderUint32("uint32_field", 3);
+  expect_.RenderInt64("int64_field", -3);
+  expect_.RenderUint64("uint64_field", 3);
+  expect_.RenderFloat("float_field", 1.0001);
+  expect_.RenderDouble("double_field", 1.0001);
+  expect_.EndObject();  // "A"
+  expect_.EndObject();  // ""
+
+  auto w = Create(true);
+
+  w->StartObject("");
+  w->StartObject("A");
+  w->RenderBool("bool_field", false);
+  EXPECT_EQ(w->Status().code(),
+            ::google::protobuf::util::StatusCode::kInvalidArgument);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr(
+          "Failed to convert binding value bool_field:\"true1\" to bool"));
+  w->RenderInt32("int32_field", -3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr(
+          "Failed to convert binding value int32_field:\"abc\" to int32"));
+  w->RenderUint32("uint32_field", 3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("Failed to convert binding value "
+                "uint32_field:\"abc\" to uint32"));
+  w->RenderInt64("int64_field", -3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr(
+          "Failed to convert binding value int64_field:\"abc\" to int64"));
+  w->RenderUint64("uint64_field", 3);
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("Failed to convert binding value "
+                        "uint64_field:\"abc\" to uint64"));
+  w->RenderFloat("float_field", 1.0001);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr(
+          "Failed to convert binding value float_field:\"abc\" to float"));
+  w->RenderDouble("double_field", 1.0001);
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("Failed to convert binding value "
+                        "double_field:\"abc\" to double"));
+  w->EndObject();  // "A"
+  w->EndObject();  // ""
+}
+
+TEST_F(RequestWeaverTest, CollisionNotReported) {
+  Bind("A.bool_field", "true");
+  Bind("A.int32_field", "-2");
+  Bind("A.uint32_field", "2");
+  Bind("A.int64_field", "-2");
+  Bind("A.uint64_field", "2");
+  Bind("A.string_field", "a");
+  Bind("A.float_field", "1.01");
+  Bind("A.double_field", "1.01");
+  Bind("A.bytes_field", "Yg==");
+  Bind("A.B.B_bool_field", "true");
+
+  expect_.StartObject("");
+  expect_.StartObject("A");
+  expect_.RenderBool("bool_field", true);
+  expect_.RenderInt32("int32_field", -2);
+  expect_.RenderUint32("uint32_field", 2);
+  expect_.RenderInt64("int64_field", -2);
+  expect_.RenderUint64("uint64_field", 2);
+  expect_.RenderString("string_field", "a");
+  expect_.RenderFloat("float_field", 1.01);
+  expect_.RenderDouble("double_field", 1.01);
+  expect_.RenderBytes("bytes_field", "b");
+  expect_.StartObject("B");
+  expect_.RenderBool("B_bool_field", true);
+  expect_.EndObject();  // "B"
+  expect_.EndObject();  // "A"
+  expect_.EndObject();  // ""
+
+  auto w = Create(false);
+
+  w->StartObject("");
+  w->StartObject("A");
+  w->RenderBool("bool_field", true);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderInt32("int32_field", -2);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderUint32("uint32_field", 2);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderInt64("int64_field", -2);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderUint64("uint64_field", 2);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderString("string_field", "a");
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderFloat("float_field", 1.01);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderDouble("double_field", 1.01);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->RenderBytes("bytes_field", "b");
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->StartObject("B");
+  w->RenderBool("B_bool_field", true);
+  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  w->EndObject();  // "B"
+  w->EndObject();  // "A"
+  w->EndObject();  // ""
+}
+
+TEST_F(RequestWeaverTest, CollisionReported) {
+  Bind("A.bool_field", "true");
+  Bind("A.int32_field", "-2");
+  Bind("A.uint32_field", "2");
+  Bind("A.int64_field", "-2");
+  Bind("A.uint64_field", "2");
+  Bind("A.string_field", "a");
+  Bind("A.float_field", "1.01");
+  Bind("A.double_field", "1.01");
+  Bind("A.bytes_field", "a");
+  Bind("A.B.B_bool_field", "true");
+
+  expect_.StartObject("");
+  expect_.StartObject("A");
+  expect_.RenderBool("bool_field", false);
+  expect_.RenderInt32("int32_field", -3);
+  expect_.RenderUint32("uint32_field", 3);
+  expect_.RenderInt64("int64_field", -3);
+  expect_.RenderUint64("uint64_field", 3);
+  expect_.RenderString("string_field", "b");
+  expect_.RenderFloat("float_field", 1.0001);
+  expect_.RenderDouble("double_field", 1.0001);
+  expect_.RenderBytes("bytes_field", "c");
+  expect_.StartObject("B");
+  expect_.RenderBool("B_bool_field", false);
+  expect_.EndObject();  // "B"
+  expect_.EndObject();  // "A"
+  expect_.EndObject();  // ""
+
+  auto w = Create(true);
+
+  w->StartObject("");
+  w->StartObject("A");
+  w->RenderBool("bool_field", false);
+  EXPECT_EQ(w->Status().code(),
+            google::protobuf::util::StatusCode::kInvalidArgument);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"true\" of the field bool_field is "
+                "conflicting with the value false in the body."));
+  w->RenderInt32("int32_field", -3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"-2\" of the field int32_field is "
+                "conflicting with the value -3 in the body."));
+  w->RenderUint32("uint32_field", 3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"2\" of the field uint32_field is "
+                "conflicting with the value 3 in the body."));
+  w->RenderInt64("int64_field", -3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"-2\" of the field int64_field is "
+                "conflicting with the value -3 in the body."));
+  w->RenderUint64("uint64_field", 3);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"2\" of the field uint64_field is "
+                "conflicting with the value 3 in the body."));
+  w->RenderString("string_field", "b");
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"a\" of the field string_field is "
+                "conflicting with the value \"b\" in the body."));
+  w->RenderFloat("float_field", 1.0001);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"1.01\" of the field float_field is "
+                "conflicting with the value 1.0001 in the body."));
+  w->RenderDouble("double_field", 1.0001);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"1.01\" of the field double_field is "
+                "conflicting with the value 1.0001 in the body."));
+  w->RenderBytes("bytes_field", "c");
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"a\" of the field bytes_field is "
+                "conflicting with the value \"c\" in the body."));
+  w->StartObject("B");
+  w->RenderBool("B_bool_field", false);
+  EXPECT_THAT(
+      w->Status().ToString(),
+      HasSubstr("The binding value \"true\" of the field B_bool_field is "
+                "conflicting with the value false in the body."));
+  w->EndObject();  // "B"
   w->EndObject();  // "A"
   w->EndObject();  // ""
 }
@@ -449,13 +685,15 @@ TEST_F(RequestWeaverTest, CollisionRepeated) {
   expect_.EndObject();  // "A"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartObject("A");
   w->RenderString("x", "a");
   w->EndObject();  // "A"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, IgnoreListTest) {
@@ -494,7 +732,7 @@ TEST_F(RequestWeaverTest, IgnoreListTest) {
   expect_.EndObject();  // "A"
   expect_.EndObject();  // ""
 
-  auto w = Create();
+  auto w = Create(false);
 
   w->StartObject("");
   w->StartList("L");
@@ -512,6 +750,8 @@ TEST_F(RequestWeaverTest, IgnoreListTest) {
   w->RenderString("y", "e");
   w->EndObject();  // "A"
   w->EndObject();  // ""
+
+  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
 }
 
 }  // namespace
