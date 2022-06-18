@@ -62,7 +62,8 @@ RequestMessageTranslator::RequestMessageTranslator(
   // Create a RequestWeaver if we have variable bindings to weave
   if (!request_info.variable_bindings.empty()) {
     request_weaver_.reset(new RequestWeaver(
-        std::move(request_info.variable_bindings), writer_pipeline_));
+        std::move(request_info.variable_bindings), writer_pipeline_,
+        &error_listener_, request_info.reject_binding_body_field_collisions));
     writer_pipeline_ = request_weaver_.get();
   }
 
@@ -127,31 +128,6 @@ void RequestMessageTranslator::WriteDelimiter() {
   // Asumming that the message_.size() - kDelimiterSize is less than UINT_MAX
   SizeToDelimiter(static_cast<unsigned>(message_.size() - kDelimiterSize),
                   reinterpret_cast<unsigned char*>(&message_[0]));
-}
-
-void RequestMessageTranslator::StatusErrorListener::InvalidName(
-    const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
-    internal::string_view unknown_name, internal::string_view message) {
-  status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::StatusCode::kInvalidArgument,
-      loc.ToString() + ": " + std::string(message));
-}
-
-void RequestMessageTranslator::StatusErrorListener::InvalidValue(
-    const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
-    internal::string_view type_name, internal::string_view value) {
-  status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::StatusCode::kInvalidArgument,
-      loc.ToString() + ": invalid value " + std::string(value) + " for type " +
-          std::string(type_name));
-}
-
-void RequestMessageTranslator::StatusErrorListener::MissingField(
-    const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
-    internal::string_view missing_name) {
-  status_ = ::google::protobuf::util::Status(
-      ::google::protobuf::util::StatusCode::kInvalidArgument,
-      loc.ToString() + ": missing field " + std::string(missing_name));
 }
 
 }  // namespace transcoding

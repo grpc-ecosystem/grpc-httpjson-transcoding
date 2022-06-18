@@ -23,6 +23,7 @@
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/object_writer.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
+#include "grpc_transcoding/status_error_listener.h"
 
 namespace google {
 namespace grpc {
@@ -74,7 +75,10 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
   // RequestWeaver does not take the ownership of 'ow'. The caller must make
   // sure that it exists throughout the lifetime of the RequestWeaver.
   RequestWeaver(std::vector<BindingInfo> bindings,
-                google::protobuf::util::converter::ObjectWriter* ow);
+                google::protobuf::util::converter::ObjectWriter* ow,
+                StatusErrorListener* el, bool report_collisions);
+
+  ::google::protobuf::util::Status Status() { return error_listener_->status(); }
 
   // ObjectWriter methods
   RequestWeaver* StartObject(internal::string_view name);
@@ -129,7 +133,8 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
 
   // Checks if any repeated fields with the same field name are in the current
   // node of the weave tree. Output them if there are any.
-  void CollisionCheck(internal::string_view name);
+  void CollisionCheck(internal::string_view name,
+                      const ::google::protobuf::util::converter::DataPiece& value);
 
   // All the headers, variable bindings and parameter bindings to be weaved in.
   //   root_   : root of the tree to be weaved in.
@@ -144,6 +149,12 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
 
   // Counter for number of uninteresting nested messages.
   int non_actionable_depth_;
+
+  // Error listener to report errors.
+  StatusErrorListener* error_listener_;
+
+  // Whether to report binding and body value collisions in the error listener.
+  bool report_collisions_;
 
   RequestWeaver(const RequestWeaver&) = delete;
   RequestWeaver& operator=(const RequestWeaver&) = delete;

@@ -49,6 +49,10 @@ struct RequestInfo {
   // sources that must be injected into certain fields of the translated
   // message.
   std::vector<RequestWeaver::BindingInfo> variable_bindings;
+
+  // Whether to reject the request if the binding value and the body value
+  // are conflicted.
+  bool reject_binding_body_field_collisions;
 };
 
 // RequestMessageTranslator translates ObjectWriter events into a single
@@ -130,35 +134,6 @@ class RequestMessageTranslator : public MessageStream {
   // StringByteSink instance that appends the bytes to this->message_. We pass
   // this to the ProtoStreamObjectWriter for writing the translated message.
   google::protobuf::strings::StringByteSink sink_;
-
-  // StatusErrorListener converts the error events into a Status
-  class StatusErrorListener
-      : public ::google::protobuf::util::converter::ErrorListener {
-   public:
-    StatusErrorListener() {}
-    virtual ~StatusErrorListener() {}
-
-    ::google::protobuf::util::Status status() const { return status_; }
-
-    // ErrorListener implementation
-    void InvalidName(
-        const ::google::protobuf::util::converter::LocationTrackerInterface&
-            loc,
-        internal::string_view unknown_name, internal::string_view message);
-    void InvalidValue(
-        const ::google::protobuf::util::converter::LocationTrackerInterface&
-            loc,
-        internal::string_view type_name, internal::string_view value);
-    void MissingField(
-        const ::google::protobuf::util::converter::LocationTrackerInterface&
-            loc,
-        internal::string_view missing_name);
-
-   private:
-    ::google::protobuf::util::Status status_;
-
-    GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StatusErrorListener);
-  };
 
   // ErrorListener implementation that converts the error events into
   // a status.
