@@ -52,7 +52,7 @@ struct RequestInfo {
 
   // Whether to reject the request if the binding value and the body value
   // are conflicted.
-  bool reject_binding_body_field_collisions;
+  bool reject_binding_body_field_collisions = false;
 };
 
 // RequestMessageTranslator translates ObjectWriter events into a single
