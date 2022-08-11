@@ -9,6 +9,7 @@ time. The code is used in istio [proxy](https://github.com/istio/proxy) and
 cloud [endpoints](https://cloud.google.com/endpoints/) to provide HTTP+JSON
 interface to gRPC service.
 
+[![CI Status](https://oss.gprow.dev/badge.svg?jobs=grpc-transcoder-periodic)](https://testgrid.k8s.io/googleoss-grpc-transcoder#Summary)
 
 ## Develop
 
@@ -19,10 +20,17 @@ following commands build and test sources:
 $ bazel build //...
 $ bazel test //...
 ```
+
 ## Toolchain
 
 The Bazel build system defaults to using clang 10 to enable reproducible builds.
 
+## Continuous Integration
+
+This repository is integrated with [OSS Prow](https://github.com/kubernetes/test-infra/tree/master/prow). Prow will run the [presubmit script](https://github.com/grpc-ecosystem/grpc-httpjson-transcoding/blob/master/script/ci.sh) on each Pull Request to verify tests pass. Note:
+
+- PR submission is only allowed if the job passes. 
+- If you are an outside contributor, Prow may not run until a Googler LGTMs.
 
 # Contribution
 See [CONTRIBUTING.md](CONTRIBUTING.md).
