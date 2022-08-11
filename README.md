@@ -9,6 +9,7 @@ time. The code is used in istio [proxy](https://github.com/istio/proxy) and
 cloud [endpoints](https://cloud.google.com/endpoints/) to provide HTTP+JSON
 interface to gRPC service.
 
+[![CI Status](https://oss.gprow.dev/badge.svg?jobs=grpc-transcoder-periodic)](https://testgrid.k8s.io/googleoss-grpc-transcoder#Summary)
 
 ## Develop
 
