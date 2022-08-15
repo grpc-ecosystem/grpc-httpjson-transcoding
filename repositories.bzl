@@ -137,3 +137,14 @@ def googleapis_repositories(bind = True):
         url = "https://github.com/googleapis/googleapis/archive/" + GOOGLEAPIS_COMMIT + ".tar.gz",
         sha256 = GOOGLEAPIS_SHA256,
     )
+
+GOOGLEBENCHMARK_COMMIT = "1.7.0"  # Jul 25, 2022
+GOOGLEBENCHMARK_SHA256 = "3aff99169fa8bdee356eaa1f691e835a6e57b1efeadb8a0f9f228531158246ac"
+
+def googlebenchmark_repositories(bind = True):
+    http_archive(
+        name = "com_google_benchmark",
+        strip_prefix = "benchmark-" + GOOGLEBENCHMARK_COMMIT,
+        url = "https://github.com/google/benchmark/archive/" + GOOGLEBENCHMARK_COMMIT + ".tar.gz",
+        sha256 = GOOGLEBENCHMARK_SHA256,
+    )
