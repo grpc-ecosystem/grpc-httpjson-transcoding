@@ -1,0 +1,10 @@
+# bazel build folders
+/bazel-bin
+/bazel-grpc-httpjson-transcoding
+/bazel-out
+/bazel-testlogs
+
+# CLion bazel plugin
+/.clwb
+# Intellij bazel plugin
+/.ilwb
