@@ -21,7 +21,7 @@ $ bazel build //...
 $ bazel test //...
 ```
 
-Use the following script to check and code foramt:
+Use the following script to check and fix code foramt:
 
 ```bash
 $ script/check-style
