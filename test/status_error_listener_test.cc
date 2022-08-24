@@ -1,8 +1,8 @@
 #include "grpc_transcoding/status_error_listener.h"
 
+#include "gmock/gmock.h"
 #include "google/protobuf/util/internal/object_location_tracker.h"
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
 namespace google {
 namespace grpc {
@@ -24,8 +24,7 @@ class StatusErrorListenerTest : public ::testing::Test {
 };
 
 TEST_F(StatusErrorListenerTest, ReportFailures) {
-  listener_.set_status(
-      Status(StatusCode::kInvalidArgument, "invalid args"));
+  listener_.set_status(Status(StatusCode::kInvalidArgument, "invalid args"));
   EXPECT_EQ(listener_.status().code(), StatusCode::kInvalidArgument);
   EXPECT_THAT(listener_.status().ToString(), HasSubstr("invalid args"));
 

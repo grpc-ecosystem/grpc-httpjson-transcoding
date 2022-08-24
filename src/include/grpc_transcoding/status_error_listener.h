@@ -1,8 +1,8 @@
 #ifndef GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 #define GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 
-#include "grpc_transcoding/internal/protobuf_types.h"
 #include "google/protobuf/util/internal/error_listener.h"
+#include "grpc_transcoding/internal/protobuf_types.h"
 
 namespace google {
 namespace grpc {
@@ -10,7 +10,8 @@ namespace grpc {
 namespace transcoding {
 
 // StatusErrorListener converts the error events into a Status
-class StatusErrorListener : public ::google::protobuf::util::converter::ErrorListener  {
+class StatusErrorListener
+    : public ::google::protobuf::util::converter::ErrorListener {
  public:
   StatusErrorListener() {}
   virtual ~StatusErrorListener() {}
@@ -31,7 +32,7 @@ class StatusErrorListener : public ::google::protobuf::util::converter::ErrorLis
   void set_status(::google::protobuf::util::Status status) { status_ = status; }
 
  private:
-  ::google::protobuf::util::Status  status_;
+  ::google::protobuf::util::Status status_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StatusErrorListener);
 };

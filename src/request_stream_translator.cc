@@ -87,8 +87,8 @@ RequestStreamTranslator* RequestStreamTranslator::EndObject() {
   }
   --depth_;
   if (depth_ < 1) {
-    status_ =
-        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Mismatched end of object.");
+    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+                             "Mismatched end of object.");
     return this;
   }
   translator_->Input().EndObject();
@@ -129,8 +129,8 @@ RequestStreamTranslator* RequestStreamTranslator::EndList() {
   }
   --depth_;
   if (depth_ < 0) {
-    status_ =
-        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Mismatched end of array.");
+    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+                             "Mismatched end of array.");
     return this;
   }
   if (depth_ == 0) {
@@ -251,7 +251,8 @@ void RequestStreamTranslator::EndMessageTranslator() {
   } else {
     // This shouldn't happen unless something like StartList(), StartObject(),
     // EndList() has been called
-    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Invalid object");
+    status_ =
+        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Invalid object");
   }
   translator_.reset();
 }

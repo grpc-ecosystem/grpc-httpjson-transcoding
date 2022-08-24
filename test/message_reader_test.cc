@@ -88,7 +88,7 @@ class MessageReaderTestRun {
     // While we still have expected messages before or at the current position
     // try to match.
     while (next_expected_ != std::end(expected_) &&
-        next_expected_->at <= position_) {
+           next_expected_->at <= position_) {
       // Must not be finished as we expect a message
       if (reader_->Finished()) {
         ADD_FAILURE() << "Finished unexpectedly" << std::endl;
@@ -117,8 +117,7 @@ class MessageReaderTestRun {
       }
       // Match the message size.
       if (result.message_size != next_expected_->message.size()) {
-        EXPECT_EQ(
-            result.message_size, next_expected_->message.size());
+        EXPECT_EQ(result.message_size, next_expected_->message.size());
         return false;
       }
       // Move to the next expected message
@@ -165,8 +164,8 @@ class MessageReaderTestCase {
       input_ += message;
       // Remember that we should expect this message after input_.size() bytes
       // are processed.
-      expected_.emplace_back(ExpectedAt{input_.size(), message,
-                                        SizeToDelimiter(message.size())});
+      expected_.emplace_back(
+          ExpectedAt{input_.size(), message, SizeToDelimiter(message.size())});
     }
   }
 
@@ -390,8 +389,7 @@ TEST_F(MessageReaderTest, IncompleteFrameHeader) {
 
   EXPECT_EQ(nullptr, reader.NextMessage().get());
   EXPECT_FALSE(reader.Status().ok());
-  EXPECT_EQ(reader.Status().message(),
-            "Incomplete gRPC frame header received");
+  EXPECT_EQ(reader.Status().message(), "Incomplete gRPC frame header received");
 }
 
 TEST_F(MessageReaderTest, InvalidFrameFlag) {

@@ -469,8 +469,6 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
   EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
 }
 
-
-
 TEST_F(PathMatcherTest, MatchUnregisteredCustomVerb) {
   SetMatchUnregisteredCustomVerb(true);
   MethodInfo* get_person_1 = AddGetPath("/person/{id=*}");
@@ -508,7 +506,6 @@ TEST_F(PathMatcherTest, MatchUnregisteredCustomVerb) {
   EXPECT_EQ(Lookup("GET", "/animal:other", &bindings), nullptr);
   EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
 }
-
 
 TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
   MethodInfo* a_verb = AddGetPath("/a/{y=*}:verb");
@@ -879,7 +876,8 @@ TEST_F(PathMatcherTest, QueryParameterNotUnescapePlus) {
   Bindings bindings;
   // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
   // By default, only unescape percent-encoded %HH,  but not '+'
-  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings), a);
+  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings),
+            a);
   EXPECT_EQ(Bindings({
                 Binding{FieldPath{"x"}, "Hello+world"},
                 Binding{FieldPath{"y"}, "++ "},
@@ -898,7 +896,8 @@ TEST_F(PathMatcherTest, QueryParameterUnescapePlus) {
   Bindings bindings;
   // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
   // Unescape percent-encoded %HH, and convert '+' to space
-  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings), a);
+  EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings),
+            a);
   EXPECT_EQ(Bindings({
                 Binding{FieldPath{"x"}, "Hello world"},
                 Binding{FieldPath{"y"}, "+  "},

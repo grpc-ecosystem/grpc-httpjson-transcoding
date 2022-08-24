@@ -3,8 +3,8 @@
 #include "test_common.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 namespace google {
@@ -20,14 +20,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   MessageReader reader(&input_stream);
 
   while (provider.remaining_bytes() > 0) {
-
     // Add a few chucks of data to the input stream.
     for (int i = 0; i < provider.ConsumeIntegralInRange(0, 5); i++) {
       input_stream.AddChunk(provider.ConsumeRandomLengthString(100));
     }
 
     // Run the message reader to get the next message.
-    (void) reader.NextMessageAndGrpcFrame();
+    (void)reader.NextMessageAndGrpcFrame();
 
     // Handle end of input or error due to malformed bytes.
     if (reader.Finished()) {
@@ -37,7 +36,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   return 0;
 }
-
 }
 }
 }

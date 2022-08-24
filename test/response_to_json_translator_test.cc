@@ -866,8 +866,7 @@ TEST_F(ResponseToJsonTranslatorTest, InvalidFrameFlag) {
   std::string actual;
   EXPECT_FALSE(translator.NextMessage(&actual));
   EXPECT_FALSE(translator.Status().ok());
-  EXPECT_EQ(translator.Status().message(),
-            "Unsupported gRPC frame flag: 10");
+  EXPECT_EQ(translator.Status().message(), "Unsupported gRPC frame flag: 10");
 }
 
 TEST_F(ResponseToJsonTranslatorTest, IncompleteFrame) {

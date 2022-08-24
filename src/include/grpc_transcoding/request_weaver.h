@@ -78,7 +78,9 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
                 google::protobuf::util::converter::ObjectWriter* ow,
                 StatusErrorListener* el, bool report_collisions);
 
-  ::google::protobuf::util::Status Status() { return error_listener_->status(); }
+  ::google::protobuf::util::Status Status() {
+    return error_listener_->status();
+  }
 
   // ObjectWriter methods
   RequestWeaver* StartObject(internal::string_view name);
@@ -133,8 +135,9 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
 
   // Checks if any repeated fields with the same field name are in the current
   // node of the weave tree. Output them if there are any.
-  void CollisionCheck(internal::string_view name,
-                      const ::google::protobuf::util::converter::DataPiece& value);
+  void CollisionCheck(
+      internal::string_view name,
+      const ::google::protobuf::util::converter::DataPiece& value);
 
   // All the headers, variable bindings and parameter bindings to be weaved in.
   //   root_   : root of the tree to be weaved in.
