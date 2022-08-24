@@ -107,7 +107,6 @@ class ResponseToJsonTranslatorTestRun {
 
       // Match the message
       if (streaming_) {
-        // FIXME: handle newline-delimited case
         if (stream_newline_delimited_) {
           if (!ExpectJsonObjectEq(next_expected_->json, actual)) {
             return false;
@@ -824,6 +823,7 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingNewlineDelimitedDirectTest) {
   EXPECT_TRUE(translator.NextMessage(&message));
   EXPECT_TRUE(
       ExpectJsonObjectEq(R"({ "name":"1", "theme":"Fiction" })", message));
+  EXPECT_TRUE(message.back() == '\n');
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
@@ -838,10 +838,12 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingNewlineDelimitedDirectTest) {
   EXPECT_TRUE(translator.NextMessage(&message));
   EXPECT_TRUE(
       ExpectJsonObjectEq(R"({ "name":"2", "theme":"Fantasy" })", message));
+  EXPECT_TRUE(message.back() == '\n');
 
   EXPECT_TRUE(translator.NextMessage(&message));
   EXPECT_TRUE(
       ExpectJsonObjectEq(R"({ "name":"3", "theme":"Children" })", message));
+  EXPECT_TRUE(message.back() == '\n');
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
@@ -854,6 +856,7 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingNewlineDelimitedDirectTest) {
   EXPECT_TRUE(translator.NextMessage(&message));
   EXPECT_TRUE(
       ExpectJsonObjectEq(R"({ "name":"4", "theme":"Classics" })", message));
+  EXPECT_TRUE(message.back() == '\n');
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
