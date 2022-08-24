@@ -38,6 +38,8 @@ pbconv::ProtoStreamObjectWriter::Options GetProtoWriterOptions() {
   // Don't fail the translation if there are unknown fields in JSON.
   // This will make sure that we allow backward and forward compatible APIs.
   options.ignore_unknown_fields = true;
+  // Support enum value string not all in UPPER_CASE.
+  options.case_insensitive_enum_parsing = true;
   return options;
 }
 
