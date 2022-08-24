@@ -59,8 +59,17 @@ namespace transcoding {
 //       detect it and act appropriately.
 //
 
+// Control various aspects of the generated JSON during response translation
 struct JsonResponseTranslateOptions {
+  // JsonPrintOptions
+  // (https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.util.json_util#JsonPrintOptions)
+  // to configures the printing of individual messages as JSON
   ::google::protobuf::util::JsonPrintOptions json_print_options;
+
+  // Whether the stream emits messages with newline-delimiters or not.
+  // If set to true, newline "\n" is used to separate streaming messages.
+  // If set to false, all streaming messages are treated as a JSON array and
+  // separated by comma.
   bool stream_newline_delimited;
 };
 
@@ -71,14 +80,7 @@ class ResponseToJsonTranslator : public MessageStream {
   // streaming - whether this is a streaming call or not
   // in - the input stream of delimited proto message(s) as in the gRPC wire
   //      format (http://www.grpc.io/docs/guides/wire.html)
-  // json_response_translate_options - control various aspects for the generated
-  // JSON, such
-  //      as indentation, whether to omit fields with default values,
-  //      etc through json_print_options
-  //      (https://developers.google.com/protocol-buffers/docs/reference/cpp/
-  //      google.protobuf.util.json_util#JsonPrintOptions), and whether to omit
-  //      the stream as newline-delimited
-  //      JSON or not
+  // options - control various aspects for the generated JSON
   ResponseToJsonTranslator(
       ::google::protobuf::util::TypeResolver* type_resolver,
       std::string type_url, bool streaming, TranscoderInputStream* in,
