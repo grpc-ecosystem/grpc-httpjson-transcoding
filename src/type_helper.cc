@@ -21,10 +21,10 @@
 
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
-#include "grpc_transcoding/percent_encoding.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
+#include "grpc_transcoding/percent_encoding.h"
 
 namespace pbutil = ::google::protobuf::util;
 namespace pbconv = ::google::protobuf::util::converter;
@@ -184,7 +184,8 @@ pbutil::Status TypeHelper::ResolveFieldPath(
 }
 
 const google::protobuf::Field* TypeHelper::FindField(
-    const google::protobuf::Type* type, google::protobuf::StringPiece name) const {
+    const google::protobuf::Type* type,
+    google::protobuf::StringPiece name) const {
   auto* field = Info()->FindField(type, name);
   if (field != nullptr) {
     return field;

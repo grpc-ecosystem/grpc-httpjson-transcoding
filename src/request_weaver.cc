@@ -43,8 +43,7 @@ pb::util::Status bindingFailureStatus(internal::string_view field_name,
   return pb::util::Status(
       pb::util::StatusCode::kInvalidArgument,
       pb::StrCat("Failed to convert binding value ", field_name, ":",
-                 value.ValueAsStringOrDefault(""),
-                 " to ", type));
+                 value.ValueAsStringOrDefault(""), " to ", type));
 }
 
 pb::util::Status isEqual(internal::string_view field_name,
@@ -97,9 +96,8 @@ pb::util::Status isEqual(internal::string_view field_name,
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "double", value_in_binding);
       }
-      if (!pb::MathUtil::AlmostEquals<double>(status.value(),
-                                              value_in_body.ToDouble().value())) {
-
+      if (!pb::MathUtil::AlmostEquals<double>(
+              status.value(), value_in_body.ToDouble().value())) {
         value_is_same = false;
       }
       break;
@@ -145,14 +143,16 @@ pb::util::Status isEqual(internal::string_view field_name,
       }
       break;
     }
-    default:break;
+    default:
+      break;
   }
   if (!value_is_same) {
     return pb::util::Status(
         pb::util::StatusCode::kInvalidArgument,
         absl::StrFormat("The binding value %s of the field %s is "
                         "conflicting with the value %s in the body.",
-                        value_in_binding.ValueAsStringOrDefault(""), std::string(field_name),
+                        value_in_binding.ValueAsStringOrDefault(""),
+                        std::string(field_name),
                         value_in_body.ValueAsStringOrDefault("")));
   }
   return pb::util::OkStatus();
@@ -161,15 +161,15 @@ pb::util::Status isEqual(internal::string_view field_name,
 }  // namespace
 
 RequestWeaver::RequestWeaver(std::vector<BindingInfo> bindings,
-                             pbconv::ObjectWriter* ow,
-                             StatusErrorListener* el, bool report_collisions)
+                             pbconv::ObjectWriter* ow, StatusErrorListener* el,
+                             bool report_collisions)
     : root_(),
       current_(),
       ow_(ow),
       non_actionable_depth_(0),
       error_listener_(el),
       report_collisions_(report_collisions) {
-  for (const auto& b: bindings) {
+  for (const auto& b : bindings) {
     Bind(std::move(b.field_path), std::move(b.value));
   }
 }
@@ -330,13 +330,13 @@ void RequestWeaver::Bind(std::vector<const pb::Field*> field_path,
 }
 
 void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
-  for (const auto& data: info->bindings) {
+  for (const auto& data : info->bindings) {
     pbconv::ObjectWriter::RenderDataPieceTo(
         pbconv::DataPiece(internal::string_view(data.second), true),
         internal::string_view(data.first->name()), ow_);
   }
   info->bindings.clear();
-  for (auto& msg: info->messages) {
+  for (auto& msg : info->messages) {
     // Enter into the message only if there are bindings or submessages left
     if (!msg.second.bindings.empty() || !msg.second.messages.empty()) {
       ow_->StartObject(msg.first->name());

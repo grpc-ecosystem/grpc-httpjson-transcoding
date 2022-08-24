@@ -98,12 +98,14 @@ bool ProtoStreamTester::ValidateDelimiter(const std::string& message) {
   return true;
 }
 
-bool ProtoStreamTester::ExpectStatusEq(google::protobuf::util::StatusCode error_code) {
+bool ProtoStreamTester::ExpectStatusEq(
+    google::protobuf::util::StatusCode error_code) {
   if (error_code != stream_.Status().code()) {
     ADD_FAILURE()
         << "ObjectTranslatorTest::ValidateStatus: Status doesn't match "
            "expected: "
-        << static_cast<int>(error_code) << " actual: " << static_cast<int>(stream_.Status().code()) << " - "
+        << static_cast<int>(error_code)
+        << " actual: " << static_cast<int>(stream_.Status().code()) << " - "
         << stream_.Status().message() << std::endl;
     return false;
   }

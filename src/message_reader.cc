@@ -85,8 +85,8 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
 
   // Check if we have the current message size. If not try to read it.
   if (!have_current_message_size_) {
-    if (in_->BytesAvailable()
-        < static_cast<pb::int64>(kGrpcDelimiterByteSize)) {
+    if (in_->BytesAvailable() <
+        static_cast<pb::int64>(kGrpcDelimiterByteSize)) {
       // We don't have 5 bytes available to read the length of the message.
       // Find out whether the stream is finished and return false.
       finished_ = in_->Finished();

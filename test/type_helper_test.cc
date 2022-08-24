@@ -342,12 +342,14 @@ TEST_F(ServiceConfigBasedTypeHelperTest, ResolveFieldEncodedPathTests) {
   // json_name = "search%5Bencoded%5D", "search[encode]" should fail
   EXPECT_FALSE(ResolveFieldPath("SearchShelf", "search[encoded]", &field_path));
 
-  EXPECT_TRUE(ResolveFieldPath("SearchShelf", "search%5Bencoded%5D", &field_path));
+  EXPECT_TRUE(
+      ResolveFieldPath("SearchShelf", "search%5Bencoded%5D", &field_path));
   ASSERT_EQ(1, field_path.size());
   EXPECT_EQ("search_encoded", field_path[0]->name());
 
   // json_name = "search[decoded]", "search%5Bdecoded%5D" should work
-  EXPECT_TRUE(ResolveFieldPath("SearchShelf", "search%5Bdecoded%5D", &field_path));
+  EXPECT_TRUE(
+      ResolveFieldPath("SearchShelf", "search%5Bdecoded%5D", &field_path));
   ASSERT_EQ(1, field_path.size());
   EXPECT_EQ("search_decoded", field_path[0]->name());
 

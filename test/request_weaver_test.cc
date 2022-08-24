@@ -24,9 +24,9 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 
-#include "grpc_transcoding/status_error_listener.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/internal/expecting_objectwriter.h"
+#include "grpc_transcoding/status_error_listener.h"
 #include "gtest/gtest.h"
 
 namespace google {
@@ -57,11 +57,8 @@ class RequestWeaverTest : public ::testing::Test {
   }
 
   std::unique_ptr<RequestWeaver> Create(bool report_collisions) {
-    return std::unique_ptr<RequestWeaver>(
-        new RequestWeaver(std::move(bindings_),
-                          &mock_,
-                          &error_listener_,
-                          report_collisions));
+    return std::unique_ptr<RequestWeaver>(new RequestWeaver(
+        std::move(bindings_), &mock_, &error_listener_, report_collisions));
   }
 
   google::protobuf::util::converter::MockObjectWriter mock_;
@@ -485,10 +482,9 @@ TEST_F(RequestWeaverTest, CollisionReportedInvalidBinding) {
       HasSubstr(
           "Failed to convert binding value int32_field:\"abc\" to int32"));
   w->RenderUint32("uint32_field", 3);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("Failed to convert binding value "
-                "uint32_field:\"abc\" to uint32"));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("Failed to convert binding value "
+                        "uint32_field:\"abc\" to uint32"));
   w->RenderInt64("int64_field", -3);
   EXPECT_THAT(
       w->Status().ToString(),
@@ -606,35 +602,29 @@ TEST_F(RequestWeaverTest, CollisionReported) {
   w->RenderBool("bool_field", false);
   EXPECT_EQ(w->Status().code(),
             google::protobuf::util::StatusCode::kInvalidArgument);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"true\" of the field bool_field is "
-                "conflicting with the value false in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"true\" of the field bool_field is "
+                        "conflicting with the value false in the body."));
   w->RenderInt32("int32_field", -3);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"-2\" of the field int32_field is "
-                "conflicting with the value -3 in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"-2\" of the field int32_field is "
+                        "conflicting with the value -3 in the body."));
   w->RenderUint32("uint32_field", 3);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"2\" of the field uint32_field is "
-                "conflicting with the value 3 in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"2\" of the field uint32_field is "
+                        "conflicting with the value 3 in the body."));
   w->RenderInt64("int64_field", -3);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"-2\" of the field int64_field is "
-                "conflicting with the value -3 in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"-2\" of the field int64_field is "
+                        "conflicting with the value -3 in the body."));
   w->RenderUint64("uint64_field", 3);
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"2\" of the field uint64_field is "
-                "conflicting with the value 3 in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"2\" of the field uint64_field is "
+                        "conflicting with the value 3 in the body."));
   w->RenderString("string_field", "b");
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"a\" of the field string_field is "
-                "conflicting with the value \"b\" in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"a\" of the field string_field is "
+                        "conflicting with the value \"b\" in the body."));
   w->RenderFloat("float_field", 1.0001);
   EXPECT_THAT(
       w->Status().ToString(),
@@ -646,10 +636,9 @@ TEST_F(RequestWeaverTest, CollisionReported) {
       HasSubstr("The binding value \"1.01\" of the field double_field is "
                 "conflicting with the value 1.0001 in the body."));
   w->RenderBytes("bytes_field", "c");
-  EXPECT_THAT(
-      w->Status().ToString(),
-      HasSubstr("The binding value \"a\" of the field bytes_field is "
-                "conflicting with the value \"c\" in the body."));
+  EXPECT_THAT(w->Status().ToString(),
+              HasSubstr("The binding value \"a\" of the field bytes_field is "
+                        "conflicting with the value \"c\" in the body."));
   w->StartObject("B");
   w->RenderBool("B_bool_field", false);
   EXPECT_THAT(

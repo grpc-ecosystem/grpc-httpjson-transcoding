@@ -15,9 +15,8 @@
 #ifndef GRPC_TRANSCODING_PERCENT_ENCODING_H_
 #define GRPC_TRANSCODING_PERCENT_ENCODING_H_
 
-#include "absl/strings/string_view.h"
 #include <string>
-
+#include "absl/strings/string_view.h"
 
 namespace google {
 namespace grpc {
@@ -34,7 +33,6 @@ enum class UrlUnescapeSpec {
   // URL path parameters will be fully URI-decoded.
   kAllCharacters,
 };
-
 
 inline bool IsReservedChar(char c) {
   // Reserved characters according to RFC 6570
@@ -96,8 +94,8 @@ inline int hex_digit_to_int(char c) {
 // characters.
 //
 inline int GetEscapedChar(absl::string_view src, size_t i,
-                   UrlUnescapeSpec unescape_spec, bool unescape_plus,
-                   char* out) {
+                          UrlUnescapeSpec unescape_spec, bool unescape_plus,
+                          char* out) {
   if (unescape_plus && src[i] == '+') {
     *out = ' ';
     return 1;
@@ -128,7 +126,8 @@ inline int GetEscapedChar(absl::string_view src, size_t i,
 }
 
 inline bool IsUrlEscapedString(absl::string_view part,
-                               UrlUnescapeSpec unescape_spec, bool unescape_plus) {
+                               UrlUnescapeSpec unescape_spec,
+                               bool unescape_plus) {
   char ch = '\0';
   for (size_t i = 0; i < part.size(); ++i) {
     if (GetEscapedChar(part, i, unescape_spec, unescape_plus, &ch) > 0) {
@@ -141,7 +140,6 @@ inline bool IsUrlEscapedString(absl::string_view part,
 inline bool IsUrlEscapedString(absl::string_view part) {
   return IsUrlEscapedString(part, UrlUnescapeSpec::kAllCharacters, false);
 }
-
 
 // Unescapes string 'part' and returns the unescaped string. Reserved characters
 // (as specified in RFC 6570) are not escaped if unescape_reserved_chars is
@@ -179,7 +177,6 @@ inline std::string UrlUnescapeString(absl::string_view part,
 inline std::string UrlUnescapeString(absl::string_view part) {
   return UrlUnescapeString(part, UrlUnescapeSpec::kAllCharacters, false);
 }
-
 
 }  // namespace transcoding
 }  // namespace grpc

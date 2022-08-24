@@ -484,7 +484,8 @@ TEST_F(JsonRequestTranslatorTest, ErrorInvalidJson) {
       AddChunk(invalid);
       Finish();
       EXPECT_TRUE(Tester().ExpectNone());
-      EXPECT_TRUE(Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument));
+      EXPECT_TRUE(Tester().ExpectStatusEq(
+          google::protobuf::util::StatusCode::kInvalidArgument));
     }
   }
 }
@@ -733,7 +734,8 @@ TEST_F(JsonRequestTranslatorTest, StreamingErrorNotAnArray) {
   AddChunk(R"({"name" : "1"})");
   Finish();
   EXPECT_TRUE(Tester().ExpectNone());
-  EXPECT_TRUE(Tester().ExpectStatusEq(google::protobuf::util::StatusCode::kInvalidArgument));
+  EXPECT_TRUE(Tester().ExpectStatusEq(
+      google::protobuf::util::StatusCode::kInvalidArgument));
 }
 
 }  // namespace
