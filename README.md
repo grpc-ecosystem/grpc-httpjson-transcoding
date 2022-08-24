@@ -21,6 +21,12 @@ $ bazel build //...
 $ bazel test //...
 ```
 
+Use the following script to check and code foramt:
+
+```bash
+$ script/check-style
+```
+
 ## Toolchain
 
 The Bazel build system defaults to using clang 10 to enable reproducible builds.
