@@ -29,10 +29,10 @@ namespace transcoding {
 ResponseToJsonTranslator::ResponseToJsonTranslator(
     ::google::protobuf::util::TypeResolver* type_resolver, std::string type_url,
     bool streaming, TranscoderInputStream* in,
-    const JsonResponseTranslateOptions& json_response_translate_options)
+    const JsonResponseTranslateOptions& options)
     : type_resolver_(type_resolver),
       type_url_(std::move(type_url)),
-      json_response_translate_options_(json_response_translate_options),
+      options_(options),
       streaming_(streaming),
       reader_(in),
       first_(true),
@@ -66,8 +66,9 @@ bool ResponseToJsonTranslator::NextMessage(std::string* message) {
       return false;
     }
   } else if (streaming_ && reader_.Finished()) {
-    if (!json_response_translate_options_.stream_newline_delimited) {
-      // This is a non-newline-delimited streaming call and the input is finished. Return the final ']'
+    if (!options_.stream_newline_delimited) {
+      // This is a non-newline-delimited streaming call and the input is
+      // finished. Return the final ']'
       // or "[]" in case this was an empty stream.
       *message = first_ ? "[]" : "]";
     }
@@ -102,9 +103,10 @@ bool ResponseToJsonTranslator::TranslateMessage(
     std::string* json_out) {
   ::google::protobuf::io::StringOutputStream json_stream(json_out);
 
-  if (streaming_ && !json_response_translate_options_.stream_newline_delimited) {
+  if (streaming_ && !options_.stream_newline_delimited) {
     if (first_) {
-      // This is a non-newline-delimited streaming call and this is the first message, so prepend the
+      // This is a non-newline-delimited streaming call and this is the first
+      // message, so prepend the
       // output JSON with a '['.
       if (!WriteChar(&json_stream, '[')) {
         status_ = ::google::protobuf::util::Status(
@@ -114,7 +116,8 @@ bool ResponseToJsonTranslator::TranslateMessage(
       }
       first_ = false;
     } else {
-      // For non-newline-delimited streaming calls add a ',' before each message except the first.
+      // For non-newline-delimited streaming calls add a ',' before each message
+      // except the first.
       if (!WriteChar(&json_stream, ',')) {
         status_ = ::google::protobuf::util::Status(
             ::google::protobuf::util::StatusCode::kInternal,
@@ -126,19 +129,20 @@ bool ResponseToJsonTranslator::TranslateMessage(
 
   // Do the actual translation.
   status_ = ::google::protobuf::util::BinaryToJsonStream(
-      type_resolver_, type_url_, proto_in, &json_stream, json_response_translate_options_.json_print_options);
+      type_resolver_, type_url_, proto_in, &json_stream,
+      options_.json_print_options);
 
   if (!status_.ok()) {
     return false;
   }
 
   // Append a newline delimiter after the message if needed.
-  if (json_response_translate_options_.stream_newline_delimited) {
+  if (streaming_ && options_.stream_newline_delimited) {
     if (!WriteChar(&json_stream, '\n')) {
-        status_ = ::google::protobuf::util::Status(
-            ::google::protobuf::util::StatusCode::kInternal,
-            "Failed to build the response message.");
-        return false;
+      status_ = ::google::protobuf::util::Status(
+          ::google::protobuf::util::StatusCode::kInternal,
+          "Failed to build the response message.");
+      return false;
     }
   }
 
