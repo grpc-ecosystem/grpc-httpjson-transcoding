@@ -53,6 +53,10 @@ struct RequestInfo {
   // Whether to reject the request if the binding value and the body value
   // are conflicted.
   bool reject_binding_body_field_collisions = false;
+
+  // Proto enum values are supposed to be all in upper cases.
+  // If true, enum values can be in lower cases.
+  bool case_insensitive_enum_parsing = false;
 };
 
 // RequestMessageTranslator translates ObjectWriter events into a single

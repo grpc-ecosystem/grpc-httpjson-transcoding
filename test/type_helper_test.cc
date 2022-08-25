@@ -193,7 +193,7 @@ TEST_F(ServiceConfigBasedTypeHelperTest, FullTypeTests) {
 
   ASSERT_NE(nullptr, t);
   EXPECT_EQ("Shelf", t->name());
-  EXPECT_EQ(2, t->fields_size());
+  EXPECT_EQ(3, t->fields_size());
   EXPECT_EQ(google::protobuf::Field::TYPE_STRING, t->fields(0).kind());
   EXPECT_EQ(google::protobuf::Field::CARDINALITY_OPTIONAL,
             t->fields(0).cardinality());

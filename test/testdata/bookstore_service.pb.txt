@@ -172,6 +172,14 @@ types {
     name: "theme"
     json_name: "theme"
   }
+  fields {
+    kind: TYPE_ENUM
+    cardinality: CARDINALITY_OPTIONAL
+    number: 3
+    name: "type"
+    type_url: "type.googleapis.com/Type"
+    json_name: "type"
+  }
   source_context {
   }
 }
@@ -434,6 +442,27 @@ enums {
   }
   source_context {
     file_name: "struct.proto"
+  }
+}
+enums {
+  name: "Type"
+  enumvalue {
+    name: "CLASSIC"
+    number: 0
+  }
+  enumvalue {
+    name: "COMIC"
+    number: 1
+  }
+  enumvalue {
+    name: "HORROR"
+    number: 2
+  }
+  enumvalue {
+    name: "OTHER"
+    number: 3
+  }
+  source_context {
   }
 }
 http {
