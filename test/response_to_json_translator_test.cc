@@ -58,15 +58,17 @@ class ResponseToJsonTranslatorTestRun {
   ResponseToJsonTranslatorTestRun(
       pbutil::TypeResolver* type_resolver, bool streaming,
       const std::string& type_url,
-      const pbutil::JsonPrintOptions& json_print_options,
+      const JsonResponseTranslateOptions& json_response_translate_options,
       const std::string& input, const std::vector<ExpectedAt>& expected)
       : input_(input),
         expected_(expected),
         streaming_(streaming),
+        stream_newline_delimited_(
+            json_response_translate_options.stream_newline_delimited),
         input_stream_(new TestZeroCopyInputStream()),
         translator_(new ResponseToJsonTranslator(
             type_resolver, type_url, streaming_, input_stream_.get(),
-            json_print_options)),
+            json_response_translate_options)),
         position_(0),
         next_expected_(std::begin(expected_)) {}
 
@@ -105,7 +107,12 @@ class ResponseToJsonTranslatorTestRun {
 
       // Match the message
       if (streaming_) {
-        if (!json_array_tester_.TestElement(next_expected_->json, actual)) {
+        if (stream_newline_delimited_) {
+          if (!ExpectJsonObjectEq(next_expected_->json, actual)) {
+            return false;
+          }
+        } else if (!json_array_tester_.TestElement(next_expected_->json,
+                                                   actual)) {
           return false;
         }
       } else {
@@ -118,7 +125,8 @@ class ResponseToJsonTranslatorTestRun {
       ++next_expected_;
     }
     if (input_stream_->Finished() && streaming_) {
-      // In case of streaming calls if the input is finished, we expect the
+      // In case of non-newline-delmited streaming calls if the input is
+      // finished, we expect the
       // final ']' at the end of the stream.
 
       // Read the message
@@ -162,6 +170,7 @@ class ResponseToJsonTranslatorTestRun {
   std::string input_;
   std::vector<ExpectedAt> expected_;
   bool streaming_;
+  bool stream_newline_delimited_;
 
   std::unique_ptr<TestZeroCopyInputStream> input_stream_;
   std::unique_ptr<ResponseToJsonTranslator> translator_;
@@ -189,20 +198,20 @@ class ResponseToJsonTranslatorTestCase {
   ResponseToJsonTranslatorTestCase(
       pbutil::TypeResolver* type_resolver, bool streaming,
       const std::string& type_url,
-      const pbutil::JsonPrintOptions& json_print_options, std::string input,
-      std::vector<ExpectedAt> expected)
+      const JsonResponseTranslateOptions& json_response_translate_options,
+      std::string input, std::vector<ExpectedAt> expected)
       : type_resolver_(type_resolver),
         streaming_(streaming),
         type_url_(type_url),
-        json_print_options_(json_print_options),
+        json_response_translate_options_(json_response_translate_options),
         input_(std::move(input)),
         expected_(std::move(expected)) {}
 
   std::unique_ptr<ResponseToJsonTranslatorTestRun> NewRun() {
     return std::unique_ptr<ResponseToJsonTranslatorTestRun>(
-        new ResponseToJsonTranslatorTestRun(type_resolver_, streaming_,
-                                            type_url_, json_print_options_,
-                                            input_, expected_));
+        new ResponseToJsonTranslatorTestRun(
+            type_resolver_, streaming_, type_url_,
+            json_response_translate_options_, input_, expected_));
   }
 
   // Runs the test for different partitions of the input.
@@ -238,7 +247,7 @@ class ResponseToJsonTranslatorTestCase {
   pbutil::TypeResolver* type_resolver_;
   bool streaming_;
   std::string type_url_;
-  pbutil::JsonPrintOptions json_print_options_;
+  JsonResponseTranslateOptions json_response_translate_options_;
 
   // The entire input including message delimiters
   std::string input_;
@@ -249,7 +258,9 @@ class ResponseToJsonTranslatorTestCase {
 
 class ResponseToJsonTranslatorTest : public ::testing::Test {
  protected:
-  ResponseToJsonTranslatorTest() : streaming_(false) {}
+  ResponseToJsonTranslatorTest()
+      : streaming_(false),
+        json_response_translate_options_({pbutil::JsonPrintOptions(), false}) {}
 
   // Load the service config to be used for testing. This must be the first call
   // in a test.
@@ -266,10 +277,18 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
     type_url_ = "type.googleapis.com/" + type_name;
   }
 
+  // Sets whether to print the streaming response with newline delimiters or
+  // not.
+  // Must be used before Build(). The default is false;
+  void SetJsonStreamNewlineDelimited(bool stream_newline_delimited) {
+    json_response_translate_options_.stream_newline_delimited =
+        stream_newline_delimited;
+  }
+
   // Sets json print options type for used in this test. Must be used before
   // Build().
-  void SetJsonPrintOptions(const pbutil::JsonPrintOptions& json_print_options) {
-    json_print_options_ = json_print_options;
+  void SetJsonPrintOptions(pbutil::JsonPrintOptions json_print_options) {
+    json_response_translate_options_.json_print_options = json_print_options;
   }
 
   // Sets whether always print primitive fields for default values. Must be used
@@ -306,7 +325,8 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
     return std::unique_ptr<ResponseToJsonTranslatorTestCase>(
         new ResponseToJsonTranslatorTestCase(
             type_helper_->Resolver(), streaming_, type_url_,
-            json_print_options_, std::move(input), std::move(expected)));
+            json_response_translate_options_, std::move(input),
+            std::move(expected)));
   }
 
  private:
@@ -314,7 +334,7 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
   std::unique_ptr<TypeHelper> type_helper_;
 
   std::string type_url_;
-  pbutil::JsonPrintOptions json_print_options_;
+  JsonResponseTranslateOptions json_response_translate_options_;
   bool streaming_;
 
   // The entire input
@@ -766,6 +786,89 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingDirectTest) {
   // All done!
   EXPECT_FALSE(translator.NextMessage(&message));
   EXPECT_TRUE(translator.Finished());
+}
+
+TEST_F(ResponseToJsonTranslatorTest, StreamingNewlineDelimitedDirectTest) {
+  // Load the service config
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+
+  // Create a TypeHelper using the service config
+  TypeHelper type_helper(service.types(), service.enums());
+
+  // Messages to test
+  auto test_message1 =
+      GenerateGrpcMessage<Shelf>(R"(name : "1" theme : "Fiction")");
+  auto test_message2 =
+      GenerateGrpcMessage<Shelf>(R"(name : "2" theme : "Fantasy")");
+  auto test_message3 =
+      GenerateGrpcMessage<Shelf>(R"(name : "3" theme : "Children")");
+  auto test_message4 =
+      GenerateGrpcMessage<Shelf>(R"(name : "4" theme : "Classics")");
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/Shelf", true, &input_stream,
+      {pbutil::JsonPrintOptions(), true});
+
+  std::string message;
+  // There is nothing translated
+  EXPECT_FALSE(translator.NextMessage(&message));
+
+  // Add test_message1 to the stream
+  input_stream.AddChunk(test_message1);
+
+  // Now we should have the test_message1 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(
+      ExpectJsonObjectEq(R"({ "name":"1", "theme":"Fiction" })", message));
+  EXPECT_TRUE(message.back() == '\n');
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Add the test_message2, test_message3 and part of test_message4
+  input_stream.AddChunk(test_message2);
+  input_stream.AddChunk(test_message3);
+  input_stream.AddChunk(test_message4.substr(0, 10));
+
+  // Now we should have test_message2 & test_message3 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(
+      ExpectJsonObjectEq(R"({ "name":"2", "theme":"Fantasy" })", message));
+  EXPECT_TRUE(message.back() == '\n');
+
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(
+      ExpectJsonObjectEq(R"({ "name":"3", "theme":"Children" })", message));
+  EXPECT_TRUE(message.back() == '\n');
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Add the rest of test_message4
+  input_stream.AddChunk(test_message4.substr(10));
+
+  // Now we should have the test_message4 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(
+      ExpectJsonObjectEq(R"({ "name":"4", "theme":"Classics" })", message));
+  EXPECT_TRUE(message.back() == '\n');
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Now finish the stream
+  input_stream.Finish();
+
+  // All done!
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(translator.Finished());
+  EXPECT_FALSE(translator.NextMessage(&message));
 }
 
 TEST_F(ResponseToJsonTranslatorTest, Streaming5KMessages) {

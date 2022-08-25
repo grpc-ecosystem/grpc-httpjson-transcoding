@@ -58,6 +58,21 @@ namespace transcoding {
 //       an incomplete message at the end of the input. The callers will need to
 //       detect it and act appropriately.
 //
+
+// Control various aspects of the generated JSON during response translation
+struct JsonResponseTranslateOptions {
+  // JsonPrintOptions
+  // (https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.util.json_util#JsonPrintOptions)
+  // to configures the printing of individual messages as JSON
+  ::google::protobuf::util::JsonPrintOptions json_print_options;
+
+  // Whether the stream emits messages with newline-delimiters or not.
+  // If set to true, newline "\n" is used to separate streaming messages.
+  // If set to false, all streaming messages are treated as a JSON array and
+  // separated by comma.
+  bool stream_newline_delimited;
+};
+
 class ResponseToJsonTranslator : public MessageStream {
  public:
   // type_resolver - passed to BinaryToJsonStream() to do the translation
@@ -65,15 +80,12 @@ class ResponseToJsonTranslator : public MessageStream {
   // streaming - whether this is a streaming call or not
   // in - the input stream of delimited proto message(s) as in the gRPC wire
   //      format (http://www.grpc.io/docs/guides/wire.html)
-  // json_print_options - control various aspects for the generated JSON, such
-  //      as indentation, weather to omit fields with default values, etc (
-  //      https://developers.google.com/protocol-buffers/docs/reference/cpp/
-  //      google.protobuf.util.json_util#JsonPrintOptions
+  // options - control various aspects for the generated JSON
   ResponseToJsonTranslator(
       ::google::protobuf::util::TypeResolver* type_resolver,
       std::string type_url, bool streaming, TranscoderInputStream* in,
-      const ::google::protobuf::util::JsonPrintOptions& json_print_options =
-          ::google::protobuf::util::JsonPrintOptions());
+      const JsonResponseTranslateOptions& options = {
+          ::google::protobuf::util::JsonPrintOptions(), false});
 
   // MessageStream implementation
   bool NextMessage(std::string* message);
@@ -87,7 +99,7 @@ class ResponseToJsonTranslator : public MessageStream {
 
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::string type_url_;
-  const ::google::protobuf::util::JsonPrintOptions json_print_options_;
+  const JsonResponseTranslateOptions options_;
   bool streaming_;
 
   // A MessageReader to extract full messages

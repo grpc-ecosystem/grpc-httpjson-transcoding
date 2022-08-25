@@ -21,7 +21,7 @@ $ bazel build //...
 $ bazel test //...
 ```
 
-Use the following script to check and fix code foramt:
+Use the following script to check and fix code format:
 
 ```bash
 $ script/check-style
