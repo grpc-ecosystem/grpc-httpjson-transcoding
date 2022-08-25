@@ -37,6 +37,14 @@ message Book {
 message Shelf {
   string name = 1;
   string theme = 2;
+  // All the types.
+  enum TYPE {
+    CLASSIC = 0;
+    COMIC = 1;
+    HORROR = 2;
+    OTHER = 3;
+  }
+  TYPE type = 3;
 }
 message ListShelvesResponse {
   repeated Shelf shelves = 1;

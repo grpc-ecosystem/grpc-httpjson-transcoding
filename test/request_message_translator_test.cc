@@ -49,11 +49,14 @@ class RequestMessageTranslatorTest : public RequestTranslatorTestBase {
     return translator_->Input();
   }
 
+  bool case_insensitive_enum_parsing_ = false;
+
  private:
   // RequestTranslatorTestBase::Create()
   virtual MessageStream* Create(
       google::protobuf::util::TypeResolver& type_resolver,
       bool output_delimiters, RequestInfo request_info) {
+    request_info.case_insensitive_enum_parsing = case_insensitive_enum_parsing_;
     translator_.reset(new RequestMessageTranslator(
         type_resolver, output_delimiters, std::move(request_info)));
     return translator_.get();
@@ -491,6 +494,56 @@ TEST_F(RequestMessageTranslatorTest, IgnoreUnkownFields) {
   )";
 
   EXPECT_TRUE(ExpectMessageEq<CreateShelfRequest>(expected));
+}
+
+TEST_F(RequestMessageTranslatorTest, EnumCaseMatched) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("Shelf");
+  Build();
+  Input()
+      .StartObject("")
+      // All upper case, matched with proto definition
+      ->RenderString("type", "HORROR")
+      ->EndObject();
+
+  auto expected = R"(
+      type : HORROR
+  )";
+
+  EXPECT_TRUE(ExpectMessageEq<Shelf>(expected));
+}
+
+TEST_F(RequestMessageTranslatorTest, EnumCaseNotMatched) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("Shelf");
+  Build();
+  Input()
+      .StartObject("")
+      // expected all upper case, but this is not.
+      ->RenderString("type", "Horror")
+      ->EndObject();
+
+  EXPECT_TRUE(Tester().ExpectStatusEq(
+      ::google::protobuf::util::StatusCode::kInvalidArgument));
+}
+
+TEST_F(RequestMessageTranslatorTest, EnumWithCaseInsensitiveFlag) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("Shelf");
+  case_insensitive_enum_parsing_ = true;
+  Build();
+  Input()
+      .StartObject("")
+      // With the case_insensitive_enum_parsing_ = true,
+      // this non all upper case should work
+      ->RenderString("type", "Horror")
+      ->EndObject();
+
+  auto expected = R"(
+      type : HORROR
+  )";
+
+  EXPECT_TRUE(ExpectMessageEq<Shelf>(expected));
 }
 
 }  // namespace

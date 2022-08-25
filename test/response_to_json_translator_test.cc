@@ -362,7 +362,7 @@ TEST_F(ResponseToJsonTranslatorTest, SimpleAlwaysPrintPrimitiveFields) {
   SetMessageType("Shelf");
   SetJsonAlwaysPrintPrimitiveFields(true);
   AddMessage<Shelf>(R"(name : "" theme : "")",
-                    R"({ "name" : "", "theme" : ""})");
+                    R"({ "name" : "", "theme" : "", "type" : "CLASSIC"})");
 
   auto tc = Build();
   EXPECT_TRUE(tc->Test(1, 1.0));
@@ -465,7 +465,7 @@ TEST_F(ResponseToJsonTranslatorTest, EmptyAlwaysPrintPrimitiveFields) {
   SetMessageType("Shelf");
   SetJsonAlwaysPrintPrimitiveFields(true);
   AddMessage<Shelf>(R"()",
-                    R"({ "name" : "", "theme" : ""})");
+                    R"({ "name" : "", "theme" : "", "type" : "CLASSIC"})");
 
   auto tc = Build();
   EXPECT_TRUE(tc->Test(1, 1.0));

@@ -33,11 +33,13 @@ namespace transcoding {
 
 namespace {
 
-pbconv::ProtoStreamObjectWriter::Options GetProtoWriterOptions() {
+pbconv::ProtoStreamObjectWriter::Options GetProtoWriterOptions(
+    bool case_insensitive_enum_parsing) {
   auto options = pbconv::ProtoStreamObjectWriter::Options::Defaults();
   // Don't fail the translation if there are unknown fields in JSON.
   // This will make sure that we allow backward and forward compatible APIs.
   options.ignore_unknown_fields = true;
+  options.case_insensitive_enum_parsing = case_insensitive_enum_parsing;
   return options;
 }
 
@@ -49,8 +51,9 @@ RequestMessageTranslator::RequestMessageTranslator(
     : message_(),
       sink_(&message_),
       error_listener_(),
-      proto_writer_(&type_resolver, *request_info.message_type, &sink_,
-                    &error_listener_, GetProtoWriterOptions()),
+      proto_writer_(
+          &type_resolver, *request_info.message_type, &sink_, &error_listener_,
+          GetProtoWriterOptions(request_info.case_insensitive_enum_parsing)),
       request_weaver_(),
       prefix_writer_(),
       writer_pipeline_(&proto_writer_),
