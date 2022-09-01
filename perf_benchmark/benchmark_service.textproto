@@ -1,0 +1,27 @@
+name: "grpc-httpjson-transcoding-benchmark.googleapis.com"
+apis {
+  methods {
+    name: "BytePayloadBM"
+    request_type_url: "type.googleapis.com/BytePayload"
+    response_type_url: "type.googleapis.com/BytePayload"
+  }
+}
+types {
+  name: "BytePayload"
+  fields {
+    kind: TYPE_BYTES
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+http {
+  rules {
+    selector: "BytePayload"
+    post: "/payload/bytes"
+    body: "*"
+  }
+}

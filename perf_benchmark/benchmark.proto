@@ -14,6 +14,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "benchmark/benchmark.h"
+// Test proto for transcoding
+syntax = "proto3";
+package google.grpc.transcoding.perf_benchmark;
 
+import "google/api/annotations.proto";
 
+service Benchmark {
+        rpc BytePayloadBM(BytePayload) returns (BytePayload) {
+                option (google.api.http) = {
+                        post: "/payload/bytes",
+                        body: "*"
+                };
+        }
+}
+
+message BytePayload {
+        optional bytes payload = 1;
+}

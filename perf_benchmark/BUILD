@@ -26,6 +26,7 @@ proto_library(
     name = "benchmark_proto",
     srcs = ["benchmark.proto"],
     deps = [
+        "@com_google_googleapis//google/api:annotations_proto",
         "@com_google_protobuf//:struct_proto",
     ],
 )
@@ -33,12 +34,30 @@ proto_library(
 cc_binary(
     name = "benchmark_main",
     srcs = ["benchmark_main.cc"],
+    data = [
+        "benchmark_service.textproto",
+    ],
     deps = [
+        ":benchmark_cc_proto",
+        ":benchmark_common",
+        "//src:json_request_translator",
+        "//src:type_helper",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/memory",
         "@com_google_benchmark//:benchmark",
         "@com_google_benchmark//:benchmark_main",
-        "@com_google_googletest//:gtest",
-        "@com_google_googletest//:gtest_main",
+        "@com_google_googleapis//google/api:service_cc_proto",
     ],
+    copts = ["-BENCHMARK_ENABLE_LIBPFM"]
 )
 
-# https://github.com/google/benchmark/archive/refs/tags/v1.7.0.tar.gz
+cc_library(
+    name = "benchmark_common",
+    srcs = ["benchmark_common.cc"],
+    hdrs = ["benchmark_common.h"],
+    deps = [
+        "//src:transcoder_input_stream",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/api:service_cc_proto",
+    ],
+)
