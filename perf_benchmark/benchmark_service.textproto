@@ -9,7 +9,7 @@ apis {
 types {
   name: "BytePayload"
   fields {
-    kind: TYPE_BYTES
+    kind: TYPE_STRING
     cardinality: CARDINALITY_OPTIONAL
     number: 1
     name: "payload"

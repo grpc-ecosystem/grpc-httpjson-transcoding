@@ -37,10 +37,23 @@ constexpr absl::string_view
     kServiceConfigTextProtoFile = "benchmark_service.textproto";
 constexpr absl::string_view kBytePayloadMessageType = "BytePayload";
 }
-
 // TODO Add memory manager
-// TODO Generalize this method
-static void BM_SinglePayloadFromJson(::benchmark::State& state) {
+// Helper method to run Json Translation benchmark.
+//
+// state - ::benchmark::State& variable used for collecting metrics.
+// msg_type - Protobuf message name for translation.
+// request_info - Json-Protobuf request information, body_field_path and
+//                variable_bindings need to be set before it is passed in.
+// json_msg_ptr - Pointer to a complete json message.
+// streaming - Flag for streaming testing. When true, a stream of `stream_size`
+//             number of `json_msg_ptr` will be fed into translation.
+// stream_size - Number of streaming messages.
+static void BenchmarkJsonTranslation(::benchmark::State& state,
+                                     absl::string_view msg_type,
+                                     RequestInfo request_info,
+                                     const std::string* json_msg_ptr,
+                                     bool streaming,
+                                     int64_t stream_size) {
   // Load service config proto into Service object
   google::api::Service service;
   LoadService(std::string(kServiceConfigTextProtoFile), &service);
@@ -49,34 +62,26 @@ static void BM_SinglePayloadFromJson(::benchmark::State& state) {
   TypeHelper type_helper(service.types(), service.enums());
 
   // Get message type
-  absl::string_view message_type = kBytePayloadMessageType;
   const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
-      absl::StrFormat("type.googleapis.com/%s", message_type));
+      absl::StrFormat("type.googleapis.com/%s", msg_type));
   if (nullptr == type) {
-    std::cerr << "Could not resolve the message type " << message_type
-              << std::endl;
+    std::cerr << "Could not resolve the message type " << msg_type << std::endl;
+    return;
   }
-
-  // Generate ZeroCopyInputStream from a random string payload
-  // Using heap instead of stack because heap space is more suitable to hold large data chunks
-  int64_t payload_length = state.range(0);
-  auto json_msg =
-      absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
-                                                     GetRandomString(
-                                                         payload_length)));
-  auto is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg);
-
-  // Populate request info
-  RequestInfo request_info;
   request_info.message_type = type;
-  request_info.body_field_path = "*";
-  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
+
+  // Wrap json_msg_ptr inside ZeroCopyInputStream.
+  // Using heap instead of stack because heap space is more suitable to hold
+  // large data chunks.
+  auto is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg_ptr,
+                                                            streaming,
+                                                            stream_size);
 
   // Benchmark the transcoding process
   for (auto s: state) {
     JsonRequestTranslator
         translator
-        (type_helper.Resolver(), is.get(), request_info, false, false);
+        (type_helper.Resolver(), is.get(), request_info, streaming, false);
     MessageStream& out = translator.Output();
 
     if (!out.Status().ok()) {
@@ -94,44 +99,66 @@ static void BM_SinglePayloadFromJson(::benchmark::State& state) {
   }
 
   // Add custom benchmark counters
-  auto message_processed = static_cast<int64_t>(state.iterations());
+  auto request_processed = static_cast<double>(state.iterations());
+  auto message_processed = static_cast<double>(state.iterations() * (streaming ? stream_size : 1));
   auto bytes_processed =
-      static_cast<int64_t>(state.iterations()) * state.range(0);
-  state.counters["byte_throughput"] =
-      Counter(static_cast<double>(bytes_processed),
-              Counter::kIsRate,
+      static_cast<double>(state.iterations() * state.range(0));
+  state.counters["byte_throughput"] = Counter(bytes_processed, Counter::kIsRate,
+                                              Counter::kIs1024);
+  state.counters["byte_latency"] =
+      Counter(bytes_processed, Counter::kIsRate | Counter::kInvert,
               Counter::kIs1024);
-  state.counters["byte_latency"] = Counter(static_cast<double>(bytes_processed),
-                                           Counter::kIsRate | Counter::kInvert,
-                                           Counter::kIs1024);
+  state.counters["request_throughput"] =
+      Counter(request_processed, Counter::kIsRate);
+  state.counters["request_latency"] =
+      Counter(request_processed, Counter::kIsRate | Counter::kInvert);
   state.counters["message_throughput"] =
-      Counter(static_cast<double>(message_processed), Counter::kIsRate);
+      Counter(message_processed, Counter::kIsRate);
   state.counters["message_latency"] =
-      Counter(static_cast<double>(message_processed),
-              Counter::kIsRate | Counter::kInvert);
+      Counter(message_processed, Counter::kIsRate | Counter::kInvert);
 }
 
-BENCHMARK(BM_SinglePayloadFromJson)
-    ->ComputeStatistics("p25", [](const std::vector<double>& v) -> double {
-      return GetPercentile(v, 25);
-    })
-    ->ComputeStatistics("p75", [](const std::vector<double>& v) -> double {
-      return GetPercentile(v, 75);
-    })
-    ->ComputeStatistics("p90", [](const std::vector<double>& v) -> double {
-      return GetPercentile(v, 90);
-    })
-    ->ComputeStatistics("p99", [](const std::vector<double>& v) -> double {
-      return GetPercentile(v, 99);
-    })
-    ->ComputeStatistics("p999", [](const std::vector<double>& v) -> double {
-      return GetPercentile(v, 99.9);
-    })
-    ->Iterations(1) // Run for 1000 iterations for all cases
+static void BM_SinglePayloadFromJson(::benchmark::State& state,
+                                     int64_t payload_length,
+                                     bool streaming,
+                                     int64_t stream_size) {
+  // Populate request info except for message_type which will be populated
+  // inside BenchmarkJsonTranslation.
+  RequestInfo request_info;
+  request_info.body_field_path = "*";
+  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
+
+  // Using heap instead of stack because heap space is more suitable to hold large data chunks
+  auto json_msg =
+      absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
+                                                     GetRandomString(
+                                                         payload_length)));
+  BenchmarkJsonTranslation(state,
+                           kBytePayloadMessageType,
+                           request_info,
+                           json_msg.get(),
+                           streaming,
+                           stream_size);
+}
+
+static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_SinglePayloadFromJson(state, state.range(0), false, 0);
+}
+BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
     ->Arg(1) // 1 byte
     ->Arg(1 << 10) // 1 KiB
     ->Arg(1 << 20) // 1 MiB
     ->Arg(1 << 25); // 32 MiB
+
+static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
+  BM_SinglePayloadFromJson(state, state.range(0), true, state.range(1));
+}
+BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming)
+    ->ArgPair(1 << 20, 1) // 1 MiB, 1 message
+    ->ArgPair(1 << 20, 1 << 2) // 1 MiB, 2 messages
+    ->ArgPair(1 << 20, 1 << 4) // 1 MiB, 16 messages
+    ->ArgPair(1 << 20, 1 << 6); // 1 MiB, 64 messages
+
 BENCHMARK_MAIN();
 
 } // namespace perf_benchmark

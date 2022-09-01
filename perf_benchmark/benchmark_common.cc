@@ -16,6 +16,7 @@
 //
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include "perf_benchmark/benchmark_common.h"
 #include "google/protobuf/text_format.h"
 
@@ -70,7 +71,6 @@ double GetPercentile(const std::vector<double>& v, double perc) {
   return copy[rough_position];
 }
 
-
 std::string GetRandomString(int64_t length) {
   static const char charset[] =
       {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -90,9 +90,45 @@ std::string GetRandomString(int64_t length) {
   return ret;
 }
 
+BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
+                                                           bool streaming,
+                                                           int stream_size)
+    : finished_(false),
+      msg_(std::move(msg)),
+      streaming_(streaming),
+      stream_size_(stream_size),
+      msg_sent(0) {
+  if (streaming_) {
+    if (stream_size_ == 1) {
+      // Edge case, we only need to set header_
+      header_ = "[" + msg_ + "]";
+    } else {
+      header_ = "[" + msg_ + ", ";
+      body_ = msg_ + ", ";
+      tail_ = msg_ + "]";
+    }
+  }
+}
+
 int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
-  if (finished_) { return 0; }
-  return msg_.size();
+  if (finished_) {
+    return 0;
+  }
+  if (!streaming_) {
+    // non-streaming
+    return msg_.size();
+  } else {
+    // streaming
+    if (msg_sent == 0) {
+      // no message sent -> next message is header_
+      return header_.size();
+    }
+    if (msg_sent + 1 == stream_size_) {
+      // last message to be sent -> next message is tail_
+      return tail_.size();
+    }
+    return body_.size();
+  }
 }
 
 bool BenchmarkZeroCopyInputStream::Finished() const {
@@ -104,17 +140,41 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
     *size = 0;
     return false;
   }
-  *data = msg_.data();
-  *size = msg_.size();
-  finished_ = true;
+  if (!streaming_) {
+    // non-streaming
+    *data = msg_.data();
+    *size = msg_.size();
+    finished_ = true;
+  } else {
+    // streaming
+    if (msg_sent == 0) {
+      // no message sent -> next message is header_
+      *data = header_.data();
+      *size = header_.size();
+    } else if (msg_sent + 1 == stream_size_) {
+      // last message to be sent -> next message is tail_
+      *data = tail_.data();
+      *size = tail_.size();
+    } else {
+      *data = body_.data();
+      *size = body_.size();
+    }
+    ++msg_sent;
+    if (msg_sent == stream_size_) {
+      finished_ = true;
+    }
+  }
   return true;
 }
 
 void BenchmarkZeroCopyInputStream::Reset() {
   finished_ = false;
+  msg_sent = 0;
 }
-}
-}
-}
-}
+
+} // namespace perf_benchmark
+
+} // namespace transcoding
+} // namespace grpc
+} // namespace google
 

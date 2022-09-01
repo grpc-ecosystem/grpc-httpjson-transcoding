@@ -59,5 +59,6 @@ cc_library(
         "//src:transcoder_input_stream",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_benchmark//:benchmark",
     ],
 )
