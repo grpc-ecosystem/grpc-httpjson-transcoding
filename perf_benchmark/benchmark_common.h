@@ -1,7 +1,19 @@
+// Copyright 2016 Google Inc. All Rights Reserved.
 //
-// Created by hongrux on 8/30/22.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
 #ifndef PERF_BENCHMARK_BENCHMARK_COMMON_H_
 #define PERF_BENCHMARK_BENCHMARK_COMMON_H_
 
@@ -71,7 +83,11 @@ bool LoadService(const std::string& config_pb_txt_file,
 double GetPercentile(const std::vector<double>& v, double perc);
 
 // Return a random alphanumeric string of the given length.
-std::string GetRandomString(int64_t length);
+// length - Length of the returned string. If base64 == true, the actual
+//          returned string length is 33–37% larger due to the encoding.
+// base64 - True if the returned string should be base64 encoded. This is
+//          required for bytes proto message.
+std::string GetRandomString(int64_t length, bool base64);
 
 } // namespace perf_benchmark
 
@@ -87,8 +103,8 @@ std::string GetRandomString(int64_t length);
 // This will also set iteration to 1 because the aggregate function gets
 // statistics from each benchmark repetition instead of iterations.
 // Running with 1000 iterations only gives 1 data point. Therefore, it is
-// recommended to run 1000 repetition of the benchmark with each repetition only
-// has 1 iteration instead.
+// recommended to run with --benchmark_repetitions=1000 CLI argument to get
+// comparable results.
 // Use this marco the same way as BENCHMARK macro.
 #define BENCHMARK_WITH_PERCENTILE(func)                                       \
     BENCHMARK(func)                                                           \
@@ -106,7 +122,6 @@ std::string GetRandomString(int64_t length);
     })                                                                        \
     ->ComputeStatistics("p999", [](const std::vector<double>& v) -> double {  \
       return GetPercentile(v, 99.9);                                          \
-    })                                                                        \
-    ->Iterations(1)
+    })
 
 #endif //PERF_BENCHMARK_BENCHMARK_COMMON_H_

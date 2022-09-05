@@ -30,5 +30,5 @@ service Benchmark {
 }
 
 message BytePayload {
-        optional string payload = 1;
+        optional bytes payload = 1;
 }

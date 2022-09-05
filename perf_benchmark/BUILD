@@ -14,7 +14,7 @@
 #
 ################################################################################
 #
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 cc_proto_library(
@@ -42,13 +42,12 @@ cc_binary(
         ":benchmark_common",
         "//src:json_request_translator",
         "//src:type_helper",
-        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
         "@com_google_benchmark//:benchmark",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googleapis//google/api:service_cc_proto",
     ],
-    copts = ["-BENCHMARK_ENABLE_LIBPFM"]
 )
 
 cc_library(
@@ -58,7 +57,19 @@ cc_library(
     deps = [
         "//src:transcoder_input_stream",
         "@com_google_absl//absl/strings",
-        "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_benchmark//:benchmark",
+        "@com_google_googleapis//google/api:service_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "benchmark_common_test",
+    srcs = [
+        "benchmark_common_test.cc",
+    ],
+    deps = [
+        ":benchmark_common",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )

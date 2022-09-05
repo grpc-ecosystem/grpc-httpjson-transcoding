@@ -132,7 +132,7 @@ static void BM_SinglePayloadFromJson(::benchmark::State& state,
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      GetRandomString(
-                                                         payload_length)));
+                                                         payload_length, true)));
   BenchmarkJsonTranslation(state,
                            kBytePayloadMessageType,
                            request_info,
@@ -145,7 +145,7 @@ static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
   BM_SinglePayloadFromJson(state, state.range(0), false, 0);
 }
 BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
-    ->Arg(1) // 1 byte
+    ->Arg(12) // 1 byte
     ->Arg(1 << 10) // 1 KiB
     ->Arg(1 << 20) // 1 MiB
     ->Arg(1 << 25); // 32 MiB
