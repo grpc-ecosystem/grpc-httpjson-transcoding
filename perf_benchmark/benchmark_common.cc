@@ -90,6 +90,30 @@ std::string GetRandomString(int64_t length, bool base64) {
   }
   return base64 ? absl::Base64Escape(ret) : ret;
 }
+std::string GetRandomInt32ArrayString(int64_t length) {
+  std::ostringstream os;
+  os << '[';
+  for (int i = 0; i < length; ++i) {
+    os << int32_t(rand());
+    if (i != length - 1) {
+      os << ',';
+    }
+  }
+  os << ']';
+  return os.str();
+}
+std::string GetRepeatedValueArrayString(absl::string_view val, int64_t length) {
+  std::ostringstream os;
+  os << '[';
+  for (int i = 0; i < length; ++i) {
+    os << val;
+    if (i != length - 1) {
+      os << ',';
+    }
+  }
+  os << ']';
+  return os.str();
+}
 
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
                                                            bool streaming,
@@ -171,6 +195,19 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
 void BenchmarkZeroCopyInputStream::Reset() {
   finished_ = false;
   msg_sent = 0;
+}
+int64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
+  if (!streaming_) {
+    return msg_.size();
+  }
+
+  if (stream_size_ == 0) {
+    return 0;
+  }
+  if (stream_size_ == 1) {
+    return header_.size();
+  }
+  return header_.size() + tail_.size() + body_.size() * static_cast<size_t>(stream_size_ - 2);
 }
 
 } // namespace perf_benchmark

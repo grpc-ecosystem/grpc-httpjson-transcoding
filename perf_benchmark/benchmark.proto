@@ -21,14 +21,64 @@ package google.grpc.transcoding.perf_benchmark;
 import "google/api/annotations.proto";
 
 service Benchmark {
-        rpc BytePayloadBM(BytePayload) returns (BytePayload) {
+        rpc BytesPayloadBM(BytesPayload) returns (BytesPayload) {
                 option (google.api.http) = {
                         post: "/payload/bytes",
                         body: "*"
                 };
         }
+        rpc Int32ArrayPayloadBM(Int32ArrayPayload) returns (Int32ArrayPayload) {
+                option (google.api.http) = {
+                        post: "/payload/int32_array",
+                        body: "*"
+                };
+        }
+        rpc DoubleArrayPayloadBM(DoubleArrayPayload) returns (DoubleArrayPayload) {
+                option (google.api.http) = {
+                        post: "/payload/double_array",
+                        body: "*"
+                };
+        }
+        rpc BoolArrayPayloadBM(BoolArrayPayload) returns (BoolArrayPayload) {
+                option (google.api.http) = {
+                        post: "/payload/bool_array",
+                        body: "*"
+                };
+        }
+        rpc StringArrayPayloadBM(StringArrayPayload) returns (StringArrayPayload) {
+                option (google.api.http) = {
+                        post: "/payload/string_array",
+                        body: "*"
+                };
+        }
+        rpc BytesArrayPayloadBM(BytesArrayPayload) returns (BytesArrayPayload) {
+                option (google.api.http) = {
+                        post: "/payload/bytes_array",
+                        body: "*"
+                };
+        }
 }
 
-message BytePayload {
+message BytesPayload {
         optional bytes payload = 1;
+}
+
+message Int32ArrayPayload {
+        repeated int32 payload = 1;
+}
+
+message DoubleArrayPayload {
+        repeated double payload = 1;
+}
+
+message BoolArrayPayload {
+        repeated bool payload = 1;
+}
+
+message StringArrayPayload {
+        repeated string payload = 1;
+}
+
+message BytesArrayPayload {
+        repeated bytes payload = 1;
 }

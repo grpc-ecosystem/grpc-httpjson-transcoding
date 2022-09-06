@@ -16,14 +16,16 @@
 //
 #include "grpc_transcoding/request_message_translator.h"
 #include "grpc_transcoding/json_request_translator.h"
-#include "benchmark/benchmark.h"
 #include "grpc_transcoding/type_helper.h"
+#include "benchmark/benchmark.h"
 #include "google/protobuf/text_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/str_format.h"
-#include "google/api/service.pb.h"
-#include "perf_benchmark/benchmark_common.h"
 #include "absl/memory/memory.h"
+#include "google/api/service.pb.h"
+
+#include <utility>
+#include "perf_benchmark/benchmark_common.h"
 
 namespace google {
 namespace grpc {
@@ -35,7 +37,14 @@ using namespace benchmark;
 
 constexpr absl::string_view
     kServiceConfigTextProtoFile = "benchmark_service.textproto";
-constexpr absl::string_view kBytePayloadMessageType = "BytePayload";
+constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
+constexpr absl::string_view kInt32ArrayPayloadMessageType = "Int32ArrayPayload";
+constexpr absl::string_view kBoolArrayPayloadMessageType = "BoolArrayPayload";
+constexpr absl::string_view kBytesArrayPayloadMessageType = "BytesArrayPayload";
+constexpr absl::string_view
+    kDoubleArrayPayloadMessageType = "DoubleArrayPayload";
+constexpr absl::string_view
+    kStringArrayPayloadMessageType = "StringArrayPayload";
 }
 // TODO Add memory manager
 // Helper method to run Json Translation benchmark.
@@ -48,12 +57,12 @@ constexpr absl::string_view kBytePayloadMessageType = "BytePayload";
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
 //             number of `json_msg_ptr` will be fed into translation.
 // stream_size - Number of streaming messages.
-static void BenchmarkJsonTranslation(::benchmark::State& state,
-                                     absl::string_view msg_type,
-                                     RequestInfo request_info,
-                                     const std::string* json_msg_ptr,
-                                     bool streaming,
-                                     int64_t stream_size) {
+void BenchmarkJsonTranslation(::benchmark::State& state,
+                              absl::string_view msg_type,
+                              RequestInfo request_info,
+                              const std::string* json_msg_ptr,
+                              bool streaming,
+                              int64_t stream_size) {
   // Load service config proto into Service object
   google::api::Service service;
   LoadService(std::string(kServiceConfigTextProtoFile), &service);
@@ -100,9 +109,10 @@ static void BenchmarkJsonTranslation(::benchmark::State& state,
 
   // Add custom benchmark counters
   auto request_processed = static_cast<double>(state.iterations());
-  auto message_processed = static_cast<double>(state.iterations() * (streaming ? stream_size : 1));
+  auto message_processed =
+      static_cast<double>(state.iterations() * (streaming ? stream_size : 1));
   auto bytes_processed =
-      static_cast<double>(state.iterations() * state.range(0));
+      static_cast<double>(state.iterations() * is->TotalBytes());
   state.counters["byte_throughput"] = Counter(bytes_processed, Counter::kIsRate,
                                               Counter::kIs1024);
   state.counters["byte_latency"] =
@@ -118,23 +128,31 @@ static void BenchmarkJsonTranslation(::benchmark::State& state,
       Counter(message_processed, Counter::kIsRate | Counter::kInvert);
 }
 
-static void BM_SinglePayloadFromJson(::benchmark::State& state,
-                                     int64_t payload_length,
-                                     bool streaming,
-                                     int64_t stream_size) {
-  // Populate request info except for message_type which will be populated
-  // inside BenchmarkJsonTranslation.
+// Create and populate request info with the given body_field_path and an empty
+// variable_bindings.
+RequestInfo CreateRequestInfo(std::string body_field_path) {
   RequestInfo request_info;
-  request_info.body_field_path = "*";
+  request_info.body_field_path = std::move(body_field_path);
   request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
+  return request_info;
+}
 
-  // Using heap instead of stack because heap space is more suitable to hold large data chunks
+//
+// Benchmark variable: JSON body length.
+//
+// Helper function for benchmarking single bytes payload translation from JSON.
+void BM_SinglePayloadFromJson(::benchmark::State& state,
+                              int64_t payload_length,
+                              bool streaming,
+                              int64_t stream_size) {
+  RequestInfo request_info = CreateRequestInfo("*");
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      GetRandomString(
-                                                         payload_length, true)));
+                                                         payload_length,
+                                                         true)));
   BenchmarkJsonTranslation(state,
-                           kBytePayloadMessageType,
+                           kBytesPayloadMessageType,
                            request_info,
                            json_msg.get(),
                            streaming,
@@ -151,14 +169,104 @@ BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
     ->Arg(1 << 25); // 32 MiB
 
 static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_SinglePayloadFromJson(state, state.range(0), true, state.range(1));
+  int64_t byte_length = 1 << 20; // 1 MiB
+  BM_SinglePayloadFromJson(state, byte_length, true, state.range(0));
 }
 BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming)
-    ->ArgPair(1 << 20, 1) // 1 MiB, 1 message
-    ->ArgPair(1 << 20, 1 << 2) // 1 MiB, 2 messages
-    ->ArgPair(1 << 20, 1 << 4) // 1 MiB, 16 messages
-    ->ArgPair(1 << 20, 1 << 6); // 1 MiB, 64 messages
+    ->Arg(1) // 1 message
+    ->Arg(1 << 2) // 2 messages
+    ->Arg(1 << 4) // 16 messages
+    ->Arg(1 << 6); // 64 messages
 
+//
+// Benchmark variable: JSON array length.
+//
+// Helper function for benchmarking int32 array payload translation from JSON.
+void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
+                                  int64_t array_length,
+                                  bool streaming,
+                                  int64_t stream_size) {
+  RequestInfo request_info = CreateRequestInfo("*");
+  auto json_msg =
+      absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
+                                                     GetRandomInt32ArrayString(
+                                                         array_length)));
+  BenchmarkJsonTranslation(state,
+                           kInt32ArrayPayloadMessageType,
+                           request_info,
+                           json_msg.get(),
+                           streaming,
+                           stream_size);
+}
+
+static void BM_Int32ArrayPayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_Int32ArrayPayloadFromJson(state, state.range(0), false, 0);
+}
+BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonNonStreaming)
+    ->Arg(1) // 1 val
+    ->Arg(1 << 8) // 256 vals
+    ->Arg(1 << 10) // 1024 vals
+    ->Arg(1 << 14); // 16384 vals
+
+static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
+  int64_t array_length = 1 << 14; // 16384 int values
+  BM_Int32ArrayPayloadFromJson(state, array_length, true, state.range(0));
+}
+BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming)
+    ->Arg(1) //  1 message
+    ->Arg(1 << 2) // 2 messages
+    ->Arg(1 << 4) // 16 messages
+    ->Arg(1 << 6); // 64 messages
+
+//
+// Benchmark variable: JSON value data type.
+// Only non-streaming is benchmarked since the JSON is already an array.
+// Benchmarks for array typed JSON streaming is tested with the JSON array
+// length benchmark variable.
+//
+// Helper function for benchmarking translation from JSON to payload of
+// different types.
+void BM_ArrayPayloadFromJson(::benchmark::State& state,
+                             absl::string_view msg_type,
+                             bool streaming,
+                             int64_t stream_size) {
+  RequestInfo request_info = CreateRequestInfo("*");
+  int64_t array_length = 1 << 10; // 1024
+  auto json_msg =
+      absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
+                                                     GetRepeatedValueArrayString(
+                                                         "0",
+                                                         array_length)));
+  BenchmarkJsonTranslation(state,
+                           msg_type,
+                           request_info,
+                           json_msg.get(),
+                           streaming,
+                           stream_size);
+}
+
+static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_ArrayPayloadFromJson(state, kInt32ArrayPayloadMessageType, false, 0);
+}
+static void BM_DoubleArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_ArrayPayloadFromJson(state, kDoubleArrayPayloadMessageType, false, 0);
+}
+static void BM_BoolArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_ArrayPayloadFromJson(state, kBoolArrayPayloadMessageType, false, 0);
+}
+static void BM_StringArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_ArrayPayloadFromJson(state, kStringArrayPayloadMessageType, false, 0);
+}
+static void BM_BytesArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_ArrayPayloadFromJson(state, kBytesArrayPayloadMessageType, false, 0);
+}
+BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayTypePayloadFromJsonNonStreaming);
+BENCHMARK_WITH_PERCENTILE(BM_DoubleArrayTypePayloadFromJsonNonStreaming);
+BENCHMARK_WITH_PERCENTILE(BM_BoolArrayTypePayloadFromJsonNonStreaming);
+BENCHMARK_WITH_PERCENTILE(BM_StringArrayTypePayloadFromJsonNonStreaming);
+BENCHMARK_WITH_PERCENTILE(BM_BytesArrayTypePayloadFromJsonNonStreaming);
+
+// Benchmark Main function
 BENCHMARK_MAIN();
 
 } // namespace perf_benchmark

@@ -1,13 +1,38 @@
 name: "grpc-httpjson-transcoding-benchmark.googleapis.com"
 apis {
   methods {
-    name: "BytePayloadBM"
-    request_type_url: "type.googleapis.com/BytePayload"
-    response_type_url: "type.googleapis.com/BytePayload"
+    name: "BytesPayloadBM"
+    request_type_url: "type.googleapis.com/BytesPayload"
+    response_type_url: "type.googleapis.com/BytesPayload"
+  }
+  methods {
+    name: "Int32ArrayPayloadBM"
+    request_type_url: "type.googleapis.com/Int32ArrayPayload"
+    response_type_url: "type.googleapis.com/Int32ArrayPayload"
+  }
+  methods {
+    name: "DoubleArrayPayloadBM"
+    request_type_url: "type.googleapis.com/DoubleArrayPayload"
+    response_type_url: "type.googleapis.com/DoubleArrayPayload"
+  }
+  methods {
+    name: "BoolArrayPayloadBM"
+    request_type_url: "type.googleapis.com/BoolArrayPayload"
+    response_type_url: "type.googleapis.com/BoolArrayPayload"
+  }
+  methods {
+    name: "StringArrayPayloadBM"
+    request_type_url: "type.googleapis.com/StringArrayPayload"
+    response_type_url: "type.googleapis.com/StringArrayPayload"
+  }
+  methods {
+    name: "BytesArrayPayloadBM"
+    request_type_url: "type.googleapis.com/BytesArrayPayload"
+    response_type_url: "type.googleapis.com/BytesArrayPayload"
   }
 }
 types {
-  name: "BytePayload"
+  name: "BytesPayload"
   fields {
     kind: TYPE_BYTES
     cardinality: CARDINALITY_OPTIONAL
@@ -18,10 +43,95 @@ types {
   source_context {
   }
 }
+types {
+  name: "Int32ArrayPayload"
+  fields {
+    kind: TYPE_INT32
+    cardinality: CARDINALITY_REPEATED
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "DoubleArrayPayload"
+  fields {
+    kind: TYPE_DOUBLE
+    cardinality: CARDINALITY_REPEATED
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "BoolArrayPayload"
+  fields {
+    kind: TYPE_BOOL
+    cardinality: CARDINALITY_REPEATED
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "StringArrayPayload"
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_REPEATED
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "BytesArrayPayload"
+  fields {
+    kind: TYPE_BYTES
+    cardinality: CARDINALITY_REPEATED
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
 http {
   rules {
-    selector: "BytePayload"
+    selector: "BytesPayload"
     post: "/payload/bytes"
+    body: "*"
+  }
+  rules {
+    selector: "Int32ArrayPayload"
+    post: "/payload/int32_array"
+    body: "*"
+  }
+  rules {
+    selector: "DoubleArrayPayload"
+    post: "/payload/double_array"
+    body: "*"
+  }
+  rules {
+    selector: "BoolArrayPayloadBM"
+    post: "/payload/bool_array"
+    body: "*"
+  }
+  rules {
+    selector: "StringArrayPayloadBM"
+    post: "/payload/string_array"
+    body: "*"
+  }
+  rules {
+    selector: "BytesArrayPayloadBM"
+    post: "/payload/bytes_array"
     body: "*"
   }
 }

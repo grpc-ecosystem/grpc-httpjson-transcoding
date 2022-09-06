@@ -41,6 +41,7 @@ namespace perf_benchmark {
 // stream_size won't be used if streaming == false.
 class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
  public:
+  // Pre - stream_size >= 0
   explicit BenchmarkZeroCopyInputStream(std::string msg, bool streaming,
                                         int stream_size);
   ~BenchmarkZeroCopyInputStream() override = default;
@@ -56,6 +57,9 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   // Reset the input stream back to the original start state.
   // This should be called after one iteration of benchmark.
   void Reset();
+
+  // Return the total number of bytes of the entire JSON message.
+  int64_t TotalBytes() const;
 
  private:
   bool finished_;
@@ -88,6 +92,16 @@ double GetPercentile(const std::vector<double>& v, double perc);
 // base64 - True if the returned string should be base64 encoded. This is
 //          required for bytes proto message.
 std::string GetRandomString(int64_t length, bool base64);
+
+// Return a random string representing an array of int32, e.g. "[1,2,3]"
+// length - Length of the integer array.
+std::string GetRandomInt32ArrayString(int64_t length);
+
+// Return an array string of the given length with repeated values,
+// e.g. "[0, 0, 0]" for GetRepeatedValueArrayString("0", 3).
+// val - Unescaped string value to be put in the array.
+// length - Length of the integer array.
+std::string GetRepeatedValueArrayString(absl::string_view val, int64_t length);
 
 } // namespace perf_benchmark
 
