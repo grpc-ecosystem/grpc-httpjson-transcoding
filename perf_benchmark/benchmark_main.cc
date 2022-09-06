@@ -262,7 +262,7 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                               absl::string_view msg_type) {
   auto json_msg =
       absl::make_unique<std::string>(GetNestedJsonString(layers,
-                                                         kNestedPayloadMessageType,
+                                                         kNestedFieldName,
                                                          std::string(
                                                              kInnerMostNestedFieldName),
                                                          "buzz"));

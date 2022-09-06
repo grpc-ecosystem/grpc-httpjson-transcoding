@@ -120,6 +120,7 @@ types {
     cardinality: CARDINALITY_OPTIONAL
     number: 1
     name: "nested"
+    type_url: "type.googleapis.com/NestedPayload"
     json_name: "nested"
   }
   fields {
