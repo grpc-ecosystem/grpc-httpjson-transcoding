@@ -147,4 +147,11 @@ std::string GetNestedJsonString(int64_t layers,
       return GetPercentile(v, 99.9);                                          \
     })
 
+#define BENCHMARK_STREAMING_WITH_PERCENTILE(func)                             \
+    BENCHMARK_WITH_PERCENTILE(func)                                           \
+    ->Arg(1)                                                                  \
+    ->Arg(1 << 2)                                                             \
+    ->Arg(1 << 4)                                                             \
+    ->Arg(1 << 6)
+
 #endif //PERF_BENCHMARK_BENCHMARK_COMMON_H_

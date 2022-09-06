@@ -174,11 +174,7 @@ static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
   int64_t byte_length = 1 << 20; // 1 MiB
   BM_SinglePayloadFromJson(state, byte_length, true, state.range(0));
 }
-BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming)
-    ->Arg(1) // 1 message
-    ->Arg(1 << 2) // 2 messages
-    ->Arg(1 << 4) // 16 messages
-    ->Arg(1 << 6); // 64 messages
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming);
 
 //
 // Benchmark variable: JSON array length.
@@ -214,11 +210,7 @@ static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
   int64_t array_length = 1 << 14; // 16384 int values
   BM_Int32ArrayPayloadFromJson(state, array_length, true, state.range(0));
 }
-BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming)
-    ->Arg(1) // 1 message
-    ->Arg(1 << 2) // 2 messages
-    ->Arg(1 << 4) // 16 messages
-    ->Arg(1 << 6); // 64 messages
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming);
 
 //
 // Benchmark variable: JSON value data type.
@@ -302,11 +294,7 @@ BENCHMARK_WITH_PERCENTILE(BM_NestedPayloadFromJsonNonStreaming)
 static void BM_NestedPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_NestedPayloadFromJson(state, 64, true, state.range(0));
 }
-BENCHMARK_WITH_PERCENTILE(BM_NestedPayloadFromJsonStreaming)
-    ->Arg(1) // 1 message
-    ->Arg(1 << 2) // 2 messages
-    ->Arg(1 << 4) // 16 messages
-    ->Arg(1 << 6); // 64 messages
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedPayloadFromJsonStreaming);
 
 // Benchmark Main function
 BENCHMARK_MAIN();
