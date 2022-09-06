@@ -21,19 +21,9 @@ apis {
     response_type_url: "type.googleapis.com/DoubleArrayPayload"
   }
   methods {
-    name: "BoolArrayPayloadBM"
-    request_type_url: "type.googleapis.com/BoolArrayPayload"
-    response_type_url: "type.googleapis.com/BoolArrayPayload"
-  }
-  methods {
     name: "StringArrayPayloadBM"
     request_type_url: "type.googleapis.com/StringArrayPayload"
     response_type_url: "type.googleapis.com/StringArrayPayload"
-  }
-  methods {
-    name: "BytesArrayPayloadBM"
-    request_type_url: "type.googleapis.com/BytesArrayPayload"
-    response_type_url: "type.googleapis.com/BytesArrayPayload"
   }
   methods {
     name: "NestedPayloadBM"
@@ -95,33 +85,9 @@ types {
   }
 }
 types {
-  name: "BoolArrayPayload"
-  fields {
-    kind: TYPE_BOOL
-    cardinality: CARDINALITY_REPEATED
-    number: 1
-    name: "payload"
-    json_name: "payload"
-  }
-  source_context {
-  }
-}
-types {
   name: "StringArrayPayload"
   fields {
     kind: TYPE_STRING
-    cardinality: CARDINALITY_REPEATED
-    number: 1
-    name: "payload"
-    json_name: "payload"
-  }
-  source_context {
-  }
-}
-types {
-  name: "BytesArrayPayload"
-  fields {
-    kind: TYPE_BYTES
     cardinality: CARDINALITY_REPEATED
     number: 1
     name: "payload"
@@ -287,18 +253,8 @@ http {
     body: "*"
   }
   rules {
-    selector: "BoolArrayPayloadBM"
-    post: "/payload/bool_array"
-    body: "*"
-  }
-  rules {
     selector: "StringArrayPayloadBM"
     post: "/payload/string_array"
-    body: "*"
-  }
-  rules {
-    selector: "BytesArrayPayloadBM"
-    post: "/payload/bytes_array"
     body: "*"
   }
   rules {

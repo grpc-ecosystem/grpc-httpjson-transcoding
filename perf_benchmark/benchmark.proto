@@ -46,21 +46,9 @@ service Benchmark {
                         body: "*"
                 };
         }
-        rpc BoolArrayPayloadBM(BoolArrayPayload) returns (BoolArrayPayload) {
-                option (google.api.http) = {
-                        post: "/payload/bool_array",
-                        body: "*"
-                };
-        }
         rpc StringArrayPayloadBM(StringArrayPayload) returns (StringArrayPayload) {
                 option (google.api.http) = {
                         post: "/payload/string_array",
-                        body: "*"
-                };
-        }
-        rpc BytesArrayPayloadBM(BytesArrayPayload) returns (BytesArrayPayload) {
-                option (google.api.http) = {
-                        post: "/payload/bytes_array",
                         body: "*"
                 };
         }
@@ -94,16 +82,8 @@ message DoubleArrayPayload {
         repeated double payload = 1;
 }
 
-message BoolArrayPayload {
-        repeated bool payload = 1;
-}
-
 message StringArrayPayload {
         repeated string payload = 1;
-}
-
-message BytesArrayPayload {
-        repeated bytes payload = 1;
 }
 
 message NestedPayload {

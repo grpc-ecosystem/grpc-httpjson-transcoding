@@ -47,8 +47,6 @@ constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
 constexpr absl::string_view
     kStructPayloadMessageType = "google.protobuf.Struct";
 constexpr absl::string_view kInt32ArrayPayloadMessageType = "Int32ArrayPayload";
-constexpr absl::string_view kBoolArrayPayloadMessageType = "BoolArrayPayload";
-constexpr absl::string_view kBytesArrayPayloadMessageType = "BytesArrayPayload";
 constexpr absl::string_view
     kDoubleArrayPayloadMessageType = "DoubleArrayPayload";
 constexpr absl::string_view

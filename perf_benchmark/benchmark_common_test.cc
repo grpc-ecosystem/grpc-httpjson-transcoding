@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 #include "perf_benchmark/benchmark_common.h"
 #include "absl/strings/escaping.h"
-#include "nlohmann/json.hpp"
 
 namespace google {
 namespace grpc {
