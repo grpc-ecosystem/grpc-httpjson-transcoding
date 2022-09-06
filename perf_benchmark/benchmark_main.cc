@@ -61,11 +61,13 @@ constexpr absl::string_view
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
 //             number of `json_msg_ptr` will be fed into translation.
 // stream_size - Number of streaming messages.
+// chunk_per_msg - Number of data chunks per message.
 void BenchmarkJsonTranslation(::benchmark::State& state,
                               absl::string_view msg_type,
                               const std::string* json_msg_ptr,
                               bool streaming,
-                              int64_t stream_size) {
+                              int64_t stream_size,
+                              int chunk_per_msg) {
   // Load service config proto into Service object
   google::api::Service service;
   LoadService(std::string(kServiceConfigTextProtoFile), &service);
@@ -92,7 +94,8 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
   // large data chunks.
   auto is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg_ptr,
                                                             streaming,
-                                                            stream_size);
+                                                            stream_size,
+                                                            chunk_per_msg);
 
   // Benchmark the transcoding process
   for (auto s: state) {
@@ -153,7 +156,8 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
                            kBytesPayloadMessageType,
                            json_msg.get(),
                            streaming,
-                           stream_size);
+                           stream_size,
+                           1);
 }
 
 static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -187,7 +191,8 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
                            kInt32ArrayPayloadMessageType,
                            json_msg.get(),
                            streaming,
-                           stream_size);
+                           stream_size,
+                           1);
 }
 
 static void BM_Int32ArrayPayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -227,7 +232,8 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                            msg_type,
                            json_msg.get(),
                            streaming,
-                           stream_size);
+                           stream_size,
+                           1);
 }
 
 static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -270,7 +276,8 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                            msg_type,
                            json_msg.get(),
                            streaming,
-                           stream_size);
+                           stream_size,
+                           1);
 }
 
 static void BM_NestedProtoPayloadFromJsonNonStreaming(::benchmark::State& state) {

@@ -141,9 +141,13 @@ std::string GetNestedJsonString(int64_t layers,
 
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
                                                            bool streaming,
-                                                           int stream_size)
+                                                           int stream_size,
+                                                           int chunk_per_msg)
     : finished_(false),
       msg_(std::move(msg)),
+      chunk_per_msg_(chunk_per_msg),
+      chunk_size_(msg_.size() / chunk_per_msg),
+      pos_(0),
       streaming_(streaming),
       stream_size_(stream_size),
       msg_sent(0) {
@@ -165,18 +169,35 @@ int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
   }
   if (!streaming_) {
     // non-streaming
-    return msg_.size();
+    // check if we are at the last chunk
+    if (pos_ + chunk_size_ >= msg_.size()) {
+      return msg_.size() - pos_;
+    }
+    return chunk_size_;
   } else {
     // streaming
+    // no message sent -> next message is header_
     if (msg_sent == 0) {
-      // no message sent -> next message is header_
-      return header_.size();
+      // header has 3 chars overhead
+      if (pos_ + chunk_size_ + 3 >= header_.size()) {
+        return header_.size() - pos_;
+      }
+      return chunk_size_;
     }
+    // last message to be sent -> next message is tail_
     if (msg_sent + 1 == stream_size_) {
-      // last message to be sent -> next message is tail_
-      return tail_.size();
+      // tail has 1 char overhead
+      if (pos_ + chunk_size_ + 1 >= tail_.size()) {
+        return tail_.size() - pos_;
+      }
+      return chunk_size_;
     }
-    return body_.size();
+    // otherwise -> next message is body_
+    // body has 2 chars overhead
+    if (pos_ + chunk_size_ + 2 >= body_.size()) {
+      return body_.size() - pos_;
+    }
+    return chunk_size_;
   }
 }
 
@@ -191,24 +212,41 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
   }
   if (!streaming_) {
     // non-streaming
-    *data = msg_.data();
-    *size = msg_.size();
-    finished_ = true;
+    *data = msg_.data() + pos_;
+    if (pos_ + chunk_size_ >= msg_.size()) { // last message
+      *size = msg_.size() - pos_;
+      pos_ = 0; // reset pos after sending the last message
+      finished_ = true;
+    } else {
+      *size = chunk_size_;
+      pos_ += chunk_size_;
+    }
   } else {
     // streaming
+    std::string* msg_ptr = nullptr;
+    int overhead = 0; // character overhead due to [,] characters.
     if (msg_sent == 0) {
       // no message sent -> next message is header_
-      *data = header_.data();
-      *size = header_.size();
+      msg_ptr = &header_;
+      overhead = 3;
     } else if (msg_sent + 1 == stream_size_) {
       // last message to be sent -> next message is tail_
-      *data = tail_.data();
-      *size = tail_.size();
+      msg_ptr = &tail_;
+      overhead = 1;
     } else {
-      *data = body_.data();
-      *size = body_.size();
+      msg_ptr = &body_;
+      overhead = 2;
     }
-    ++msg_sent;
+
+    *data = msg_ptr->data() + pos_;
+    if (pos_ + chunk_size_ + overhead >= msg_ptr->size()) { // last message
+      *size = msg_ptr->size() - pos_;
+      pos_ = 0; // reset pos after sending the last message
+      ++msg_sent;
+    } else {
+      *size = chunk_size_;
+      pos_ += chunk_size_;
+    }
     if (msg_sent == stream_size_) {
       finished_ = true;
     }

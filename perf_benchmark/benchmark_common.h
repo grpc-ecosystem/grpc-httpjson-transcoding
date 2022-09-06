@@ -41,9 +41,11 @@ namespace perf_benchmark {
 // stream_size won't be used if streaming == false.
 class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
  public:
-  // Pre - stream_size >= 0
+  // Pre-Conditions:
+  // - stream_size >= 0
+  // - chunk_per_msg <= msg.size()
   explicit BenchmarkZeroCopyInputStream(std::string msg, bool streaming,
-                                        int stream_size);
+                                        int stream_size, int chunk_per_msg);
   ~BenchmarkZeroCopyInputStream() override = default;
 
   int64_t BytesAvailable() const override;
@@ -65,6 +67,9 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   bool finished_;
   const std::string msg_;
 
+  const int chunk_per_msg_;
+  const int chunk_size_;
+  int pos_;
   const bool streaming_;
   // only used when streaming_ == true
   const int stream_size_;
