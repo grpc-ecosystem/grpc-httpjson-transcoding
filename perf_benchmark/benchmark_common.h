@@ -104,13 +104,15 @@ std::string GetRandomInt32ArrayString(int64_t length);
 std::string GetRepeatedValueArrayString(std::string val, int64_t length);
 
 // Return a nested JSON string with the innermost value being a payload string,
-// e.g. "{"nested": {"nested": {"payload": "message"}}}"
+// e.g. "{"nested": {"nested": {"inner_key": "inner_val"}}}"
 // layers - Number of nested layer. The value needs >= 0. 0 is a flat JSON.
 // nested_field_name - JSON key name for the nested field.
-// payload_msg - String message for the innermost payload.
+// inner_key - Field name for the innermost json field.
+// payload_msg - String value for the innermost json field.
 std::string GetNestedJsonString(int64_t layers,
                                 absl::string_view nested_field_name,
-                                std::string payload_msg);
+                                std::string inner_key,
+                                std::string inner_val);
 
 } // namespace perf_benchmark
 

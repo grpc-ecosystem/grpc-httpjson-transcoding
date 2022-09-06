@@ -132,8 +132,11 @@ nlohmann::json GetNestedJson(int64_t layers,
 
 std::string GetNestedJsonString(int64_t layers,
                                 absl::string_view nested_field_name,
-                                std::string payload_msg) {
-  return to_string(GetNestedJson(layers, nested_field_name, payload_msg));
+                                std::string inner_key,
+                                std::string inner_val) {
+  nlohmann::json inner;
+  inner[std::move(inner_key)] = inner_val;
+  return to_string(GetNestedJson(layers, nested_field_name, inner));
 }
 
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,

@@ -37,9 +37,12 @@ using namespace benchmark;
 
 constexpr absl::string_view
     kServiceConfigTextProtoFile = "benchmark_service.textproto";
+constexpr absl::string_view kNestedFieldName = "nested";
 constexpr absl::string_view kInnerMostNestedFieldName = "payload";
 constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
 constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
+constexpr absl::string_view
+    kStructPayloadMessageType = "google.protobuf.Struct";
 constexpr absl::string_view kInt32ArrayPayloadMessageType = "Int32ArrayPayload";
 constexpr absl::string_view kBoolArrayPayloadMessageType = "BoolArrayPayload";
 constexpr absl::string_view kBytesArrayPayloadMessageType = "BytesArrayPayload";
@@ -267,34 +270,68 @@ BENCHMARK_WITH_PERCENTILE(BM_BytesArrayTypePayloadFromJsonNonStreaming);
 void BM_NestedPayloadFromJson(::benchmark::State& state,
                               int64_t layers,
                               bool streaming,
-                              int64_t stream_size) {
+                              int64_t stream_size,
+                              absl::string_view msg_type) {
   RequestInfo request_info = CreateRequestInfo("*");
   auto json_msg =
       absl::make_unique<std::string>(GetNestedJsonString(layers,
-                                                         kInnerMostNestedFieldName,
+                                                         kNestedPayloadMessageType,
+                                                         std::string(
+                                                             kInnerMostNestedFieldName),
                                                          "buzz"));
   BenchmarkJsonTranslation(state,
-                           kNestedPayloadMessageType,
+                           msg_type,
                            request_info,
                            json_msg.get(),
                            streaming,
                            stream_size);
 }
 
-static void BM_NestedPayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, state.range(0), false, 0);
+static void BM_NestedProtoPayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state,
+                           state.range(0),
+                           false,
+                           0,
+                           kNestedPayloadMessageType);
 }
-BENCHMARK_WITH_PERCENTILE(BM_NestedPayloadFromJsonNonStreaming)
+BENCHMARK_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonNonStreaming)
     ->Arg(0) // flat JSON
     ->Arg(1) // nested with 1 layer
     ->Arg(8) // nested with 8 layers
     ->Arg(32) // nested with 32 layers
     ->Arg(64); // nested with 64 layers
 
-static void BM_NestedPayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, 64, true, state.range(0));
+static void BM_NestedProtoPayloadFromJsonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state,
+                           64,
+                           true,
+                           state.range(0),
+                           kNestedPayloadMessageType);
 }
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedPayloadFromJsonStreaming);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonStreaming);
+
+static void BM_StructProtoPayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state,
+                           state.range(0),
+                           false,
+                           0,
+                           kStructPayloadMessageType);
+}
+BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
+    ->Arg(0) // flat JSON
+    ->Arg(1) // nested with 1 layer
+    ->Arg(8) // nested with 8 layers
+    ->Arg(32) // nested with 32 layers
+    ->Arg(64); // nested with 64 layers
+
+static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state,
+                           64,
+                           true,
+                           state.range(0),
+                           kStructPayloadMessageType);
+}
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
 
 // Benchmark Main function
 BENCHMARK_MAIN();

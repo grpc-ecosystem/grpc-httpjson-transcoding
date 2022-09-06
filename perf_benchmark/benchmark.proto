@@ -19,6 +19,7 @@ syntax = "proto3";
 package google.grpc.transcoding.perf_benchmark;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 
 service Benchmark {
         rpc BytesPayloadBM(BytesPayload) returns (BytesPayload) {
@@ -63,6 +64,12 @@ service Benchmark {
                         body: "*"
                 };
         }
+        rpc StructPayloadBM(google.protobuf.Struct) returns (google.protobuf.Struct) {
+                option (google.api.http) = {
+                        post: "/payload/struct",
+                        body: "*"
+                };
+        }
 }
 
 message BytesPayload {
@@ -93,3 +100,4 @@ message NestedPayload {
         optional NestedPayload nested = 1;
         optional string payload = 2;
 }
+
