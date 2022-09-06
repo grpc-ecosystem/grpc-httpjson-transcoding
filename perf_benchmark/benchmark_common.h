@@ -44,6 +44,8 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   // Pre-Conditions:
   // - stream_size >= 0
   // - chunk_per_msg <= msg.size()
+  //
+  // Note: chunk_per_msg could be off by a few chunks due to int rounding.
   explicit BenchmarkZeroCopyInputStream(std::string msg, bool streaming,
                                         int stream_size, int chunk_per_msg);
   ~BenchmarkZeroCopyInputStream() override = default;
@@ -67,7 +69,6 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   bool finished_;
   const std::string msg_;
 
-  const int chunk_per_msg_;
   const int chunk_size_;
   int pos_;
   const bool streaming_;

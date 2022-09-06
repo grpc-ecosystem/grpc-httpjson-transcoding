@@ -145,7 +145,6 @@ BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
                                                            int chunk_per_msg)
     : finished_(false),
       msg_(std::move(msg)),
-      chunk_per_msg_(chunk_per_msg),
       chunk_size_(msg_.size() / chunk_per_msg),
       pos_(0),
       streaming_(streaming),

@@ -39,6 +39,7 @@ constexpr absl::string_view
 constexpr absl::string_view kNestedFieldName = "nested";
 constexpr absl::string_view kInnerMostNestedFieldName = "payload";
 constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
+constexpr absl::string_view kStringPayloadMessageType = "StringPayload";
 constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
 constexpr absl::string_view
     kStructPayloadMessageType = "google.protobuf.Struct";
@@ -325,6 +326,52 @@ static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
                            kStructPayloadMessageType);
 }
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
+
+//
+// Benchmark variable: Message chunk per message
+//
+// Helper function for benchmarking translation from segmented JSON input
+void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
+                                       int64_t payload_length,
+                                       bool streaming,
+                                       int64_t stream_size,
+                                       int chunk_per_msg) {
+  auto json_msg =
+      absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
+                                                     GetRandomString(
+                                                         payload_length,
+                                                         true)));
+  BenchmarkJsonTranslation(state,
+                           kStringPayloadMessageType,
+                           json_msg.get(),
+                           streaming,
+                           stream_size,
+                           chunk_per_msg);
+}
+
+static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& state) {
+  int64_t payload_length = 1 << 20; // 1 MiB
+  BM_SegmentedStringPayloadFromJson(state,
+                                    payload_length,
+                                    false,
+                                    0,
+                                    state.range(0));
+}
+BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
+    ->Arg(1) // 1 chunk per message
+    ->Arg(1 << 4) // 16 chunks per message
+    ->Arg(1 << 8) // 256 chunks per message
+    ->Arg(1 << 12); // 4096 chunks per message
+
+static void BM_SegmentedStringPayloadFromJsonStreaming(::benchmark::State& state) {
+  int64_t payload_length = 1 << 20; // 1 MiB
+  BM_SegmentedStringPayloadFromJson(state,
+                                    payload_length,
+                                    true,
+                                    state.range(0),
+                                    1 << 8);
+}
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonStreaming);
 
 // Benchmark Main function
 BENCHMARK_MAIN();

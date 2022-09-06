@@ -28,6 +28,12 @@ service Benchmark {
                         body: "*"
                 };
         }
+        rpc StringPayloadBM(StringPayload) returns (StringPayload) {
+                option (google.api.http) = {
+                        post: "/payload/string",
+                        body: "*"
+                };
+        }
         rpc Int32ArrayPayloadBM(Int32ArrayPayload) returns (Int32ArrayPayload) {
                 option (google.api.http) = {
                         post: "/payload/int32_array",
@@ -74,6 +80,10 @@ service Benchmark {
 
 message BytesPayload {
         optional bytes payload = 1;
+}
+
+message StringPayload {
+        optional string payload = 1;
 }
 
 message Int32ArrayPayload {

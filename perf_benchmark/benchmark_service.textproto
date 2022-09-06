@@ -6,6 +6,11 @@ apis {
     response_type_url: "type.googleapis.com/BytesPayload"
   }
   methods {
+    name: "StringPayloadBM"
+    request_type_url: "type.googleapis.com/StringPayload"
+    response_type_url: "type.googleapis.com/StringPayload"
+  }
+  methods {
     name: "Int32ArrayPayloadBM"
     request_type_url: "type.googleapis.com/Int32ArrayPayload"
     response_type_url: "type.googleapis.com/Int32ArrayPayload"
@@ -45,6 +50,18 @@ types {
   name: "BytesPayload"
   fields {
     kind: TYPE_BYTES
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "StringPayload"
+  fields {
+    kind: TYPE_STRING
     cardinality: CARDINALITY_OPTIONAL
     number: 1
     name: "payload"
@@ -252,6 +269,11 @@ http {
   rules {
     selector: "BytesPayload"
     post: "/payload/bytes"
+    body: "*"
+  }
+  rules {
+    selector: "StringPayload"
+    post: "/payload/string"
     body: "*"
   }
   rules {
