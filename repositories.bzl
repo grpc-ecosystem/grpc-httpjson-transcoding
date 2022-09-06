@@ -148,3 +148,39 @@ def googlebenchmark_repositories(bind = True):
         url = "https://github.com/google/benchmark/archive/" + GOOGLEBENCHMARK_COMMIT + ".tar.gz",
         sha256 = GOOGLEBENCHMARK_SHA256,
     )
+
+def nlohmannjson_repositories(bind = True):
+    BUILD = """
+# Copyright 2016 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
+#
+licenses(["notice"])
+package(default_visibility = ["//visibility:public"])
+cc_library(
+    name = "json",
+    hdrs = [
+        "single_include/nlohmann/json.hpp",
+    ],
+    strip_include_prefix = "single_include/",
+)
+"""
+    http_archive(
+        name = "com_github_nlohmann_json",
+        strip_prefix = "json-3.11.2",
+        urls = ["https://github.com/nlohmann/json/archive/v3.11.2.tar.gz"],
+        sha256 = "d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273",
+        build_file_content = BUILD,
+    )

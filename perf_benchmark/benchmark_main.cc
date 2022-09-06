@@ -37,7 +37,9 @@ using namespace benchmark;
 
 constexpr absl::string_view
     kServiceConfigTextProtoFile = "benchmark_service.textproto";
+constexpr absl::string_view kInnerMostNestedFieldName = "payload";
 constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
+constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
 constexpr absl::string_view kInt32ArrayPayloadMessageType = "Int32ArrayPayload";
 constexpr absl::string_view kBoolArrayPayloadMessageType = "BoolArrayPayload";
 constexpr absl::string_view kBytesArrayPayloadMessageType = "BytesArrayPayload";
@@ -213,7 +215,7 @@ static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_Int32ArrayPayloadFromJson(state, array_length, true, state.range(0));
 }
 BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming)
-    ->Arg(1) //  1 message
+    ->Arg(1) // 1 message
     ->Arg(1 << 2) // 2 messages
     ->Arg(1 << 4) // 16 messages
     ->Arg(1 << 6); // 64 messages
@@ -265,6 +267,46 @@ BENCHMARK_WITH_PERCENTILE(BM_DoubleArrayTypePayloadFromJsonNonStreaming);
 BENCHMARK_WITH_PERCENTILE(BM_BoolArrayTypePayloadFromJsonNonStreaming);
 BENCHMARK_WITH_PERCENTILE(BM_StringArrayTypePayloadFromJsonNonStreaming);
 BENCHMARK_WITH_PERCENTILE(BM_BytesArrayTypePayloadFromJsonNonStreaming);
+
+//
+// Benchmark variable: Number of nested JSON layer.
+//
+// Helper function for benchmarking translation from nested JSON values.
+void BM_NestedPayloadFromJson(::benchmark::State& state,
+                              int64_t layers,
+                              bool streaming,
+                              int64_t stream_size) {
+  RequestInfo request_info = CreateRequestInfo("*");
+  auto json_msg =
+      absl::make_unique<std::string>(GetNestedJsonString(layers,
+                                                         kInnerMostNestedFieldName,
+                                                         "buzz"));
+  BenchmarkJsonTranslation(state,
+                           kNestedPayloadMessageType,
+                           request_info,
+                           json_msg.get(),
+                           streaming,
+                           stream_size);
+}
+
+static void BM_NestedPayloadFromJsonNonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state, state.range(0), false, 0);
+}
+BENCHMARK_WITH_PERCENTILE(BM_NestedPayloadFromJsonNonStreaming)
+    ->Arg(0) // flat JSON
+    ->Arg(1) // nested with 1 layer
+    ->Arg(8) // nested with 8 layers
+    ->Arg(32) // nested with 32 layers
+    ->Arg(64); // nested with 64 layers
+
+static void BM_NestedPayloadFromJsonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state, 64, true, state.range(0));
+}
+BENCHMARK_WITH_PERCENTILE(BM_NestedPayloadFromJsonStreaming)
+    ->Arg(1) // 1 message
+    ->Arg(1 << 2) // 2 messages
+    ->Arg(1 << 4) // 16 messages
+    ->Arg(1 << 6); // 64 messages
 
 // Benchmark Main function
 BENCHMARK_MAIN();

@@ -30,6 +30,11 @@ apis {
     request_type_url: "type.googleapis.com/BytesArrayPayload"
     response_type_url: "type.googleapis.com/BytesArrayPayload"
   }
+  methods {
+    name: "NestedPayloadBM"
+    request_type_url: "type.googleapis.com/NestedPayload"
+    response_type_url: "type.googleapis.com/NestedPayload"
+  }
 }
 types {
   name: "BytesPayload"
@@ -103,6 +108,25 @@ types {
   source_context {
   }
 }
+types {
+  name: "NestedPayload"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "nested"
+    json_name: "nested"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "payload"
+    json_name: "payload"
+  }
+  source_context {
+  }
+}
 http {
   rules {
     selector: "BytesPayload"
@@ -132,6 +156,11 @@ http {
   rules {
     selector: "BytesArrayPayloadBM"
     post: "/payload/bytes_array"
+    body: "*"
+  }
+  rules {
+    selector: "NestedPayloadBM"
+    post: "/payload/nested"
     body: "*"
   }
 }

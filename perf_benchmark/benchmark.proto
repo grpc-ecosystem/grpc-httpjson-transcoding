@@ -57,6 +57,12 @@ service Benchmark {
                         body: "*"
                 };
         }
+        rpc NestedPayloadBM(NestedPayload) returns (NestedPayload) {
+                option (google.api.http) = {
+                        post: "/payload/nested",
+                        body: "*"
+                };
+        }
 }
 
 message BytesPayload {
@@ -81,4 +87,9 @@ message StringArrayPayload {
 
 message BytesArrayPayload {
         repeated bytes payload = 1;
+}
+
+message NestedPayload {
+        optional NestedPayload nested = 1;
+        optional string payload = 2;
 }

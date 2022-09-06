@@ -56,6 +56,7 @@ cc_library(
     hdrs = ["benchmark_common.h"],
     deps = [
         "//src:transcoder_input_stream",
+        "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/strings",
         "@com_google_benchmark//:benchmark",
         "@com_google_googleapis//google/api:service_cc_proto",

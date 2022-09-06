@@ -20,6 +20,7 @@
 #include "perf_benchmark/benchmark_common.h"
 #include "google/protobuf/text_format.h"
 #include "absl/strings/escaping.h"
+#include "nlohmann/json.hpp"
 
 namespace google {
 namespace grpc {
@@ -90,6 +91,7 @@ std::string GetRandomString(int64_t length, bool base64) {
   }
   return base64 ? absl::Base64Escape(ret) : ret;
 }
+
 std::string GetRandomInt32ArrayString(int64_t length) {
   std::ostringstream os;
   os << '[';
@@ -102,7 +104,8 @@ std::string GetRandomInt32ArrayString(int64_t length) {
   os << ']';
   return os.str();
 }
-std::string GetRepeatedValueArrayString(absl::string_view val, int64_t length) {
+
+std::string GetRepeatedValueArrayString(std::string val, int64_t length) {
   std::ostringstream os;
   os << '[';
   for (int i = 0; i < length; ++i) {
@@ -113,6 +116,24 @@ std::string GetRepeatedValueArrayString(absl::string_view val, int64_t length) {
   }
   os << ']';
   return os.str();
+}
+
+nlohmann::json GetNestedJson(int64_t layers,
+                             absl::string_view nested_field_name,
+                             nlohmann::json inner) {
+  if (layers == 0) {
+    return inner;
+  }
+  nlohmann::json outer;
+  outer[std::string(nested_field_name)] =
+      GetNestedJson(layers - 1, nested_field_name, inner);
+  return outer;
+}
+
+std::string GetNestedJsonString(int64_t layers,
+                                absl::string_view nested_field_name,
+                                std::string payload_msg) {
+  return to_string(GetNestedJson(layers, nested_field_name, payload_msg));
 }
 
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
@@ -207,7 +228,8 @@ int64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
   if (stream_size_ == 1) {
     return header_.size();
   }
-  return header_.size() + tail_.size() + body_.size() * static_cast<size_t>(stream_size_ - 2);
+  return header_.size() + tail_.size()
+      + body_.size() * static_cast<size_t>(stream_size_ - 2);
 }
 
 } // namespace perf_benchmark
