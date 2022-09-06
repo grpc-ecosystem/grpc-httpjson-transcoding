@@ -12,9 +12,9 @@ our performance benchmark. Variable being tested
 ## How to run
 
 ```bash
-bazelisk run //perf_benchmark:benchmark_main \
+bazelisk run //perf_benchmark:benchmark_main -- \
   --benchmark_min_warmup_time=3 \
-  --benchmark_repetitions=1100 \
+  --benchmark_repetitions=1000 \
   --benchmark_format=console \
   --benchmark_counters_tabular=true \
   --benchmark_filter=BM_*
@@ -41,5 +41,5 @@ Options meaning:
 - Memory usage (TODO)
 
 We also captures p25, p50, p75, p90, p99, and p999 for each test,
-but `--benchmark_repetitions=1100` is recommended for the results to be
+but `--benchmark_repetitions=1000` is recommended for the results to be
 meaningful.
