@@ -24,7 +24,6 @@
 #include "absl/memory/memory.h"
 #include "google/api/service.pb.h"
 
-#include <utility>
 #include "perf_benchmark/benchmark_common.h"
 
 namespace google {
@@ -64,7 +63,6 @@ constexpr absl::string_view
 // stream_size - Number of streaming messages.
 void BenchmarkJsonTranslation(::benchmark::State& state,
                               absl::string_view msg_type,
-                              RequestInfo request_info,
                               const std::string* json_msg_ptr,
                               bool streaming,
                               int64_t stream_size) {
@@ -82,6 +80,11 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
     std::cerr << "Could not resolve the message type " << msg_type << std::endl;
     return;
   }
+
+  RequestInfo request_info;
+  // body field path used in this benchmark are all "*"
+  request_info.body_field_path = "*";
+  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
   // Wrap json_msg_ptr inside ZeroCopyInputStream.
@@ -133,15 +136,6 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
       Counter(message_processed, Counter::kIsRate | Counter::kInvert);
 }
 
-// Create and populate request info with the given body_field_path and an empty
-// variable_bindings.
-RequestInfo CreateRequestInfo(std::string body_field_path) {
-  RequestInfo request_info;
-  request_info.body_field_path = std::move(body_field_path);
-  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
-  return request_info;
-}
-
 //
 // Benchmark variable: JSON body length.
 //
@@ -150,7 +144,6 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
                               int64_t payload_length,
                               bool streaming,
                               int64_t stream_size) {
-  RequestInfo request_info = CreateRequestInfo("*");
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      GetRandomString(
@@ -158,7 +151,6 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
                                                          true)));
   BenchmarkJsonTranslation(state,
                            kBytesPayloadMessageType,
-                           request_info,
                            json_msg.get(),
                            streaming,
                            stream_size);
@@ -187,14 +179,12 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
                                   int64_t array_length,
                                   bool streaming,
                                   int64_t stream_size) {
-  RequestInfo request_info = CreateRequestInfo("*");
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRandomInt32ArrayString(
                                                          array_length)));
   BenchmarkJsonTranslation(state,
                            kInt32ArrayPayloadMessageType,
-                           request_info,
                            json_msg.get(),
                            streaming,
                            stream_size);
@@ -227,7 +217,6 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                              absl::string_view msg_type,
                              bool streaming,
                              int64_t stream_size) {
-  RequestInfo request_info = CreateRequestInfo("*");
   int64_t array_length = 1 << 10; // 1024
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
@@ -236,7 +225,6 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                                                          array_length)));
   BenchmarkJsonTranslation(state,
                            msg_type,
-                           request_info,
                            json_msg.get(),
                            streaming,
                            stream_size);
@@ -272,7 +260,6 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                               bool streaming,
                               int64_t stream_size,
                               absl::string_view msg_type) {
-  RequestInfo request_info = CreateRequestInfo("*");
   auto json_msg =
       absl::make_unique<std::string>(GetNestedJsonString(layers,
                                                          kNestedPayloadMessageType,
@@ -281,7 +268,6 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                                                          "buzz"));
   BenchmarkJsonTranslation(state,
                            msg_type,
-                           request_info,
                            json_msg.get(),
                            streaming,
                            stream_size);
