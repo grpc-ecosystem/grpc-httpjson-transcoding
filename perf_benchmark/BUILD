@@ -22,6 +22,11 @@ cc_proto_library(
     deps = [":benchmark_proto"],
 )
 
+cc_proto_library(
+    name = "com_google_protobuf_struct_cc_proto",
+    deps = ["@com_google_protobuf//:struct_proto"],
+)
+
 proto_library(
     name = "benchmark_proto",
     srcs = ["benchmark.proto"],
@@ -38,6 +43,7 @@ cc_binary(
         "benchmark_service.textproto",
     ],
     deps = [
+        "com_google_protobuf_struct_cc_proto",
         ":benchmark_cc_proto",
         ":benchmark_common",
         "//src:json_request_translator",

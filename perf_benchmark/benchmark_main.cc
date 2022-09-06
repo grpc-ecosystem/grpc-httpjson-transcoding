@@ -19,12 +19,15 @@
 #include "grpc_transcoding/type_helper.h"
 #include "benchmark/benchmark.h"
 #include "google/protobuf/text_format.h"
+#include "google/protobuf/struct.pb.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/escaping.h"
 #include "absl/memory/memory.h"
 #include "google/api/service.pb.h"
 
 #include "perf_benchmark/benchmark_common.h"
+#include "perf_benchmark/benchmark.pb.h"
 
 namespace google {
 namespace grpc {
@@ -63,12 +66,12 @@ constexpr absl::string_view
 //             number of `json_msg_ptr` will be fed into translation.
 // stream_size - Number of streaming messages.
 // chunk_per_msg - Number of data chunks per message.
-void BenchmarkJsonTranslation(::benchmark::State& state,
-                              absl::string_view msg_type,
-                              const std::string* json_msg_ptr,
-                              bool streaming,
-                              int64_t stream_size,
-                              int chunk_per_msg) {
+std::string BenchmarkJsonTranslation(::benchmark::State& state,
+                                     absl::string_view msg_type,
+                                     const std::string* json_msg_ptr,
+                                     bool streaming,
+                                     int64_t stream_size,
+                                     int chunk_per_msg) {
   // Load service config proto into Service object
   google::api::Service service;
   LoadService(std::string(kServiceConfigTextProtoFile), &service);
@@ -81,7 +84,7 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
       absl::StrFormat("type.googleapis.com/%s", msg_type));
   if (nullptr == type) {
     std::cerr << "Could not resolve the message type " << msg_type << std::endl;
-    return;
+    return "";
   }
 
   RequestInfo request_info;
@@ -99,6 +102,7 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
                                                             chunk_per_msg);
 
   // Benchmark the transcoding process
+  std::string message;
   for (auto s: state) {
     JsonRequestTranslator
         translator
@@ -107,14 +111,10 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
 
     if (!out.Status().ok()) {
       std::cerr << "Error: " << out.Status().message().as_string().c_str();
-      return;
+      return "";
     }
 
-    std::string message;
     while (out.NextMessage(&message)) {
-//      BytePayload actual_proto;
-//      actual_proto.ParseFromString(message);
-//      std::cout << "Message=" << actual_proto.DebugString() << std::endl;
     }
     is->Reset();
   }
@@ -138,6 +138,7 @@ void BenchmarkJsonTranslation(::benchmark::State& state,
       Counter(message_processed, Counter::kIsRate);
   state.counters["message_latency"] =
       Counter(message_processed, Counter::kIsRate | Counter::kInvert);
+  return message;
 }
 
 //
@@ -148,17 +149,27 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
                               int64_t payload_length,
                               bool streaming,
                               int64_t stream_size) {
+  auto msg =
+      absl::make_unique<std::string>(GetRandomBytesString(payload_length,
+                                                          true));
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
-                                                     GetRandomString(
-                                                         payload_length,
-                                                         true)));
-  BenchmarkJsonTranslation(state,
-                           kBytesPayloadMessageType,
-                           json_msg.get(),
-                           streaming,
-                           stream_size,
-                           1);
+                                                     *msg));
+  std::string proto_str = BenchmarkJsonTranslation(state,
+                                                   kBytesPayloadMessageType,
+                                                   json_msg.get(),
+                                                   streaming,
+                                                   stream_size,
+                                                   1);
+  // Verification
+  std::string msg_decoded;
+  absl::Base64Unescape(*msg, &msg_decoded);
+  BytesPayload actual_proto;
+  actual_proto.ParseFromString(proto_str);
+  if (actual_proto.payload() != msg_decoded) {
+    state.SkipWithError(("JSON parsing error, parsed proto: "
+        + actual_proto.DebugString()).c_str());
+  }
 }
 
 static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -188,12 +199,20 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRandomInt32ArrayString(
                                                          array_length)));
-  BenchmarkJsonTranslation(state,
-                           kInt32ArrayPayloadMessageType,
-                           json_msg.get(),
-                           streaming,
-                           stream_size,
-                           1);
+  std::string proto_str = BenchmarkJsonTranslation(state,
+                                                   kInt32ArrayPayloadMessageType,
+                                                   json_msg.get(),
+                                                   streaming,
+                                                   stream_size,
+                                                   1);
+
+  // Verification
+  Int32ArrayPayload actual_proto;
+  actual_proto.ParseFromString(proto_str);
+  if (actual_proto.payload().size() != array_length) {
+    state.SkipWithError(("JSON parsing error, parsed proto: "
+        + actual_proto.DebugString()).c_str());
+  }
 }
 
 static void BM_Int32ArrayPayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -213,12 +232,14 @@ BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming);
 
 //
 // Benchmark variable: JSON value data type.
+// E.g. "0" can be parsed as int32, double, or string.
 // Only non-streaming is benchmarked since the JSON is already an array.
 // Benchmarks for array typed JSON streaming is tested with the JSON array
 // length benchmark variable.
 //
 // Helper function for benchmarking translation from JSON to payload of
 // different types.
+template<class T>
 void BM_ArrayPayloadFromJson(::benchmark::State& state,
                              absl::string_view msg_type,
                              bool streaming,
@@ -229,34 +250,43 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                                                      GetRepeatedValueArrayString(
                                                          "0",
                                                          array_length)));
-  BenchmarkJsonTranslation(state,
-                           msg_type,
-                           json_msg.get(),
-                           streaming,
-                           stream_size,
-                           1);
+  std::string proto_str = BenchmarkJsonTranslation(state,
+                                                   msg_type,
+                                                   json_msg.get(),
+                                                   streaming,
+                                                   stream_size,
+                                                   1);
+
+  // Verification
+  T actual_proto;
+  actual_proto.ParseFromString(proto_str);
+  if (actual_proto.payload().size() != array_length) {
+    state.SkipWithError(("JSON parsing error, parsed proto: "
+        + actual_proto.DebugString()).c_str());
+  }
 }
 
 static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_ArrayPayloadFromJson(state, kInt32ArrayPayloadMessageType, false, 0);
+  BM_ArrayPayloadFromJson<Int32ArrayPayload>(state,
+                                             kInt32ArrayPayloadMessageType,
+                                             false,
+                                             0);
 }
 static void BM_DoubleArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_ArrayPayloadFromJson(state, kDoubleArrayPayloadMessageType, false, 0);
-}
-static void BM_BoolArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_ArrayPayloadFromJson(state, kBoolArrayPayloadMessageType, false, 0);
+  BM_ArrayPayloadFromJson<DoubleArrayPayload>(state,
+                                              kDoubleArrayPayloadMessageType,
+                                              false,
+                                              0);
 }
 static void BM_StringArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_ArrayPayloadFromJson(state, kStringArrayPayloadMessageType, false, 0);
-}
-static void BM_BytesArrayTypePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_ArrayPayloadFromJson(state, kBytesArrayPayloadMessageType, false, 0);
+  BM_ArrayPayloadFromJson<StringArrayPayload>(state,
+                                              kStringArrayPayloadMessageType,
+                                              false,
+                                              0);
 }
 BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayTypePayloadFromJsonNonStreaming);
 BENCHMARK_WITH_PERCENTILE(BM_DoubleArrayTypePayloadFromJsonNonStreaming);
-BENCHMARK_WITH_PERCENTILE(BM_BoolArrayTypePayloadFromJsonNonStreaming);
 BENCHMARK_WITH_PERCENTILE(BM_StringArrayTypePayloadFromJsonNonStreaming);
-BENCHMARK_WITH_PERCENTILE(BM_BytesArrayTypePayloadFromJsonNonStreaming);
 
 //
 // Benchmark variable: Number of nested JSON layer.
@@ -273,12 +303,53 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                                                          std::string(
                                                              kInnerMostNestedFieldName),
                                                          "buzz"));
-  BenchmarkJsonTranslation(state,
-                           msg_type,
-                           json_msg.get(),
-                           streaming,
-                           stream_size,
-                           1);
+  std::string proto_str = BenchmarkJsonTranslation(state,
+                                                   msg_type,
+                                                   json_msg.get(),
+                                                   streaming,
+                                                   stream_size,
+                                                   1);
+
+  // Verification
+  int actual_layers = 0;
+  if (msg_type == kNestedPayloadMessageType) {
+    NestedPayload actual_proto;
+    actual_proto.ParseFromString(proto_str);
+
+    while (actual_proto.has_nested()) {
+      ++actual_layers;
+      // avoid stackoverflow due to copy
+      NestedPayload tmp(actual_proto.nested());
+      actual_proto.clear_nested();
+      actual_proto.clear_payload();
+      actual_proto = tmp;
+    }
+    // This is because actual_proto.has_nested() will be true for
+    // every first call.
+    actual_layers -= 1;
+
+  } else if (msg_type == kStructPayloadMessageType) {
+    // TODO
+    google::protobuf::Struct actual_proto;
+    actual_proto.ParseFromString(proto_str);
+
+    std::string field_name = std::string(kNestedFieldName);
+    while (actual_proto.fields().contains(field_name)) {
+      ++actual_layers;
+      // avoid stackoverflow due to copy
+      google::protobuf::Struct
+          tmp = actual_proto.fields().at(field_name).struct_value();
+      actual_proto.clear_fields();
+      actual_proto = tmp;
+    }
+  }
+
+  if (actual_layers != layers) {
+    state.SkipWithError(absl::StrFormat(
+        "Actual layer is not as expected. Actual layers: %d, Expected layers: %d",
+        actual_layers,
+        layers).c_str());
+  }
 }
 
 static void BM_NestedProtoPayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -315,8 +386,8 @@ BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(0) // flat JSON
     ->Arg(1) // nested with 1 layer
     ->Arg(8) // nested with 8 layers
-    ->Arg(32) // nested with 32 layers
-    ->Arg(64); // nested with 64 layers
+    ->Arg(32); // nested with 32 layers
+    // More than 32 layers would fail the parsing
 
 static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_NestedPayloadFromJson(state,
@@ -336,17 +407,24 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
                                        bool streaming,
                                        int64_t stream_size,
                                        int chunk_per_msg) {
+  auto msg =
+      absl::make_unique<std::string>(GetRandomString(payload_length));
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
-                                                     GetRandomString(
-                                                         payload_length,
-                                                         true)));
-  BenchmarkJsonTranslation(state,
-                           kStringPayloadMessageType,
-                           json_msg.get(),
-                           streaming,
-                           stream_size,
-                           chunk_per_msg);
+                                                     *msg));
+  std::string proto_str = BenchmarkJsonTranslation(state,
+                                                   kStringPayloadMessageType,
+                                                   json_msg.get(),
+                                                   streaming,
+                                                   stream_size,
+                                                   chunk_per_msg);
+  // Verification
+  StringPayload actual_proto;
+  actual_proto.ParseFromString(proto_str);
+  if (actual_proto.payload() != *msg) {
+    state.SkipWithError(("JSON parsing error, parsed proto: "
+        + actual_proto.DebugString()).c_str());
+  }
 }
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& state) {

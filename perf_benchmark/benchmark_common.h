@@ -92,12 +92,16 @@ bool LoadService(const std::string& config_pb_txt_file,
 // Return the given percentile of the vector v.
 double GetPercentile(const std::vector<double>& v, double perc);
 
-// Return a random alphanumeric string of the given length.
+// Return a random string of the given length.
 // length - Length of the returned string. If base64 == true, the actual
 //          returned string length is 33–37% larger due to the encoding.
 // base64 - True if the returned string should be base64 encoded. This is
 //          required for bytes proto message.
-std::string GetRandomString(int64_t length, bool base64);
+std::string GetRandomBytesString(int64_t length, bool base64);
+
+// Return a random alphanumeric string of the given length.
+// length - Length of the returned string.
+std::string GetRandomString(int64_t length);
 
 // Return a random string representing an array of int32, e.g. "[1,2,3]"
 // length - Length of the integer array.
