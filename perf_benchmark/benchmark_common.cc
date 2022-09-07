@@ -22,6 +22,7 @@
 #include "google/protobuf/text_format.h"
 #include "absl/strings/escaping.h"
 #include "absl/random/random.h"
+#include "absl/status/statusor.h"
 #include "nlohmann/json.hpp"
 
 namespace google {
@@ -32,33 +33,32 @@ namespace perf_benchmark {
 
 namespace pb = ::google::protobuf;
 
-std::string LoadFile(const std::string& file_name) {
-  std::ifstream ifs(file_name);
+absl::StatusOr<std::string> LoadFile(absl::string_view file_name) {
+  std::ifstream ifs(file_name.data(), std::ifstream::in);
   if (!ifs) {
-    std::cerr << "Could not open " << file_name.c_str() << std::endl;
-    return {};
+    return absl::InvalidArgumentError(absl::StrCat("Could not open ",
+                                                   file_name));
   }
   std::ostringstream ss;
   ss << ifs.rdbuf();
   return ss.str();
 }
 
-absl::Status LoadService(const std::string& config_pb_txt_file,
+absl::Status LoadService(absl::string_view config_pb_txt_file,
                          ::google::api::Service* service) {
   static const char kBenchmarkData[] = "perf_benchmark/";
   return LoadService(config_pb_txt_file, kBenchmarkData, service);
 }
 
-absl::Status LoadService(const std::string& config_pb_txt_file,
-                         const std::string& benchmark_path,
+absl::Status LoadService(absl::string_view config_pb_txt_file,
+                         absl::string_view benchmark_path,
                          ::google::api::Service* service) {
-  auto config = LoadFile(benchmark_path + config_pb_txt_file);
-  if (config.empty()) {
-    return absl::InvalidArgumentError(absl::StrCat("Empty config file at: ",
-                                                   benchmark_path));
+  auto config = LoadFile(absl::StrCat(benchmark_path, config_pb_txt_file));
+  if (!config.ok()) {
+    return config.status();
   }
 
-  if (!pb::TextFormat::ParseFromString(config, service)) {
+  if (!pb::TextFormat::ParseFromString(*config, service)) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Could not parse service config from ",
         config_pb_txt_file));

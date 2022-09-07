@@ -84,10 +84,10 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
 
 // Load service from a proto text file. Returns true if loading succeeds;
 // otherwise returns false.
-absl::Status LoadService(const std::string& config_pb_txt_file,
-                         const std::string& benchmark_path,
+absl::Status LoadService(absl::string_view config_pb_txt_file,
+                         absl::string_view benchmark_path,
                          ::google::api::Service* service);
-absl::Status LoadService(const std::string& config_pb_txt_file,
+absl::Status LoadService(absl::string_view config_pb_txt_file,
                          ::google::api::Service* service);
 
 // Return the given percentile of the vector v.
