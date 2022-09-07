@@ -24,15 +24,15 @@ namespace transcoding {
 
 namespace perf_benchmark {
 
-TEST(BenchmarkCommonTest, GetRandomString) {
+TEST(BenchmarkCommonTest, GetRandomBytesString) {
   const int test_length_input[] = {0, 1, 10, 100};
   for (auto length: test_length_input) {
     // Regular random string
-    EXPECT_EQ(GetRandomString(length, false).length(), length);
+    EXPECT_EQ(GetRandomBytesString(length, false).length(), length);
 
     // Base64 encoded random string should have the given length after decoding
     std::string decoded;
-    absl::Base64Unescape(GetRandomString(length, true), &decoded);
+    absl::Base64Unescape(GetRandomBytesString(length, true), &decoded);
     EXPECT_EQ(decoded.length(), length);
   }
 }
