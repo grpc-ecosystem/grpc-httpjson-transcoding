@@ -17,9 +17,11 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <limits>
 #include "perf_benchmark/benchmark_common.h"
 #include "google/protobuf/text_format.h"
 #include "absl/strings/escaping.h"
+#include "absl/random/random.h"
 #include "nlohmann/json.hpp"
 
 namespace google {
@@ -75,7 +77,9 @@ double GetPercentile(const std::vector<double>& v, double perc) {
 }
 
 std::string GetRandomBytesString(int64_t length, bool base64) {
-  static const char charset[] =
+  static absl::BitGen bitgen;
+  // full_ascii_charset contains every ASCII character.
+  static const char full_ascii_charset[] =
       {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
        39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
@@ -88,12 +92,15 @@ std::string GetRandomBytesString(int64_t length, bool base64) {
   ret.reserve(length);
 
   for (int i = 0; i < length; ++i) {
-    ret += charset[rand() % (sizeof(charset) - 1)];
+    ret += full_ascii_charset[absl::Uniform(bitgen,
+                                            0u,
+                                            sizeof(full_ascii_charset))];
   }
   return base64 ? absl::Base64Escape(ret) : ret;
 }
 
 std::string GetRandomAlphanumericString(int64_t length) {
+  static absl::BitGen bitgen;
   static const char charset[] =
       "0123456789"
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -101,16 +108,19 @@ std::string GetRandomAlphanumericString(int64_t length) {
   std::string ret;
   ret.reserve(length);
   for (int i = 0; i < length; ++i) {
-    ret += charset[rand() % (sizeof(charset) - 1)];
+    ret += charset[absl::Uniform(bitgen, 0u, sizeof(charset))];
   }
   return ret;
 }
 
 std::string GetRandomInt32ArrayString(int64_t length) {
+  static absl::BitGen bitgen;
   std::ostringstream os;
   os << '[';
   for (int i = 0; i < length; ++i) {
-    os << int32_t(rand());
+    os << int32_t(absl::Uniform(bitgen,
+                                std::numeric_limits<int32_t>::min(),
+                                std::numeric_limits<int32_t>::max()));
     if (i != length - 1) {
       os << ',';
     }

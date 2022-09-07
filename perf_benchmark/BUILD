@@ -67,6 +67,7 @@ cc_library(
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/random",
         "@com_google_benchmark//:benchmark",
         "@com_google_googleapis//google/api:service_cc_proto",
     ],
