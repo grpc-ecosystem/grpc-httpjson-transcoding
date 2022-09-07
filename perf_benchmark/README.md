@@ -38,7 +38,6 @@ Options meaning:
 - Byte latency and throughput
 - Message latency and throughput
 - Request latency and throughput
-- Memory usage (TODO)
 
 We also capture p25, p50, p75, p90, p99, and p999 for each test,
 but `--benchmark_repetitions=1000` is recommended for the results to be

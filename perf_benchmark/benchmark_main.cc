@@ -52,7 +52,7 @@ constexpr absl::string_view
 constexpr absl::string_view
     kStringArrayPayloadMessageType = "StringArrayPayload";
 }
-// TODO Add memory manager
+
 // Helper method to run Json Translation benchmark.
 //
 // state - ::benchmark::State& variable used for collecting metrics.
@@ -327,7 +327,6 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
     actual_layers -= 1;
 
   } else if (msg_type == kStructPayloadMessageType) {
-    // TODO
     google::protobuf::Struct actual_proto;
     actual_proto.ParseFromString(proto_str);
 
