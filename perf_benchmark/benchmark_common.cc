@@ -93,14 +93,13 @@ std::string GetRandomBytesString(int64_t length, bool base64) {
   return base64 ? absl::Base64Escape(ret) : ret;
 }
 
-std::string GetRandomString(int64_t length) {
+std::string GetRandomAlphanumericString(int64_t length) {
   static const char charset[] =
       "0123456789"
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       "abcdefghijklmnopqrstuvwxyz";
   std::string ret;
   ret.reserve(length);
-
   for (int i = 0; i < length; ++i) {
     ret += charset[rand() % (sizeof(charset) - 1)];
   }

@@ -85,10 +85,10 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
 // Load service from a proto text file. Returns true if loading succeeds;
 // otherwise returns false.
 absl::Status LoadService(const std::string& config_pb_txt_file,
-                 const std::string& benchmark_path,
-                 ::google::api::Service* service);
+                         const std::string& benchmark_path,
+                         ::google::api::Service* service);
 absl::Status LoadService(const std::string& config_pb_txt_file,
-                 ::google::api::Service* service);
+                         ::google::api::Service* service);
 
 // Return the given percentile of the vector v.
 double GetPercentile(const std::vector<double>& v, double perc);
@@ -102,7 +102,7 @@ std::string GetRandomBytesString(int64_t length, bool base64);
 
 // Return a random alphanumeric string of the given length.
 // length - Length of the returned string.
-std::string GetRandomString(int64_t length);
+std::string GetRandomAlphanumericString(int64_t length);
 
 // Return a random string representing an array of int32, e.g. "[1,2,3]"
 // length - Length of the integer array.

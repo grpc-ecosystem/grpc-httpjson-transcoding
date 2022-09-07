@@ -427,8 +427,13 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
                                        bool streaming,
                                        int64_t stream_size,
                                        int chunk_per_msg) {
+  // We are using GetRandomAlphanumericString instead of GetRandomBytesString
+  // because JSON format reserves characters such as `"` and `\`.
+  // We could generate `"` and `\` and escape them, but for simplicity, we are
+  // only using alphanumeric characters.
+  // This would also be a more common for string proto.
   auto msg =
-      absl::make_unique<std::string>(GetRandomString(payload_length));
+      absl::make_unique<std::string>(GetRandomAlphanumericString(payload_length));
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      *msg));
