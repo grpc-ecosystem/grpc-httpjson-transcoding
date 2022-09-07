@@ -305,10 +305,6 @@ BENCHMARK_WITH_PERCENTILE(BM_StringArrayTypePayloadFromJsonNonStreaming);
 //
 // Benchmark variable: Number of nested JSON layer.
 //
-// Struct proto streaming is not possible because of the versatility.
-// Right now, a stream of JSONs would be parsed as an array by the struct
-// instead of a stream of nested array.
-//
 // Helper function for benchmarking translation from nested JSON values.
 void BM_NestedPayloadFromJson(::benchmark::State& state,
                               int64_t layers,
@@ -344,9 +340,6 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
         actual_proto.clear_payload();
         actual_proto = tmp;
       }
-      // This is because actual_proto.has_nested() will be true for
-      // every first call.
-      actual_layers -= 1;
 
     } else if (msg_type == kStructPayloadMessageType) {
       google::protobuf::Struct actual_proto;
@@ -409,6 +402,15 @@ BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(8) // nested with 8 layers
     ->Arg(32); // nested with 32 layers
 // More than 32 layers would fail the parsing
+
+static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
+  BM_NestedPayloadFromJson(state,
+                           64,
+                           true,
+                           state.range(0),
+                           kStructPayloadMessageType);
+}
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
 
 //
 // Benchmark variable: Message chunk per message
