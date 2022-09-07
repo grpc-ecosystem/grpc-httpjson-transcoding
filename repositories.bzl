@@ -145,7 +145,7 @@ def googlebenchmark_repositories(bind = True):
     http_archive(
         name = "com_google_benchmark",
         strip_prefix = "benchmark-" + GOOGLEBENCHMARK_COMMIT,
-        url = "https://github.com/google/benchmark/archive/" + GOOGLEBENCHMARK_COMMIT + ".tar.gz",
+        url = "https://github.com/google/benchmark/archive/v" + GOOGLEBENCHMARK_COMMIT + ".tar.gz",
         sha256 = GOOGLEBENCHMARK_SHA256,
     )
 
