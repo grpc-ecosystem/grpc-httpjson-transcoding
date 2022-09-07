@@ -40,6 +40,6 @@ Options meaning:
 - Request latency and throughput
 - Memory usage (TODO)
 
-We also captures p25, p50, p75, p90, p99, and p999 for each test,
+We also capture p25, p50, p75, p90, p99, and p999 for each test,
 but `--benchmark_repetitions=1000` is recommended for the results to be
 meaningful.

@@ -135,11 +135,9 @@ std::string GetNestedJsonString(int64_t layers,
 // Macro for running a benchmark with p25, p75, p90, p99, p999 percentiles.
 // Other statistics - mean, median, standard deviation, coefficient of variation
 // are automatically captured.
-// This will also set iteration to 1 because the aggregate function gets
-// statistics from each benchmark repetition instead of iterations.
-// Running with 1000 iterations only gives 1 data point. Therefore, it is
-// recommended to run with --benchmark_repetitions=1000 CLI argument to get
-// comparable results.
+// Note that running with 1000 iterations only gives 1 data point. Therefore,
+// it is recommended to run with --benchmark_repetitions=1000 CLI argument to
+// get comparable results.
 // Use this marco the same way as BENCHMARK macro.
 #define BENCHMARK_WITH_PERCENTILE(func)                                       \
     BENCHMARK(func)                                                           \
