@@ -41,26 +41,27 @@ std::string LoadFile(const std::string& file_name) {
   return ss.str();
 }
 
-bool LoadService(const std::string& config_pb_txt_file,
-                 ::google::api::Service* service) {
+absl::Status LoadService(const std::string& config_pb_txt_file,
+                         ::google::api::Service* service) {
   static const char kBenchmarkData[] = "perf_benchmark/";
   return LoadService(config_pb_txt_file, kBenchmarkData, service);
 }
 
-bool LoadService(const std::string& config_pb_txt_file,
-                 const std::string& benchmark_path,
-                 ::google::api::Service* service) {
+absl::Status LoadService(const std::string& config_pb_txt_file,
+                         const std::string& benchmark_path,
+                         ::google::api::Service* service) {
   auto config = LoadFile(benchmark_path + config_pb_txt_file);
   if (config.empty()) {
-    return false;
+    return absl::InvalidArgumentError(absl::StrCat("Empty config file at: ",
+                                                   benchmark_path));
   }
 
   if (!pb::TextFormat::ParseFromString(config, service)) {
-    std::cerr << "Could not parse service config from "
-              << config_pb_txt_file.c_str() << std::endl;
-    return false;
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Could not parse service config from ",
+        config_pb_txt_file));
   } else {
-    return true;
+    return absl::OkStatus();
   }
 }
 double GetPercentile(const std::vector<double>& v, double perc) {

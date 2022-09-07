@@ -22,6 +22,7 @@
 #include "google/api/service.pb.h"
 #include "grpc_transcoding/transcoder_input_stream.h"
 #include "absl/strings/string_view.h"
+#include "absl/status/status.h"
 #include "benchmark/benchmark.h"
 
 namespace google {
@@ -83,10 +84,10 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
 
 // Load service from a proto text file. Returns true if loading succeeds;
 // otherwise returns false.
-bool LoadService(const std::string& config_pb_txt_file,
+absl::Status LoadService(const std::string& config_pb_txt_file,
                  const std::string& benchmark_path,
                  ::google::api::Service* service);
-bool LoadService(const std::string& config_pb_txt_file,
+absl::Status LoadService(const std::string& config_pb_txt_file,
                  ::google::api::Service* service);
 
 // Return the given percentile of the vector v.

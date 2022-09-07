@@ -23,6 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/escaping.h"
+#include "absl/status/statusor.h"
 #include "absl/memory/memory.h"
 #include "google/api/service.pb.h"
 
@@ -55,6 +56,8 @@ constexpr absl::string_view
 
 // Helper method to run Json Translation benchmark.
 //
+// Return absl::StatusOr<std::string> containing the parsed message if not
+// error.
 // state - ::benchmark::State& variable used for collecting metrics.
 // msg_type - Protobuf message name for translation.
 // request_info - Json-Protobuf request information, body_field_path and
@@ -64,15 +67,19 @@ constexpr absl::string_view
 //             number of `json_msg_ptr` will be fed into translation.
 // stream_size - Number of streaming messages.
 // chunk_per_msg - Number of data chunks per message.
-std::string BenchmarkJsonTranslation(::benchmark::State& state,
-                                     absl::string_view msg_type,
-                                     const std::string* json_msg_ptr,
-                                     bool streaming,
-                                     int64_t stream_size,
-                                     int chunk_per_msg) {
+absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
+                                                     absl::string_view msg_type,
+                                                     const std::string* json_msg_ptr,
+                                                     bool streaming,
+                                                     int64_t stream_size,
+                                                     int chunk_per_msg) {
   // Load service config proto into Service object
   google::api::Service service;
-  LoadService(std::string(kServiceConfigTextProtoFile), &service);
+  absl::Status
+      status = LoadService(std::string(kServiceConfigTextProtoFile), &service);
+  if (!status.ok()) {
+    return status;
+  }
 
   // Create a TypeHelper based on the service config
   TypeHelper type_helper(service.types(), service.enums());
@@ -81,8 +88,9 @@ std::string BenchmarkJsonTranslation(::benchmark::State& state,
   const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
       absl::StrFormat("type.googleapis.com/%s", msg_type));
   if (nullptr == type) {
-    std::cerr << "Could not resolve the message type " << msg_type << std::endl;
-    return "";
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Could not resolve the message type ",
+        msg_type));
   }
 
   RequestInfo request_info;
@@ -102,14 +110,12 @@ std::string BenchmarkJsonTranslation(::benchmark::State& state,
   // Benchmark the transcoding process
   std::string message;
   for (auto s: state) {
-    JsonRequestTranslator
-        translator
+    JsonRequestTranslator translator
         (type_helper.Resolver(), is.get(), request_info, streaming, false);
     MessageStream& out = translator.Output();
 
     if (!out.Status().ok()) {
-      std::cerr << "Error: " << out.Status().message().as_string().c_str();
-      return "";
+      return absl::InternalError(out.Status().ToString());
     }
 
     while (out.NextMessage(&message)) {
@@ -153,20 +159,24 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      *msg));
-  std::string proto_str = BenchmarkJsonTranslation(state,
-                                                   kBytesPayloadMessageType,
-                                                   json_msg.get(),
-                                                   streaming,
-                                                   stream_size,
-                                                   1);
-  // Verification
-  std::string msg_decoded;
-  absl::Base64Unescape(*msg, &msg_decoded);
-  BytesPayload actual_proto;
-  actual_proto.ParseFromString(proto_str);
-  if (actual_proto.payload() != msg_decoded) {
-    state.SkipWithError(("JSON parsing error, parsed proto: "
-        + actual_proto.DebugString()).c_str());
+  absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
+                                                                   kBytesPayloadMessageType,
+                                                                   json_msg.get(),
+                                                                   streaming,
+                                                                   stream_size,
+                                                                   1);
+  if (!proto_str.ok()) {
+    state.SkipWithError(proto_str.status().ToString().c_str());
+  } else {
+    // Verification
+    std::string msg_decoded;
+    absl::Base64Unescape(*msg, &msg_decoded);
+    BytesPayload actual_proto;
+    actual_proto.ParseFromString(*proto_str);
+    if (actual_proto.payload() != msg_decoded) {
+      state.SkipWithError(("JSON parsing error, parsed proto: "
+          + actual_proto.DebugString()).c_str());
+    }
   }
 }
 
@@ -197,19 +207,22 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRandomInt32ArrayString(
                                                          array_length)));
-  std::string proto_str = BenchmarkJsonTranslation(state,
-                                                   kInt32ArrayPayloadMessageType,
-                                                   json_msg.get(),
-                                                   streaming,
-                                                   stream_size,
-                                                   1);
-
-  // Verification
-  Int32ArrayPayload actual_proto;
-  actual_proto.ParseFromString(proto_str);
-  if (actual_proto.payload().size() != array_length) {
-    state.SkipWithError(("JSON parsing error, parsed proto: "
-        + actual_proto.DebugString()).c_str());
+  absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
+                                                                   kInt32ArrayPayloadMessageType,
+                                                                   json_msg.get(),
+                                                                   streaming,
+                                                                   stream_size,
+                                                                   1);
+  if (!proto_str.ok()) {
+    state.SkipWithError(proto_str.status().ToString().c_str());
+  } else {
+    // Verification
+    Int32ArrayPayload actual_proto;
+    actual_proto.ParseFromString(*proto_str);
+    if (actual_proto.payload().size() != array_length) {
+      state.SkipWithError(("JSON parsing error, parsed proto: "
+          + actual_proto.DebugString()).c_str());
+    }
   }
 }
 
@@ -248,19 +261,22 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                                                      GetRepeatedValueArrayString(
                                                          "0",
                                                          array_length)));
-  std::string proto_str = BenchmarkJsonTranslation(state,
-                                                   msg_type,
-                                                   json_msg.get(),
-                                                   streaming,
-                                                   stream_size,
-                                                   1);
-
-  // Verification
-  T actual_proto;
-  actual_proto.ParseFromString(proto_str);
-  if (actual_proto.payload().size() != array_length) {
-    state.SkipWithError(("JSON parsing error, parsed proto: "
-        + actual_proto.DebugString()).c_str());
+  absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
+                                                                   msg_type,
+                                                                   json_msg.get(),
+                                                                   streaming,
+                                                                   stream_size,
+                                                                   1);
+  if (!proto_str.ok()) {
+    state.SkipWithError(proto_str.status().ToString().c_str());
+  } else {
+    // Verification
+    T actual_proto;
+    actual_proto.ParseFromString(*proto_str);
+    if (actual_proto.payload().size() != array_length) {
+      state.SkipWithError(("JSON parsing error, parsed proto: "
+          + actual_proto.DebugString()).c_str());
+    }
   }
 }
 
@@ -301,52 +317,59 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                                                          std::string(
                                                              kInnerMostNestedFieldName),
                                                          "buzz"));
-  std::string proto_str = BenchmarkJsonTranslation(state,
-                                                   msg_type,
-                                                   json_msg.get(),
-                                                   streaming,
-                                                   stream_size,
-                                                   1);
+  absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
+                                                                   msg_type,
+                                                                   json_msg.get(),
+                                                                   streaming,
+                                                                   stream_size,
+                                                                   1);
+  if (!proto_str.ok()) {
+    state.SkipWithError(proto_str.status().ToString().c_str());
+  } else {
+    // Verification
+    int actual_layers = 0;
+    if (msg_type == kNestedPayloadMessageType) {
+      NestedPayload actual_proto;
+      actual_proto.ParseFromString(*proto_str);
 
-  // Verification
-  int actual_layers = 0;
-  if (msg_type == kNestedPayloadMessageType) {
-    NestedPayload actual_proto;
-    actual_proto.ParseFromString(proto_str);
+      while (actual_proto.has_nested()) {
+        ++actual_layers;
+        // avoid stackoverflow due to copy
+        NestedPayload tmp(actual_proto.nested());
+        actual_proto.clear_nested();
+        actual_proto.clear_payload();
+        actual_proto = tmp;
+      }
+      // This is because actual_proto.has_nested() will be true for
+      // every first call.
+      actual_layers -= 1;
 
-    while (actual_proto.has_nested()) {
-      ++actual_layers;
-      // avoid stackoverflow due to copy
-      NestedPayload tmp(actual_proto.nested());
-      actual_proto.clear_nested();
-      actual_proto.clear_payload();
-      actual_proto = tmp;
+    } else if (msg_type == kStructPayloadMessageType) {
+      google::protobuf::Struct actual_proto;
+      actual_proto.ParseFromString(*proto_str);
+
+      std::string field_name = std::string(kNestedFieldName);
+      for (auto element : actual_proto.fields()) {
+        std::cout << "Key: " << element.first << std::endl;
+      }
+      while (actual_proto.fields().contains(field_name)) {
+        ++actual_layers;
+        // avoid stackoverflow due to copy
+        google::protobuf::Struct
+            tmp = actual_proto.fields().at(field_name).struct_value();
+        actual_proto.clear_fields();
+        actual_proto = tmp;
+      }
     }
-    // This is because actual_proto.has_nested() will be true for
-    // every first call.
-    actual_layers -= 1;
 
-  } else if (msg_type == kStructPayloadMessageType) {
-    google::protobuf::Struct actual_proto;
-    actual_proto.ParseFromString(proto_str);
-
-    std::string field_name = std::string(kNestedFieldName);
-    while (actual_proto.fields().contains(field_name)) {
-      ++actual_layers;
-      // avoid stackoverflow due to copy
-      google::protobuf::Struct
-          tmp = actual_proto.fields().at(field_name).struct_value();
-      actual_proto.clear_fields();
-      actual_proto = tmp;
+    if (actual_layers != layers) {
+      state.SkipWithError(absl::StrFormat(
+          "Actual layer is not as expected. Actual layers: %d, Expected layers: %d",
+          actual_layers,
+          layers).c_str());
     }
   }
 
-  if (actual_layers != layers) {
-    state.SkipWithError(absl::StrFormat(
-        "Actual layer is not as expected. Actual layers: %d, Expected layers: %d",
-        actual_layers,
-        layers).c_str());
-  }
 }
 
 static void BM_NestedProtoPayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -384,7 +407,7 @@ BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(1) // nested with 1 layer
     ->Arg(8) // nested with 8 layers
     ->Arg(32); // nested with 32 layers
-    // More than 32 layers would fail the parsing
+// More than 32 layers would fail the parsing
 
 static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_NestedPayloadFromJson(state,
@@ -409,18 +432,22 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : "%s"})",
                                                      *msg));
-  std::string proto_str = BenchmarkJsonTranslation(state,
-                                                   kStringPayloadMessageType,
-                                                   json_msg.get(),
-                                                   streaming,
-                                                   stream_size,
-                                                   chunk_per_msg);
-  // Verification
-  StringPayload actual_proto;
-  actual_proto.ParseFromString(proto_str);
-  if (actual_proto.payload() != *msg) {
-    state.SkipWithError(("JSON parsing error, parsed proto: "
-        + actual_proto.DebugString()).c_str());
+  absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
+                                                                   kStringPayloadMessageType,
+                                                                   json_msg.get(),
+                                                                   streaming,
+                                                                   stream_size,
+                                                                   chunk_per_msg);
+  if (!proto_str.ok()) {
+    state.SkipWithError(proto_str.status().ToString().c_str());
+  } else {
+    // Verification
+    StringPayload actual_proto;
+    actual_proto.ParseFromString(*proto_str);
+    if (actual_proto.payload() != *msg) {
+      state.SkipWithError(("JSON parsing error, parsed proto: "
+          + actual_proto.DebugString()).c_str());
+    }
   }
 }
 
