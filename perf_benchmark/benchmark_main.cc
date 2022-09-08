@@ -337,27 +337,21 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
       NestedPayload actual_proto;
       actual_proto.ParseFromString(*proto_str);
 
-      while (actual_proto.has_nested()) {
+      NestedPayload* it = &actual_proto;
+      while (it->has_nested()) {
         ++actual_layers;
-        // avoid stackoverflow due to copy
-        NestedPayload tmp(actual_proto.nested());
-        actual_proto.clear_nested();
-        actual_proto.clear_payload();
-        actual_proto = tmp;
+        it = it->mutable_nested();
       }
 
     } else if (msg_type == kStructPayloadMessageType) {
+      std::string field_name = std::string(kNestedFieldName);
       google::protobuf::Struct actual_proto;
       actual_proto.ParseFromString(*proto_str);
 
-      std::string field_name = std::string(kNestedFieldName);
-      while (actual_proto.fields().contains(field_name)) {
+      google::protobuf::Struct* it = &actual_proto;
+      while (it->fields().contains(field_name)) {
         ++actual_layers;
-        // avoid stackoverflow due to copy
-        google::protobuf::Struct
-            tmp = actual_proto.fields().at(field_name).struct_value();
-        actual_proto.clear_fields();
-        actual_proto = tmp;
+        it = it->mutable_fields()->at(field_name).mutable_struct_value();
       }
     }
 
