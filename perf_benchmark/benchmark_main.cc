@@ -71,7 +71,7 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
                                                      absl::string_view msg_type,
                                                      const std::string* json_msg_ptr,
                                                      bool streaming,
-                                                     int64_t stream_size,
+                                                     uint64_t stream_size,
                                                      int chunk_per_msg) {
   // Load service config proto into Service object
   google::api::Service service;
@@ -99,13 +99,18 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
   request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
-  // Wrap json_msg_ptr inside ZeroCopyInputStream.
+  // Wrap json_msg_ptr inside BenchmarkZeroCopyInputStream.
   // Using heap instead of stack because heap space is more suitable to hold
   // large data chunks.
-  auto is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg_ptr,
-                                                            streaming,
-                                                            stream_size,
-                                                            chunk_per_msg);
+  std::unique_ptr<BenchmarkZeroCopyInputStream> is;
+  if (streaming) {
+    is = absl::make_unique<StreamingBenchmarkZeroCopyInputStream>(*json_msg_ptr,
+                                                                  chunk_per_msg,
+                                                                  stream_size);
+  } else {
+    is = absl::make_unique<UnaryBenchmarkZeroCopyInputStream>(*json_msg_ptr,
+                                                              chunk_per_msg);
+  }
 
   // Benchmark the transcoding process
   std::string message;
@@ -150,9 +155,9 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
 //
 // Helper function for benchmarking single bytes payload translation from JSON.
 void BM_SinglePayloadFromJson(::benchmark::State& state,
-                              int64_t payload_length,
+                              uint64_t payload_length,
                               bool streaming,
-                              int64_t stream_size) {
+                              uint64_t stream_size) {
   auto msg =
       absl::make_unique<std::string>(GetRandomBytesString(payload_length,
                                                           true));
@@ -184,13 +189,13 @@ static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
   BM_SinglePayloadFromJson(state, state.range(0), false, 0);
 }
 BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
-    ->Arg(12) // 1 byte
+    ->Arg(1) // 1 byte
     ->Arg(1 << 10) // 1 KiB
     ->Arg(1 << 20) // 1 MiB
     ->Arg(1 << 25); // 32 MiB
 
 static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
-  int64_t byte_length = 1 << 20; // 1 MiB
+  uint64_t byte_length = 1 << 20; // 1 MiB
   BM_SinglePayloadFromJson(state, byte_length, true, state.range(0));
 }
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming);
@@ -200,9 +205,9 @@ BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming);
 //
 // Helper function for benchmarking int32 array payload translation from JSON.
 void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
-                                  int64_t array_length,
+                                  uint64_t array_length,
                                   bool streaming,
-                                  int64_t stream_size) {
+                                  uint64_t stream_size) {
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRandomInt32ArrayString(
@@ -236,7 +241,7 @@ BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonNonStreaming)
     ->Arg(1 << 14); // 16384 vals
 
 static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
-  int64_t array_length = 1 << 14; // 16384 int values
+  uint64_t array_length = 1 << 14; // 16384 int values
   BM_Int32ArrayPayloadFromJson(state, array_length, true, state.range(0));
 }
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming);
@@ -254,8 +259,8 @@ template<class T>
 void BM_ArrayPayloadFromJson(::benchmark::State& state,
                              absl::string_view msg_type,
                              bool streaming,
-                             int64_t stream_size) {
-  int64_t array_length = 1 << 10; // 1024
+                             uint64_t stream_size) {
+  uint64_t array_length = 1 << 10; // 1024
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRepeatedValueArrayString(
@@ -307,9 +312,9 @@ BENCHMARK_WITH_PERCENTILE(BM_StringArrayTypePayloadFromJsonNonStreaming);
 //
 // Helper function for benchmarking translation from nested JSON values.
 void BM_NestedPayloadFromJson(::benchmark::State& state,
-                              int64_t layers,
+                              uint64_t layers,
                               bool streaming,
-                              int64_t stream_size,
+                              uint64_t stream_size,
                               absl::string_view msg_type) {
   auto json_msg =
       absl::make_unique<std::string>(GetNestedJsonString(layers,
@@ -417,9 +422,9 @@ BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
 //
 // Helper function for benchmarking translation from segmented JSON input
 void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
-                                       int64_t payload_length,
+                                       uint64_t payload_length,
                                        bool streaming,
-                                       int64_t stream_size,
+                                       uint64_t stream_size,
                                        int chunk_per_msg) {
   // We are using GetRandomAlphanumericString instead of GetRandomBytesString
   // because JSON format reserves characters such as `"` and `\`.
@@ -451,7 +456,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
 }
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& state) {
-  int64_t payload_length = 1 << 20; // 1 MiB
+  uint64_t payload_length = 1 << 20; // 1 MiB
   BM_SegmentedStringPayloadFromJson(state,
                                     payload_length,
                                     false,
@@ -465,7 +470,7 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
     ->Arg(1 << 12); // 4096 chunks per message
 
 static void BM_SegmentedStringPayloadFromJsonStreaming(::benchmark::State& state) {
-  int64_t payload_length = 1 << 20; // 1 MiB
+  uint64_t payload_length = 1 << 20; // 1 MiB
   BM_SegmentedStringPayloadFromJson(state,
                                     payload_length,
                                     true,
