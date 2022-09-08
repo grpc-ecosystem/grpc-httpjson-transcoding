@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 #include "gtest/gtest.h"
-#include "perf_benchmark/benchmark_common.h"
+#include "perf_benchmark/utils.h"
 #include "absl/strings/escaping.h"
 
 namespace google {

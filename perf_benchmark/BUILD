@@ -45,13 +45,14 @@ cc_binary(
     deps = [
         "com_google_protobuf_struct_cc_proto",
         ":benchmark_cc_proto",
-        ":benchmark_common",
+        ":benchmark_input_stream",
+        ":utils",
         "//src:json_request_translator",
         "//src:type_helper",
         "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/status:status",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_benchmark//:benchmark",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googleapis//google/api:service_cc_proto",
@@ -59,28 +60,36 @@ cc_binary(
 )
 
 cc_library(
-    name = "benchmark_common",
-    srcs = ["benchmark_common.cc"],
-    hdrs = ["benchmark_common.h"],
+    name = "utils",
+    srcs = ["utils.cc"],
+    hdrs = ["utils.h"],
     deps = [
-        "//src:transcoder_input_stream",
         "@com_github_nlohmann_json//:json",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/status:status",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/random",
-        "@com_google_benchmark//:benchmark",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/api:service_cc_proto",
     ],
 )
 
+cc_library(
+    name = "benchmark_input_stream",
+    srcs = ["benchmark_input_stream.cc"],
+    hdrs = ["benchmark_input_stream.h"],
+    deps = [
+        "//src:transcoder_input_stream",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
 cc_test(
-    name = "benchmark_common_test",
+    name = "utils_test",
     srcs = [
-        "benchmark_common_test.cc",
+        "utils_test.cc",
     ],
     deps = [
-        ":benchmark_common",
+        ":utils",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],

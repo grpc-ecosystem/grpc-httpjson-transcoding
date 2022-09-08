@@ -27,7 +27,8 @@
 #include "absl/memory/memory.h"
 #include "google/api/service.pb.h"
 
-#include "perf_benchmark/benchmark_common.h"
+#include "perf_benchmark/utils.h"
+#include "perf_benchmark/benchmark_input_stream.h"
 #include "perf_benchmark/benchmark.pb.h"
 
 namespace google {
