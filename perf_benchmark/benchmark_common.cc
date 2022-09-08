@@ -131,7 +131,7 @@ std::string GetRepeatedValueArrayString(absl::string_view val, uint64_t length) 
   return os.str();
 }
 
-nlohmann::json GetNestedJson(int64_t layers,
+nlohmann::json GetNestedJson(uint64_t layers,
                              absl::string_view nested_field_name,
                              nlohmann::json inner) {
   if (layers == 0) {
@@ -239,7 +239,7 @@ int64_t StreamingBenchmarkZeroCopyInputStream::BytesAvailable() const {
   return chunk_size_;
 }
 bool StreamingBenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
-  std::string* msg_ptr = nullptr;
+  std::string* msg_ptr;
   int overhead = 0; // character overhead due to [,] characters.
   if (msg_sent == 0) {
     // no message sent -> next message is header_

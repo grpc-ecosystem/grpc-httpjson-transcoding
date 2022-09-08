@@ -52,6 +52,17 @@ constexpr absl::string_view
     kDoubleArrayPayloadMessageType = "DoubleArrayPayload";
 constexpr absl::string_view
     kStringArrayPayloadMessageType = "StringArrayPayload";
+
+// Used for NestedPayload and StructPayload
+constexpr uint64_t kNumNestedLayersForStreaming = 32;
+// Used for ArrayPayload
+constexpr uint64_t kArrayPayloadLengthForStreaming = 1 << 10; // 1024
+// Used for BytesPayload
+constexpr uint64_t kBytesPayloadLengthForStreaming = 1 << 20; // 1 MiB
+// Used for Int32ArrayPayload
+constexpr uint64_t kInt32ArrayPayloadLengthForStreaming = 1 << 14; // 16384
+// Used for Segmented StringPayload
+constexpr uint64_t kSegmentedStringPayloadLengthForStreaming = 1 << 20; // 1 MiB
 }
 
 // Helper method to run Json Translation benchmark.
@@ -72,7 +83,7 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
                                                      const std::string* json_msg_ptr,
                                                      bool streaming,
                                                      uint64_t stream_size,
-                                                     int chunk_per_msg) {
+                                                     uint64_t chunk_per_msg) {
   // Load service config proto into Service object
   google::api::Service service;
   absl::Status
@@ -195,8 +206,10 @@ BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
     ->Arg(1 << 25); // 32 MiB
 
 static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
-  uint64_t byte_length = 1 << 20; // 1 MiB
-  BM_SinglePayloadFromJson(state, byte_length, true, state.range(0));
+  BM_SinglePayloadFromJson(state,
+                           kBytesPayloadLengthForStreaming,
+                           true,
+                           state.range(0));
 }
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming);
 
@@ -241,8 +254,10 @@ BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonNonStreaming)
     ->Arg(1 << 14); // 16384 vals
 
 static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
-  uint64_t array_length = 1 << 14; // 16384 int values
-  BM_Int32ArrayPayloadFromJson(state, array_length, true, state.range(0));
+  BM_Int32ArrayPayloadFromJson(state,
+                               kInt32ArrayPayloadLengthForStreaming,
+                               true,
+                               state.range(0));
 }
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming);
 
@@ -260,12 +275,11 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                              absl::string_view msg_type,
                              bool streaming,
                              uint64_t stream_size) {
-  uint64_t array_length = 1 << 10; // 1024
   auto json_msg =
       absl::make_unique<std::string>(absl::StrFormat(R"({"payload" : %s})",
                                                      GetRepeatedValueArrayString(
                                                          "0",
-                                                         array_length)));
+                                                         kArrayPayloadLengthForStreaming)));
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    msg_type,
                                                                    json_msg.get(),
@@ -278,7 +292,7 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
     // Verification
     T actual_proto;
     actual_proto.ParseFromString(*proto_str);
-    if (actual_proto.payload().size() != array_length) {
+    if (actual_proto.payload().size() != kArrayPayloadLengthForStreaming) {
       state.SkipWithError(("JSON parsing error, parsed proto: "
           + actual_proto.DebugString()).c_str());
     }
@@ -399,12 +413,12 @@ BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(0) // flat JSON
     ->Arg(1) // nested with 1 layer
     ->Arg(8) // nested with 8 layers
+        // More than 32 layers would fail the parsing for struct proto.
     ->Arg(32); // nested with 32 layers
-// More than 32 layers would fail the parsing
 
 static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_NestedPayloadFromJson(state,
-                           64,
+                           kNumNestedLayersForStreaming,
                            true,
                            state.range(0),
                            kStructPayloadMessageType);
@@ -419,7 +433,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
                                        uint64_t payload_length,
                                        bool streaming,
                                        uint64_t stream_size,
-                                       int chunk_per_msg) {
+                                       uint64_t chunk_per_msg) {
   // We are using GetRandomAlphanumericString instead of GetRandomBytesString
   // because JSON format reserves characters such as `"` and `\`.
   // We could generate `"` and `\` and escape them, but for simplicity, we are
@@ -450,9 +464,8 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
 }
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& state) {
-  uint64_t payload_length = 1 << 20; // 1 MiB
   BM_SegmentedStringPayloadFromJson(state,
-                                    payload_length,
+                                    kSegmentedStringPayloadLengthForStreaming,
                                     false,
                                     0,
                                     state.range(0));
@@ -464,9 +477,8 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
     ->Arg(1 << 12); // 4096 chunks per message
 
 static void BM_SegmentedStringPayloadFromJsonStreaming(::benchmark::State& state) {
-  uint64_t payload_length = 1 << 20; // 1 MiB
   BM_SegmentedStringPayloadFromJson(state,
-                                    payload_length,
+                                    kSegmentedStringPayloadLengthForStreaming,
                                     true,
                                     state.range(0),
                                     1 << 8);

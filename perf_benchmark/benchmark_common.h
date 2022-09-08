@@ -130,6 +130,7 @@ absl::Status LoadService(absl::string_view config_pb_txt_file,
 // Return the given percentile of the vector v.
 double GetPercentile(const std::vector<double>& v, double perc);
 
+// This method is not thread-safe since it uses a shared absl::BitGen.
 // Return a random string of the given length.
 // length - Length of the returned string. If base64 == true, the actual
 //          returned string length is 33–37% larger due to the encoding.
@@ -137,10 +138,12 @@ double GetPercentile(const std::vector<double>& v, double perc);
 //          required for bytes proto message.
 std::string GetRandomBytesString(uint64_t length, bool base64);
 
+// This method is not thread-safe since it uses a shared absl::BitGen.
 // Return a random alphanumeric string of the given length.
 // length - Length of the returned string.
 std::string GetRandomAlphanumericString(uint64_t length);
 
+// This method is not thread-safe since it uses a shared absl::BitGen.
 // Return a random string representing an array of int32, e.g. "[1,2,3]"
 // length - Length of the integer array.
 std::string GetRandomInt32ArrayString(uint64_t length);
