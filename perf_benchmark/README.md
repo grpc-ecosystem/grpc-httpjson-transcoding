@@ -12,7 +12,7 @@ our performance benchmark. Variable being tested
 ## How to run
 
 ```bash
-bazelisk run //perf_benchmark:benchmark_main -- \
+bazel run //perf_benchmark:benchmark_main -- \
   --benchmark_min_warmup_time=3 \
   --benchmark_repetitions=1000 \
   --benchmark_format=console \
