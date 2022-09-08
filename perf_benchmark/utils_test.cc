@@ -17,6 +17,8 @@
 #include "gtest/gtest.h"
 #include "perf_benchmark/utils.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/ascii.h"
 
 namespace google {
 namespace grpc {
@@ -24,7 +26,7 @@ namespace transcoding {
 
 namespace perf_benchmark {
 
-TEST(BenchmarkCommonTest, GetRandomBytesString) {
+TEST(UtilsTest, GetRandomBytesStringLength) {
   const int test_length_input[] = {0, 1, 10, 100};
   for (auto length: test_length_input) {
     // Regular random string
@@ -35,6 +37,92 @@ TEST(BenchmarkCommonTest, GetRandomBytesString) {
     absl::Base64Unescape(GetRandomBytesString(length, true), &decoded);
     EXPECT_EQ(decoded.length(), length);
   }
+}
+
+TEST(UtilsTest, GetPercentile) {
+  // Fill in an array of 0 to 99
+  std::vector<double> arr;
+  int arr_length = 100;
+  for (int i = 0; i < arr_length; ++i) {
+    arr.push_back(double(i));
+  }
+
+  // i^th percentile should equal to i
+  for (int i = 0; i < arr.size(); ++i) {
+    EXPECT_EQ(GetPercentile(arr, double(i)), double(i));
+  }
+
+  // p999 should get the largest value
+  EXPECT_EQ(GetPercentile(arr, 99.9), 99.0);
+}
+
+TEST(UtilsTest, GetRandomAlphanumericString) {
+  for (auto ch: GetRandomAlphanumericString(100)) {
+    std::cout << ch << std::endl;
+    EXPECT_TRUE(absl::ascii_isalnum(ch));
+  }
+}
+
+TEST(UtilsTest, GetRandomAlphanumericStringLength) {
+  const int test_length_input[] = {0, 1, 10, 100};
+  for (auto length: test_length_input) {
+    EXPECT_EQ(GetRandomAlphanumericString(length).length(), length);
+  }
+}
+
+TEST(UtilsTest, GetRandomInt32ArrayString) {
+  const int test_length_input[] = {0, 1, 10, 100};
+  for (auto length: test_length_input) {
+    std::string res = GetRandomInt32ArrayString(length);
+    EXPECT_EQ(res.front(), '[');
+    EXPECT_EQ(res.back(), ']');
+
+    // Verify length
+    std::vector<std::string>
+        split = absl::StrSplit(res.substr(1, res.size() - 2), ',');
+    if (!split.empty() && split.at(0) != "") { // if a delimiter is found
+      EXPECT_EQ(split.size(), length);
+    }
+  }
+}
+
+TEST(UtilsTest, GetRepeatedValueArrayString) {
+  const int test_length_input[] = {0, 1, 10, 100};
+  absl::string_view test_val = "TEST";
+  absl::string_view expected_json_val = R"("TEST")";
+  for (auto length: test_length_input) {
+    std::string res = GetRepeatedValueArrayString(test_val, length);
+    EXPECT_EQ(res.front(), '[');
+    EXPECT_EQ(res.back(), ']');
+
+    // Verify length
+    std::vector<std::string>
+        split = absl::StrSplit(res.substr(1, res.size() - 2), ',');
+    if (split.at(0) != "") { // if a delimiter is found
+      EXPECT_EQ(split.size(), length);
+      for (const auto& s: split) {
+        EXPECT_EQ(expected_json_val, s);
+      }
+    }
+  }
+}
+
+TEST(UtilsTest, GetNestedJsonStringZeroLayer) {
+  EXPECT_EQ(
+      R"({"inner_val":"inner_key"})",
+      GetNestedJsonString(0, "doesnt_matter", "inner_val", "inner_key")
+  );
+}
+
+TEST(UtilsTest, GetNestedJsonStringMultiLayers) {
+  EXPECT_EQ(
+      R"({"nested_field_name":{"inner_val":"inner_key"}})",
+      GetNestedJsonString(1, "nested_field_name", "inner_val", "inner_key")
+  );
+  EXPECT_EQ(
+      R"({"nested_field_name":{"nested_field_name":{"inner_val":"inner_key"}}})",
+      GetNestedJsonString(2, "nested_field_name", "inner_val", "inner_key")
+  );
 }
 } // namespace perf_benchmark
 

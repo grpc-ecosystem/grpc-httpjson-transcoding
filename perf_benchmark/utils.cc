@@ -97,7 +97,8 @@ std::string GetRandomAlphanumericString(uint64_t length) {
   std::string ret;
   ret.reserve(length);
   for (int i = 0; i < length; ++i) {
-    ret += charset[absl::Uniform(bitgen, 0u, sizeof(charset))];
+    // sizeof(charset) - 1 to exclude trailing NULL char
+    ret += charset[absl::Uniform(bitgen, 0u, sizeof(charset) - 1)];
   }
   return ret;
 }
