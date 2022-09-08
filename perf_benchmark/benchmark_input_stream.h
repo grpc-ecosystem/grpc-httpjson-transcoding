@@ -38,11 +38,11 @@ namespace perf_benchmark {
 class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
  public:
   // Pre-Conditions:
-  // - chunk_per_msg <= msg.size()
+  // - num_chunks_per_msg <= msg.size()
   //
-  // Note: chunk_per_msg could be off by a few chunks due to int rounding.
+  // Note: num_chunks_per_msg could be off by a few chunks due to int rounding.
   explicit BenchmarkZeroCopyInputStream(std::string msg,
-                                        uint64_t chunk_per_msg);
+                                        uint64_t num_chunks_per_msg);
   ~BenchmarkZeroCopyInputStream() override = default;
 
   int64_t BytesAvailable() const override;

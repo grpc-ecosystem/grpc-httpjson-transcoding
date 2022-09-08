@@ -16,6 +16,7 @@
 //
 
 #include "perf_benchmark/benchmark_input_stream.h"
+#include "google/protobuf/stubs/logging.h"
 
 namespace google {
 namespace grpc {
@@ -23,11 +24,13 @@ namespace transcoding {
 
 namespace perf_benchmark {
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
-                                                                     uint64_t chunk_per_msg)
-     : finished_(false),
+                                                           uint64_t num_chunks_per_msg)
+    : finished_(false),
       msg_(std::move(msg)),
-      chunk_size_(msg_.size() / chunk_per_msg),
-      pos_(0) {}
+      chunk_size_(msg_.size() / num_chunks_per_msg),
+      pos_(0) {
+  GOOGLE_CHECK(num_chunks_per_msg <= msg_.size());
+}
 
 int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
   if (finished_) {
@@ -48,7 +51,6 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
   *data = msg_.data() + pos_;
   if (pos_ + chunk_size_ >= msg_.size()) { // last message
     *size = msg_.size() - pos_;
-    pos_ = 0; // reset pos after sending the last message
     finished_ = true;
   } else {
     *size = chunk_size_;
@@ -59,6 +61,7 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
 
 void BenchmarkZeroCopyInputStream::Reset() {
   finished_ = false;
+  pos_ = 0;
 }
 
 uint64_t BenchmarkZeroCopyInputStream::TotalBytes() const {

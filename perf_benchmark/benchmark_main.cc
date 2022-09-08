@@ -63,7 +63,7 @@ constexpr uint64_t kBytesPayloadLengthForStreaming = 1 << 20; // 1 MiB
 // Used for Int32ArrayPayload
 constexpr uint64_t kInt32ArrayPayloadLengthForStreaming = 1 << 14; // 16384
 // Used for Segmented StringPayload
-constexpr uint64_t kSegmentedStringPayloadLengthForStreaming = 1 << 20; // 1 MiB
+constexpr uint64_t kSegmentedStringPayloadLength = 1 << 20; // 1 MiB
 }
 
 // Helper method to run Json Translation benchmark.
@@ -352,10 +352,10 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
       NestedPayload actual_proto;
       actual_proto.ParseFromString(*proto_str);
 
-      NestedPayload* it = &actual_proto;
+      const NestedPayload* it = &actual_proto;
       while (it->has_nested()) {
         ++actual_layers;
-        it = it->mutable_nested();
+        it = &it->nested();
       }
 
     } else if (msg_type == kStructPayloadMessageType) {
@@ -363,10 +363,10 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
       google::protobuf::Struct actual_proto;
       actual_proto.ParseFromString(*proto_str);
 
-      google::protobuf::Struct* it = &actual_proto;
+      const google::protobuf::Struct* it = &actual_proto;
       while (it->fields().contains(field_name)) {
         ++actual_layers;
-        it = it->mutable_fields()->at(field_name).mutable_struct_value();
+        it = &(it->fields().at(field_name).struct_value());
       }
     }
 
@@ -466,7 +466,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& state) {
   BM_SegmentedStringPayloadFromJson(state,
-                                    kSegmentedStringPayloadLengthForStreaming,
+                                    kSegmentedStringPayloadLength,
                                     false,
                                     0,
                                     state.range(0));
@@ -479,7 +479,7 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
 
 static void BM_SegmentedStringPayloadFromJsonStreaming(::benchmark::State& state) {
   BM_SegmentedStringPayloadFromJson(state,
-                                    kSegmentedStringPayloadLengthForStreaming,
+                                    kSegmentedStringPayloadLength,
                                     true,
                                     state.range(0),
                                     1 << 8);
