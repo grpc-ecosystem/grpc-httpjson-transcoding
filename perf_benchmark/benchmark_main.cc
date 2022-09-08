@@ -72,14 +72,14 @@ constexpr uint64_t kSegmentedStringPayloadLength = 1 << 20; // 1 MiB
 // error.
 // state - ::benchmark::State& variable used for collecting metrics.
 // msg_type - Protobuf message name for translation.
-// json_msg_ptr - Pointer to a complete json message.
+// json_msg - Complete input json message.
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
-//             number of `json_msg_ptr` will be fed into translation.
+//             number of `json_msg` will be fed into translation.
 // stream_size - Number of streaming messages.
 // chunk_per_msg - Number of data chunks per message.
 absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
                                                      absl::string_view msg_type,
-                                                     const std::string* json_msg_ptr,
+                                                     absl::string_view json_msg,
                                                      bool streaming,
                                                      uint64_t stream_size,
                                                      uint64_t chunk_per_msg) {
@@ -108,17 +108,14 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
   request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
-  // Wrap json_msg_ptr inside BenchmarkZeroCopyInputStream.
-  // Using heap instead of stack because heap space is more suitable to hold
-  // large data chunks.
+  // Wrap json_msg inside BenchmarkZeroCopyInputStream.
   std::unique_ptr<BenchmarkZeroCopyInputStream> is;
   if (streaming) {
-    auto streaming_msg = absl::make_unique<std::string>(
-        GetStreamedJson(*json_msg_ptr, stream_size));
-    is = absl::make_unique<BenchmarkZeroCopyInputStream>(*streaming_msg,
+    std::string streaming_msg = GetStreamedJson(json_msg, stream_size);
+    is = absl::make_unique<BenchmarkZeroCopyInputStream>(streaming_msg,
                                                          chunk_per_msg);
   } else {
-    is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg_ptr,
+    is = absl::make_unique<BenchmarkZeroCopyInputStream>(std::string(json_msg),
                                                          chunk_per_msg);
   }
 
@@ -170,13 +167,11 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
                               uint64_t payload_length,
                               bool streaming,
                               uint64_t stream_size) {
-  auto msg = absl::make_unique<std::string>(
-      GetRandomBytesString(payload_length, true));
-  auto json_msg = absl::make_unique<std::string>(
-      absl::StrFormat(R"({"payload" : "%s"})", *msg));
+  std::string msg = GetRandomBytesString(payload_length, true);
+  std::string json_msg = absl::StrFormat(R"({"payload" : "%s"})", msg);
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    kBytesPayloadMessageType,
-                                                                   json_msg.get(),
+                                                                   json_msg,
                                                                    streaming,
                                                                    stream_size,
                                                                    1);
@@ -185,7 +180,7 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
   } else {
     // Verification
     std::string msg_decoded;
-    absl::Base64Unescape(*msg, &msg_decoded);
+    absl::Base64Unescape(msg, &msg_decoded);
     BytesPayload actual_proto;
     actual_proto.ParseFromString(*proto_str);
     if (actual_proto.payload() != msg_decoded) {
@@ -220,12 +215,11 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
                                   uint64_t array_length,
                                   bool streaming,
                                   uint64_t stream_size) {
-  auto json_msg = absl::make_unique<std::string>(
-      absl::StrFormat(R"({"payload" : %s})",
-                      GetRandomInt32ArrayString(array_length)));
+  std::string json_msg = absl::StrFormat(R"({"payload" : %s})",
+                                         GetRandomInt32ArrayString(array_length));
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    kInt32ArrayPayloadMessageType,
-                                                                   json_msg.get(),
+                                                                   json_msg,
                                                                    streaming,
                                                                    stream_size,
                                                                    1);
@@ -273,13 +267,12 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
                              absl::string_view msg_type,
                              bool streaming,
                              uint64_t stream_size) {
-  auto json_msg = absl::make_unique<std::string>(
-      absl::StrFormat(R"({"payload" : %s})",
-                      GetRepeatedValueArrayString("0",
-                                                  kArrayPayloadLengthForStreaming)));
+  auto json_msg = absl::StrFormat(
+      R"({"payload" : %s})",
+      GetRepeatedValueArrayString("0", kArrayPayloadLengthForStreaming));
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    msg_type,
-                                                                   json_msg.get(),
+                                                                   json_msg,
                                                                    streaming,
                                                                    stream_size,
                                                                    1);
@@ -327,14 +320,14 @@ void BM_NestedPayloadFromJson(::benchmark::State& state,
                               bool streaming,
                               uint64_t stream_size,
                               absl::string_view msg_type) {
-  auto json_msg = absl::make_unique<std::string>(
-      GetNestedJsonString(layers,
-                          kNestedFieldName,
-                          std::string(kInnerMostNestedFieldName),
-                          "buzz"));
+  auto json_msg = GetNestedJsonString(
+      layers,
+      kNestedFieldName,
+      std::string(kInnerMostNestedFieldName),
+      "buzz");
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    msg_type,
-                                                                   json_msg.get(),
+                                                                   json_msg,
                                                                    streaming,
                                                                    stream_size,
                                                                    1);
@@ -435,13 +428,11 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
   // We could generate `"` and `\` and escape them, but for simplicity, we are
   // only using alphanumeric characters.
   // This would also be a more common for string proto.
-  auto msg =
-      absl::make_unique<std::string>(GetRandomAlphanumericString(payload_length));
-  auto json_msg = absl::make_unique<std::string>(
-      absl::StrFormat(R"({"payload" : "%s"})", *msg));
+  std::string msg = GetRandomAlphanumericString(payload_length);
+  std::string json_msg = absl::StrFormat(R"({"payload" : "%s"})", msg);
   absl::StatusOr<std::string> proto_str = BenchmarkJsonTranslation(state,
                                                                    kStringPayloadMessageType,
-                                                                   json_msg.get(),
+                                                                   json_msg,
                                                                    streaming,
                                                                    stream_size,
                                                                    chunk_per_msg);
@@ -451,7 +442,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
     // Verification
     StringPayload actual_proto;
     actual_proto.ParseFromString(*proto_str);
-    if (actual_proto.payload() != *msg) {
+    if (actual_proto.payload() != msg) {
       state.SkipWithError(("JSON parsing error, parsed proto: "
           + actual_proto.DebugString()).c_str());
     }
