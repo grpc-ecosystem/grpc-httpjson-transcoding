@@ -72,8 +72,6 @@ constexpr uint64_t kSegmentedStringPayloadLengthForStreaming = 1 << 20; // 1 MiB
 // error.
 // state - ::benchmark::State& variable used for collecting metrics.
 // msg_type - Protobuf message name for translation.
-// request_info - Json-Protobuf request information, body_field_path and
-//                variable_bindings need to be set before it is passed in.
 // json_msg_ptr - Pointer to a complete json message.
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
 //             number of `json_msg_ptr` will be fed into translation.
@@ -116,12 +114,14 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
   // large data chunks.
   std::unique_ptr<BenchmarkZeroCopyInputStream> is;
   if (streaming) {
-    is = absl::make_unique<StreamingBenchmarkZeroCopyInputStream>(*json_msg_ptr,
-                                                                  chunk_per_msg,
-                                                                  stream_size);
+    auto streaming_msg =
+        absl::make_unique<std::string>(GetStreamedJson(*json_msg_ptr,
+                                                       stream_size));
+    is = absl::make_unique<BenchmarkZeroCopyInputStream>(*streaming_msg,
+                                                         chunk_per_msg);
   } else {
-    is = absl::make_unique<UnaryBenchmarkZeroCopyInputStream>(*json_msg_ptr,
-                                                              chunk_per_msg);
+    is = absl::make_unique<BenchmarkZeroCopyInputStream>(*json_msg_ptr,
+                                                         chunk_per_msg);
   }
 
   // Benchmark the transcoding process

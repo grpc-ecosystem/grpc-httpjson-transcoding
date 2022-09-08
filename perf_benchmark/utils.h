@@ -72,8 +72,14 @@ std::string GetRepeatedValueArrayString(absl::string_view val, uint64_t length);
 // payload_msg - String value for the innermost json field.
 std::string GetNestedJsonString(uint64_t layers,
                                 absl::string_view nested_field_name,
-                                std::string inner_key,
-                                std::string inner_val);
+                                absl::string_view inner_key,
+                                absl::string_view inner_val);
+
+// Return an HTTP/JSON string that corresponds to gRPC streaming message.
+// This is essentially wrapping the json_msg repetitively around a JSON array.
+// for stream_size == 1 -> "[json_msg]"
+// for stream_size > 1 -> "[json_msg,...,json_msg]"
+std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
 
 } // namespace perf_benchmark
 

@@ -146,11 +146,24 @@ nlohmann::json GetNestedJson(uint64_t layers,
 
 std::string GetNestedJsonString(uint64_t layers,
                                 absl::string_view nested_field_name,
-                                std::string inner_key,
-                                std::string inner_val) {
+                                absl::string_view inner_key,
+                                absl::string_view inner_val) {
   nlohmann::json inner;
-  inner[std::move(inner_key)] = inner_val;
+  inner[inner_key.data()] = inner_val;
   return to_string(GetNestedJson(layers, nested_field_name, inner));
+}
+
+std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
+  std::stringstream ss("");
+  ss << '[';
+  for (uint64_t i = 0; i < stream_size; ++i) {
+    ss << json_msg;
+    if (i != stream_size - 1) {
+      ss << ",";
+    }
+  }
+  ss << ']';
+  return ss.str();
 }
 } // namespace perf_benchmark
 

@@ -80,6 +80,7 @@ cc_library(
     deps = [
         "//src:transcoder_input_stream",
         "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -91,6 +92,17 @@ cc_test(
     deps = [
         ":utils",
         "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "benchmark_input_stream_test",
+    srcs = [
+        "benchmark_input_stream_test.cc",
+    ],
+    deps = [
+        ":benchmark_input_stream",
         "@com_google_googletest//:gtest_main",
     ],
 )

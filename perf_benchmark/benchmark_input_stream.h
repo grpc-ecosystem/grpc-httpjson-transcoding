@@ -19,6 +19,7 @@
 
 #include "grpc_transcoding/transcoder_input_stream.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/stubs/logging.h"
 
 namespace google {
 namespace grpc {
@@ -31,6 +32,8 @@ namespace perf_benchmark {
 // benchmark since the same input message will be read multiple times without
 // introducing a large runtime overhead.
 //
+// For streaming JSON messages, pass in an array of JSON objects as the msg.
+//
 // After each benchmark iteration, Reset() needs to be called.
 class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
  public:
@@ -42,76 +45,34 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
                                         uint64_t chunk_per_msg);
   ~BenchmarkZeroCopyInputStream() override = default;
 
-  int64_t BytesAvailable() const override = 0;
+  int64_t BytesAvailable() const override;
   bool Finished() const override { return finished_; };
 
-  bool Next(const void** data, int* size) override = 0;
-  void BackUp(int count) override {}; // Not Implemented
-  bool Skip(int count) override { return false; }; // Not Implemented
-  int64_t ByteCount() const override { return 0; }; // Not Implemented
+  bool Next(const void** data, int* size) override;
+  void BackUp(int count) override { GOOGLE_LOG(FATAL) << "Not implemented"; };
+  bool Skip(int count) override {
+    GOOGLE_LOG(FATAL) << "Not implemented";
+    return false;
+  };
+  int64_t ByteCount() const override {
+    GOOGLE_LOG(FATAL) << "Not implemented";
+    return 0;
+  };
 
   // Reset the input stream back to the original start state.
   // This should be called after one iteration of benchmark.
-  virtual void Reset() = 0;
+  virtual void Reset();
 
   // Return the total number of bytes of the entire JSON message.
-  virtual uint64_t TotalBytes() const = 0;
+  virtual uint64_t TotalBytes() const;
 
- protected:
+ private:
   bool finished_;
   const std::string msg_;
   const uint64_t chunk_size_;
-};
-
-// BenchmarkZeroCopyInputStream implementation for non-streaming benchmarks.
-class UnaryBenchmarkZeroCopyInputStream : public BenchmarkZeroCopyInputStream {
- public:
-  // Pre-Conditions:
-  // - chunk_per_msg <= msg.size()
-  //
-  // Note: chunk_per_msg could be off by a few chunks due to int rounding.
-  explicit UnaryBenchmarkZeroCopyInputStream(std::string msg,
-                                             uint64_t chunk_per_msg);
-  ~UnaryBenchmarkZeroCopyInputStream() override = default;
-
-  int64_t BytesAvailable() const override;
-  bool Next(const void** data, int* size) override;
-  void Reset() override;
-  uint64_t TotalBytes() const override;
-
- private:
   uint64_t pos_;
 };
 
-// BenchmarkZeroCopyInputStream for streaming message benchmarks.
-// The same json message will be streamed by stream_size times. Each call to
-// Next() will yield a single message from the streaming, which means Next()
-// will return true exactly `stream_size` times.
-class StreamingBenchmarkZeroCopyInputStream
-    : public BenchmarkZeroCopyInputStream {
- public:
-  // Pre-Conditions:
-  // - chunk_per_msg <= msg.size()
-  //
-  // Note: chunk_per_msg could be off by a few chunks due to int rounding.
-  explicit StreamingBenchmarkZeroCopyInputStream(std::string msg,
-                                                 uint64_t chunk_per_msg,
-                                                 uint64_t stream_size);
-  ~StreamingBenchmarkZeroCopyInputStream() override = default;
-
-  int64_t BytesAvailable() const override;
-  bool Next(const void** data, int* size) override;
-  void Reset() override;
-  uint64_t TotalBytes() const override;
-
- private:
-  uint64_t pos_;
-  const uint64_t stream_size_;
-  int msg_sent;
-  std::string header_;
-  std::string body_;
-  std::string tail_;
-};
 } // namespace perf_benchmark
 
 } // namespace transcoding
