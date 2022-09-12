@@ -43,7 +43,6 @@ cc_binary(
         "benchmark_service.textproto",
     ],
     deps = [
-        "com_google_protobuf_struct_cc_proto",
         ":benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
@@ -101,8 +100,17 @@ cc_test(
     srcs = [
         "benchmark_input_stream_test.cc",
     ],
+    data = [
+        "benchmark_service.textproto",
+    ],
     deps = [
+        "com_google_protobuf_struct_cc_proto",
+        ":benchmark_cc_proto",
         ":benchmark_input_stream",
+        ":utils",
+        "//src:json_request_translator",
+        "//src:type_helper",
+        "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
     ],
 )

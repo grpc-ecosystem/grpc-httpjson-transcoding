@@ -114,11 +114,11 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
       return GetPercentile(v, 99.9);                                          \
     })
 
-#define BENCHMARK_STREAMING_WITH_PERCENTILE(func)                             \
+#define BENCHMARK_STREAMING_WITH_PERCENTILE(func, num_chunks_per_msg)         \
     BENCHMARK_WITH_PERCENTILE(func)                                           \
-    ->Arg(1)                                                                  \
-    ->Arg(1 << 2)                                                             \
-    ->Arg(1 << 4)                                                             \
-    ->Arg(1 << 6)
+    ->Arg(1 * (num_chunks_per_msg))                                             \
+    ->Arg(1 << 2 * (num_chunks_per_msg))                                        \
+    ->Arg(1 << 4 * (num_chunks_per_msg))                                        \
+    ->Arg(1 << 6 * (num_chunks_per_msg))
 
 #endif //PERF_BENCHMARK_UTILS_H_
