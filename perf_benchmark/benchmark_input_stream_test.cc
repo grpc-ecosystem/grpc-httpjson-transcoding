@@ -125,272 +125,170 @@ uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
 
 } // namespace
 
-TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple
-) {
-absl::string_view json_msg_input[] =
-    {R"({"Hello":"World!"})",
-     R"([{"Hello":"World!"}])",
-     R"([{"Hello":"World!"},{"Hello":"World, Again!"}])"};
+TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
+  absl::string_view json_msg_input[] =
+      {R"({"Hello":"World!"})",
+       R"([{"Hello":"World!"}])",
+       R"([{"Hello":"World!"},{"Hello":"World, Again!"}])"};
 
-for (
-auto& json_msg
-: json_msg_input) {
-BenchmarkZeroCopyInputStream is(std::string(json_msg), 1);
+  for (auto& json_msg: json_msg_input) {
+    BenchmarkZeroCopyInputStream is(std::string(json_msg), 1);
 
-// TotalBytes and BytesAvailable should equal to json_msg.
-EXPECT_EQ(is
-.
-TotalBytes(), json_msg
-.
-size()
-);
-EXPECT_EQ(is
-.
-BytesAvailable(), json_msg
-.
-size()
-);
-// Stream should not be finished.
-EXPECT_FALSE(is
-.
-Finished()
-);
+    // TotalBytes and BytesAvailable should equal to json_msg.
+    EXPECT_EQ(is.TotalBytes(), json_msg.size());
+    EXPECT_EQ(is.BytesAvailable(), json_msg.size());
+    // Stream should not be finished.
+    EXPECT_FALSE(is.Finished());
 
-// Reading data.
-const void* data = nullptr;
-int size;
-is.
-Next(& data, & size
-);
-EXPECT_EQ(size, json_msg
-.
-size()
-);
-EXPECT_EQ(std::string(static_cast<const char*>(data)), json_msg
-);
+    // Reading data.
+    const void* data = nullptr;
+    int size;
+    is.Next(&data, &size);
+    EXPECT_EQ(size, json_msg.size());
+    EXPECT_EQ(std::string(static_cast<const char*>(data)), json_msg);
 
-// Stream should be finished
-EXPECT_TRUE(is
-.
-Finished()
-);
+    // Stream should be finished
+    EXPECT_TRUE(is.Finished());
 
-// Reset should reset everything as if Next() is not called.
-is.
-Reset();
-EXPECT_EQ(is
-.
-TotalBytes(), json_msg
-.
-size()
-);
-EXPECT_EQ(is
-.
-BytesAvailable(), json_msg
-.
-size()
-);
-EXPECT_FALSE(is
-.
-Finished()
-);
-}
+    // Reset should reset everything as if Next() is not called.
+    is.Reset();
+    EXPECT_EQ(is.TotalBytes(), json_msg.size());
+    EXPECT_EQ(is.BytesAvailable(), json_msg.size());
+    EXPECT_FALSE(is.Finished());
+  }
 }
 
-TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamChunk
-) {
-absl::string_view json_msg = R"({"Hello":"World!"})";
-const uint64_t
-    chunk_per_msg_input[] = {1, 2, 4, json_msg.size() - 1, json_msg.size()};
+TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamChunk) {
+  absl::string_view json_msg = R"({"Hello":"World!"})";
+  const uint64_t
+      chunk_per_msg_input[] = {1, 2, 4, json_msg.size() - 1, json_msg.size()};
 
-for (
-uint64_t chunk_per_msg
-: chunk_per_msg_input) {
-BenchmarkZeroCopyInputStream is(std::string(json_msg), chunk_per_msg);
-uint64_t expected_chunk_size = json_msg.size() / chunk_per_msg;
+  for (uint64_t chunk_per_msg: chunk_per_msg_input) {
+    BenchmarkZeroCopyInputStream is(std::string(json_msg), chunk_per_msg);
+    uint64_t expected_chunk_size = json_msg.size() / chunk_per_msg;
 
-// Reading data.
-const void* data = nullptr;
-int size;
-uint64_t total_bytes_read = 0;
-std::string str_read;
-while (!is.
-Finished()
-) {
-// TotalBytes should equal to json_msg.
-EXPECT_EQ(is
-.
-TotalBytes(), json_msg
-.
-size()
-);
-if (json_msg.
-size()
-- total_bytes_read >= expected_chunk_size) {
-// BytesAvailable should equal to the chunk size unless we are reading
-// the last message.
-EXPECT_EQ(is
-.
-BytesAvailable(), expected_chunk_size
-);
+    // Reading data.
+    const void* data = nullptr;
+    int size;
+    uint64_t total_bytes_read = 0;
+    std::string str_read;
+    while (!is.Finished()) {
+      // TotalBytes should equal to json_msg.
+      EXPECT_EQ(is.TotalBytes(), json_msg.size());
+      if (json_msg.size() - total_bytes_read >= expected_chunk_size) {
+        // BytesAvailable should equal to the chunk size unless we are reading
+        // the last message.
+        EXPECT_EQ(is.BytesAvailable(), expected_chunk_size);
+      }
+
+      is.Next(&data, &size);
+      total_bytes_read += size;
+      str_read += std::string(static_cast<const char*>(data), size);
+
+      if (json_msg.size() - total_bytes_read >= expected_chunk_size) {
+        // size should equal to the expected_chunk_size unless it's the last
+        // message.
+        EXPECT_EQ(size, expected_chunk_size);
+      }
+      if (total_bytes_read == json_msg.size()) {
+        // Stream should be finished
+        EXPECT_TRUE(is.Finished());
+      }
+    }
+    EXPECT_EQ(total_bytes_read, json_msg.size());
+    EXPECT_EQ(str_read, json_msg);
+
+    // Reset should reset everything as if Next() is not called.
+    is.Reset();
+    EXPECT_EQ(is.TotalBytes(), json_msg.size());
+    EXPECT_EQ(is.BytesAvailable(), expected_chunk_size);
+    EXPECT_FALSE(is.Finished());
+  }
 }
 
-is.
-Next(& data, & size
-);
-total_bytes_read +=
-size;
-str_read += std::string(static_cast
-<const char*>(data), size
-);
+TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorBytesProto) {
+  // JSON message containing "Hello World!" encoded in base64 string.
+  absl::string_view json_msg = R"({"payload":"SGVsbG8gV29ybGQh"})";
+  absl::string_view expected_decoded_payload = "Hello World!";
 
-if (json_msg.
-size()
-- total_bytes_read >= expected_chunk_size) {
-// size should equal to the expected_chunk_size unless it's the last
-// message.
-EXPECT_EQ(size, expected_chunk_size
-);
-}
-if (total_bytes_read == json_msg.
-size()
-) {
-// Stream should be finished
-EXPECT_TRUE(is
-.
-Finished()
-);
-}
-}
-EXPECT_EQ(total_bytes_read, json_msg
-.
-size()
-);
-EXPECT_EQ(str_read, json_msg
-);
+  const std::string proto_str =
+      ParseJsonMessageToProtoMessage(json_msg, "BytesPayload", 1);
 
-// Reset should reset everything as if Next() is not called.
-is.
-Reset();
-EXPECT_EQ(is
-.
-TotalBytes(), json_msg
-.
-size()
-);
-EXPECT_EQ(is
-.
-BytesAvailable(), expected_chunk_size
-);
-EXPECT_FALSE(is
-.
-Finished()
-);
-}
+  // Verification - decoded message should equal the encoded one.
+  BytesPayload actual_proto;
+  actual_proto.ParseFromString(proto_str);
+  EXPECT_EQ(expected_decoded_payload, actual_proto.payload());
 }
 
-TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorBytesProto
-) {
-// JSON message containing "Hello World!" encoded in base64 string.
-absl::string_view json_msg = R"({"payload":"SGVsbG8gV29ybGQh"})";
-absl::string_view expected_decoded_payload = "Hello World!";
-
-const std::string proto_str =
-    ParseJsonMessageToProtoMessage(json_msg, "BytesPayload", 1);
-
-// Verification - decoded message should equal the encoded one.
-BytesPayload actual_proto;
-actual_proto.
-ParseFromString(proto_str);
-EXPECT_EQ(expected_decoded_payload, actual_proto
-.
-payload()
-);
-}
-
-TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorArrayProto
-) {
-IntegrationWithJsonRequestTranslatorArrayProtoHelper<Int32ArrayPayload>(
-"Int32ArrayPayload");
-IntegrationWithJsonRequestTranslatorArrayProtoHelper<DoubleArrayPayload>(
-"DoubleArrayPayload");
-IntegrationWithJsonRequestTranslatorArrayProtoHelper<StringArrayPayload>(
-"StringArrayPayload");
+TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorArrayProto) {
+  IntegrationWithJsonRequestTranslatorArrayProtoHelper<Int32ArrayPayload>(
+      "Int32ArrayPayload");
+  IntegrationWithJsonRequestTranslatorArrayProtoHelper<DoubleArrayPayload>(
+      "DoubleArrayPayload");
+  IntegrationWithJsonRequestTranslatorArrayProtoHelper<StringArrayPayload>(
+      "StringArrayPayload");
 }
 
 TEST(BenchmarkInputStreamTest,
-    IntegrationWithJsonRequestTranslatorNestedProto
-) {
-// JSON message containing 0 and 2 layers of nesetd payload message
-absl::string_view expected_payload = "Hello World!";
-absl::string_view nested_field_name = "nested";
-const std::string zero_layer_json_msg =
-    GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
-const std::string two_layers_json_msg =
-    GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
+     IntegrationWithJsonRequestTranslatorNestedProto) {
+  // JSON message containing 0 and 2 layers of nesetd payload message
+  absl::string_view expected_payload = "Hello World!";
+  absl::string_view nested_field_name = "nested";
+  const std::string zero_layer_json_msg =
+      GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
+  const std::string two_layers_json_msg =
+      GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
 
-const std::string zero_layer_proto_str =
-    ParseJsonMessageToProtoMessage(zero_layer_json_msg, "NestedPayload", 1);
-const std::string two_layer_proto_str =
-    ParseJsonMessageToProtoMessage(two_layers_json_msg, "NestedPayload", 1);
+  const std::string zero_layer_proto_str =
+      ParseJsonMessageToProtoMessage(zero_layer_json_msg, "NestedPayload", 1);
+  const std::string two_layer_proto_str =
+      ParseJsonMessageToProtoMessage(two_layers_json_msg, "NestedPayload", 1);
 
-EXPECT_EQ(GetNestedProtoLayer(zero_layer_proto_str),
-0);
-EXPECT_EQ(GetNestedProtoLayer(two_layer_proto_str),
-2);
+  EXPECT_EQ(GetNestedProtoLayer(zero_layer_proto_str), 0);
+  EXPECT_EQ(GetNestedProtoLayer(two_layer_proto_str), 2);
 }
 
 TEST(BenchmarkInputStreamTest,
-    IntegrationWithJsonRequestTranslatorSstructProto
-) {
-absl::string_view expected_payload = "Hello World!";
-absl::string_view nested_field_name = "nested";
-const std::string zero_layer_json_msg =
-    GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
-const std::string two_layers_json_msg =
-    GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
+     IntegrationWithJsonRequestTranslatorSstructProto) {
+  absl::string_view expected_payload = "Hello World!";
+  absl::string_view nested_field_name = "nested";
+  const std::string zero_layer_json_msg =
+      GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
+  const std::string two_layers_json_msg =
+      GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
 
-const std::string zero_layer_proto_str =
-    ParseJsonMessageToProtoMessage(zero_layer_json_msg,
-                                   "google.protobuf.Struct",
-                                   1);
-const std::string two_layer_proto_str =
-    ParseJsonMessageToProtoMessage(two_layers_json_msg,
-                                   "google.protobuf.Struct",
-                                   1);
+  const std::string zero_layer_proto_str =
+      ParseJsonMessageToProtoMessage(zero_layer_json_msg,
+                                     "google.protobuf.Struct",
+                                     1);
+  const std::string two_layer_proto_str =
+      ParseJsonMessageToProtoMessage(two_layers_json_msg,
+                                     "google.protobuf.Struct",
+                                     1);
 
-EXPECT_EQ(GetStructProtoLayer(zero_layer_proto_str,
-                              std::string(nested_field_name)),
-0);
-EXPECT_EQ(GetStructProtoLayer(two_layer_proto_str,
-                              std::string(nested_field_name)),
-2);
+  EXPECT_EQ(GetStructProtoLayer(zero_layer_proto_str,
+                                std::string(nested_field_name)), 0);
+  EXPECT_EQ(GetStructProtoLayer(two_layer_proto_str,
+                                std::string(nested_field_name)), 2);
 }
 
 TEST(BenchmarkInputStreamTest,
-    IntegrationWithJsonRequestTranslatorChunkMessage
-) {
-// JSON message containing "Hello World!"
-absl::string_view expected_payload = "Hello World!";
-const std::string
-    json_msg = absl::StrFormat(R"({"payload":"%s"})", expected_payload);
-uint64_t chunk_size_input[] = {1, 2, 4, 8};
+     IntegrationWithJsonRequestTranslatorChunkMessage) {
+  // JSON message containing "Hello World!"
+  absl::string_view expected_payload = "Hello World!";
+  const std::string
+      json_msg = absl::StrFormat(R"({"payload":"%s"})", expected_payload);
+  uint64_t chunk_size_input[] = {1, 2, 4, 8};
 
-for (
-uint64_t chunk_size
-: chunk_size_input) {
-std::string proto_str =
-    ParseJsonMessageToProtoMessage(json_msg, "StringPayload", chunk_size);
+  for (uint64_t chunk_size: chunk_size_input) {
+    std::string proto_str =
+        ParseJsonMessageToProtoMessage(json_msg, "StringPayload", chunk_size);
 
-// Verification - decoded message should equal the encoded one.
-StringPayload actual_proto;
-actual_proto.
-ParseFromString(proto_str);
-EXPECT_EQ(expected_payload, actual_proto
-.
-payload()
-);
-}
+    // Verification - decoded message should equal the encoded one.
+    StringPayload actual_proto;
+    actual_proto.ParseFromString(proto_str);
+    EXPECT_EQ(expected_payload, actual_proto.payload());
+  }
 }
 
 } // namespace perf_benchmark
