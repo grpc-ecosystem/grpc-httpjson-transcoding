@@ -64,6 +64,27 @@ constexpr uint64_t kBytesPayloadLengthForStreaming = 1 << 20; // 1 MiB
 constexpr uint64_t kInt32ArrayPayloadLengthForStreaming = 1 << 14; // 16384
 // Used for Segmented StringPayload
 constexpr uint64_t kSegmentedStringPayloadLength = 1 << 20; // 1 MiB
+
+// Global type helper containing the type information of the benchmark_service
+// service config object.
+const TypeHelper& GetBenchmarkTypeHelper() {
+  static const auto* const kTypeHelper = [] {
+    // Load service config proto into Service object.
+    // Construct object on the heap using new without calling its dtor to
+    // avoid destruction issue with static variables. However, this can cause
+    // unnecessary heap allocations and create minor performance concerns.
+    // For a small benchmark script, this is okay.
+    auto* service = new google::api::Service();
+    GOOGLE_CHECK_OK(
+        LoadService(std::string(kServiceConfigTextProtoFile), service));
+
+    // Create a TypeHelper based on the service config.
+    // Construct object on the heap for the same reason as the Service config.
+    auto* type_helper = new TypeHelper(service->types(), service->enums());
+    return type_helper;
+  }();
+  return *kTypeHelper;
+}
 }
 
 // Helper method to run Json Translation benchmark.
@@ -83,15 +104,8 @@ absl::StatusOr<std::string> BenchmarkJsonTranslation(::benchmark::State& state,
                                                      bool streaming,
                                                      uint64_t stream_size,
                                                      uint64_t chunk_per_msg) {
-  // Load service config proto into Service object
-  google::api::Service service;
-  auto status = LoadService(std::string(kServiceConfigTextProtoFile), &service);
-  if (!status.ok()) {
-    return status;
-  }
-
-  // Create a TypeHelper based on the service config
-  TypeHelper type_helper(service.types(), service.enums());
+  // Retrieve global type helper
+  const TypeHelper& type_helper = GetBenchmarkTypeHelper();
 
   // Get message type
   const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(

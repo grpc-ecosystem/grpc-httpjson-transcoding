@@ -16,7 +16,6 @@
 //
 #include <fstream>
 #include <sstream>
-#include <utility>
 #include <limits>
 #include "perf_benchmark/utils.h"
 #include "google/protobuf/text_format.h"
