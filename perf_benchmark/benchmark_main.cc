@@ -63,7 +63,7 @@ constexpr uint64_t kBytesPayloadLengthForStreaming = 1 << 20; // 1 MiB
 constexpr uint64_t kInt32ArrayPayloadLengthForStreaming = 1 << 14; // 16384
 // Used for Segmented StringPayload
 constexpr uint64_t kSegmentedStringPayloadLength = 1 << 20; // 1 MiB
-constexpr uint64_t kSegmentedStringStreamingNumChunksPerMsg = 1 << 12; // 4096
+constexpr uint64_t kSegmentedStringStreamingNumChunksPerMsg = 1 << 8; // 256
 
 // Global type helper containing the type information of the benchmark_service
 // service config object.
@@ -326,7 +326,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
                                        uint64_t payload_length,
                                        bool streaming,
                                        uint64_t stream_size,
-                                       uint64_t chunk_per_msg) {
+                                       uint64_t num_chunks_per_msg) {
   // We are using GetRandomAlphanumericString instead of GetRandomBytesString
   // because JSON format reserves characters such as `"` and `\`.
   // We could generate `"` and `\` and escape them, but for simplicity, we are
@@ -340,7 +340,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
                                                  json_msg,
                                                  streaming,
                                                  stream_size,
-                                                 chunk_per_msg);
+                                                 num_chunks_per_msg);
   if (!status.ok()) {
     state.SkipWithError(status.ToString().c_str());
   }
@@ -355,11 +355,15 @@ static void BM_SegmentedStringPayloadFromJsonNonStreaming(::benchmark::State& st
 }
 
 static void BM_SegmentedStringPayloadFromJsonStreaming(::benchmark::State& state) {
+  // due to streaming, num_chunks_per_msg will be multiplied with the stream_size
+  uint64_t stream_size = state.range(0);
+  uint64_t num_chunks_per_msg =
+      kSegmentedStringStreamingNumChunksPerMsg * stream_size;
   BM_SegmentedStringPayloadFromJson(state,
                                     kSegmentedStringPayloadLength,
                                     true,
-                                    state.range(0),
-                                    1 << 8);
+                                    stream_size,
+                                    num_chunks_per_msg);
 }
 
 //
@@ -370,7 +374,7 @@ BENCHMARK_WITH_PERCENTILE(BM_SinglePayloadFromJsonNonStreaming)
     ->Arg(1 << 10) // 1 KiB
     ->Arg(1 << 20) // 1 MiB
     ->Arg(1 << 25); // 32 MiB
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming, 1);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SinglePayloadFromJsonStreaming);
 
 //
 // Independent benchmark variable: JSON array length.
@@ -380,7 +384,7 @@ BENCHMARK_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonNonStreaming)
     ->Arg(1 << 8) // 256 vals
     ->Arg(1 << 10) // 1024 vals
     ->Arg(1 << 14); // 16384 vals
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming, 1);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_Int32ArrayPayloadFromJsonStreaming);
 
 //
 // Independent benchmark variable: JSON value data type.
@@ -407,8 +411,8 @@ BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(8) // nested with 8 layers
         // More than 32 layers would fail the parsing for struct proto.
     ->Arg(32); // nested with 32 layers
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonStreaming, 1);
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming, 1);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonStreaming);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
 
 //
 // Independent benchmark variable: Message chunk per message
@@ -418,8 +422,7 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
     ->Arg(1 << 4) // 16 chunks per message
     ->Arg(1 << 8) // 256 chunks per message
     ->Arg(1 << 12); // 4096 chunks per message
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonStreaming,
-                                    kSegmentedStringStreamingNumChunksPerMsg);
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonStreaming);
 
 // Benchmark Main function
 BENCHMARK_MAIN();
