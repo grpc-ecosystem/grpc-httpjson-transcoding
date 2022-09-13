@@ -238,10 +238,10 @@ TEST(BenchmarkInputStreamTest,
                                                      nested_field_name,
                                                      "payload",
                                                      "Hello World!");
-    const std::string zero_layer_proto_str =
+    const std::string proto_str =
         ParseJsonMessageToProtoMessage(json_msg, "NestedPayload", 1);
 
-    EXPECT_EQ(GetNestedProtoLayer(zero_layer_proto_str), num_nested_layer);
+    EXPECT_EQ(GetNestedProtoLayer(proto_str), num_nested_layer);
   }
 }
 
