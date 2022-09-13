@@ -231,45 +231,35 @@ TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorArrayProto) {
 
 TEST(BenchmarkInputStreamTest,
      IntegrationWithJsonRequestTranslatorNestedProto) {
-  // JSON message containing 0 and 2 layers of nesetd payload message
-  absl::string_view expected_payload = "Hello World!";
   absl::string_view nested_field_name = "nested";
-  const std::string zero_layer_json_msg =
-      GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
-  const std::string two_layers_json_msg =
-      GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
+  uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
+  for (uint64_t num_nested_layer: num_nested_layer_input) {
+    const std::string json_msg = GetNestedJsonString(num_nested_layer,
+                                                     nested_field_name,
+                                                     "payload",
+                                                     "Hello World!");
+    const std::string zero_layer_proto_str =
+        ParseJsonMessageToProtoMessage(json_msg, "NestedPayload", 1);
 
-  const std::string zero_layer_proto_str =
-      ParseJsonMessageToProtoMessage(zero_layer_json_msg, "NestedPayload", 1);
-  const std::string two_layer_proto_str =
-      ParseJsonMessageToProtoMessage(two_layers_json_msg, "NestedPayload", 1);
-
-  EXPECT_EQ(GetNestedProtoLayer(zero_layer_proto_str), 0);
-  EXPECT_EQ(GetNestedProtoLayer(two_layer_proto_str), 2);
+    EXPECT_EQ(GetNestedProtoLayer(zero_layer_proto_str), num_nested_layer);
+  }
 }
 
 TEST(BenchmarkInputStreamTest,
-     IntegrationWithJsonRequestTranslatorSstructProto) {
-  absl::string_view expected_payload = "Hello World!";
+     IntegrationWithJsonRequestTranslatorStructProto) {
   absl::string_view nested_field_name = "nested";
-  const std::string zero_layer_json_msg =
-      GetNestedJsonString(0, nested_field_name, "payload", expected_payload);
-  const std::string two_layers_json_msg =
-      GetNestedJsonString(2, nested_field_name, "payload", expected_payload);
+  uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
+  for (uint64_t num_nested_layer: num_nested_layer_input) {
+    const std::string json_msg = GetNestedJsonString(num_nested_layer,
+                                                     nested_field_name,
+                                                     "payload",
+                                                     "Hello World!");
+    const std::string proto_str =
+        ParseJsonMessageToProtoMessage(json_msg, "google.protobuf.Struct", 1);
 
-  const std::string zero_layer_proto_str =
-      ParseJsonMessageToProtoMessage(zero_layer_json_msg,
-                                     "google.protobuf.Struct",
-                                     1);
-  const std::string two_layer_proto_str =
-      ParseJsonMessageToProtoMessage(two_layers_json_msg,
-                                     "google.protobuf.Struct",
-                                     1);
-
-  EXPECT_EQ(GetStructProtoLayer(zero_layer_proto_str,
-                                std::string(nested_field_name)), 0);
-  EXPECT_EQ(GetStructProtoLayer(two_layer_proto_str,
-                                std::string(nested_field_name)), 2);
+    EXPECT_EQ(GetStructProtoLayer(proto_str, std::string(nested_field_name)),
+              num_nested_layer);
+  }
 }
 
 TEST(BenchmarkInputStreamTest,
