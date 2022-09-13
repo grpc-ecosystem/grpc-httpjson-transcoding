@@ -90,7 +90,7 @@ class ResponseToJsonTranslatorTestRun {
     // While we still have expected messages before or at the current position
     // try to match.
     while (next_expected_ != std::end(expected_) &&
-           next_expected_->at <= position_) {
+        next_expected_->at <= position_) {
       // Check the status first
       if (!translator_->Status().ok()) {
         ADD_FAILURE() << "Error: " << translator_->Status().message()
@@ -306,7 +306,7 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
 
   // Adds a message to be tested and the corresponding expected JSON. Must be
   // used before Build().
-  template <typename MessageType>
+  template<typename MessageType>
   void AddMessage(const std::string& proto_text, std::string expected_json) {
     // Generate a gRPC message and add it to the input
     input_ += GenerateGrpcMessage<MessageType>(proto_text);
@@ -410,6 +410,22 @@ TEST_F(ResponseToJsonTranslatorTest, Nested) {
   EXPECT_TRUE(tc->Test(3, 0.2));
 }
 
+// This test currently would time out
+TEST_F(ResponseToJsonTranslatorTest, Struct) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("google.protobuf.Struct");
+  AddMessage<::google::protobuf::Struct>(
+      R"(
+        fields {
+          key: "payload"
+          value { string_value: "Hello World!" }
+        })",
+      R"({ "payload" : "Hello World!"})");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+}
+
 TEST_F(ResponseToJsonTranslatorTest, NestedAlwaysPrintPrimitiveFields) {
   ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
   SetMessageType("Book");
@@ -477,7 +493,7 @@ TEST_F(ResponseToJsonTranslatorTest, DifferentSizes) {
   SetMessageType("Shelf");
 
   auto sizes = {1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
-  for (auto size : sizes) {
+  for (auto size: sizes) {
     auto theme = GenerateInput("abcdefgh12345", size);
     AddMessage<Shelf>(R"(name : "1" theme : ")" + theme + R"(")",
                       R"({ "name" : "1",  "theme" : ")" + theme + R"("})");
@@ -636,7 +652,7 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingDifferentSizes) {
   SetStreaming(true);
 
   auto sizes = {1, 2, 3, 4, 5, 6, 10, 12, 100, 128, 256, 1024, 4096, 65537};
-  for (auto size : sizes) {
+  for (auto size: sizes) {
     auto theme = GenerateInput("abcdefgh12345", size);
     AddMessage<Shelf>(R"(name : "1" theme : ")" + theme + R"(")",
                       R"({ "name" : "1",  "theme" : ")" + theme + R"("})");
@@ -921,7 +937,7 @@ TEST_F(ResponseToJsonTranslatorTest, Streaming5KMessages) {
 
   // Check the status
   EXPECT_TRUE(translator.Status().ok())
-      << "Error " << translator.Status().message() << std::endl;
+            << "Error " << translator.Status().message() << std::endl;
 
   // Match the output array
   EXPECT_TRUE(ExpectJsonArrayEq(expected_json_array, actual_json_array));
