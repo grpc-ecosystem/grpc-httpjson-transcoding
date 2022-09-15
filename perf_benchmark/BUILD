@@ -104,6 +104,21 @@ cc_test(
         "benchmark_service.textproto",
     ],
     deps = [
+        ":benchmark_input_stream",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "benchmark_input_stream_translator_integration_test",
+    srcs = [
+        "benchmark_input_stream_translator_integration_test.cc",
+    ],
+    data = [
+        "benchmark_service.textproto",
+    ],
+    deps = [
         "com_google_protobuf_struct_cc_proto",
         ":benchmark_cc_proto",
         ":benchmark_input_stream",
