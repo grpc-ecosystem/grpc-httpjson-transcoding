@@ -23,10 +23,6 @@ namespace grpc {
 namespace transcoding {
 
 namespace perf_benchmark {
-namespace {
-constexpr absl::string_view kServiceConfigTextProtoFile =
-    "benchmark_service.textproto";
-}  // namespace
 
 TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
   absl::string_view json_msg_input[] = {
