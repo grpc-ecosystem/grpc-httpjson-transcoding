@@ -43,7 +43,6 @@ cc_binary(
         "benchmark_service.textproto",
     ],
     deps = [
-        ":benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",

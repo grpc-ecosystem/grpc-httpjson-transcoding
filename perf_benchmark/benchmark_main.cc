@@ -26,7 +26,6 @@
 #include "grpc_transcoding/request_message_translator.h"
 #include "grpc_transcoding/type_helper.h"
 
-#include "perf_benchmark/benchmark.pb.h"
 #include "perf_benchmark/benchmark_input_stream.h"
 #include "perf_benchmark/utils.h"
 
@@ -214,7 +213,6 @@ static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
 
 // Helper function for benchmarking translation from JSON to payload of
 // different types.
-template <class T>
 void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
                           bool streaming, uint64_t stream_size) {
   auto json_msg = absl::StrFormat(
@@ -229,18 +227,15 @@ void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
 
 static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  ArrayPayloadFromJson<Int32ArrayPayload>(state, kInt32ArrayPayloadMessageType,
-                                          false, 0);
+  ArrayPayloadFromJson(state, kInt32ArrayPayloadMessageType, false, 0);
 }
 static void BM_DoubleArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  ArrayPayloadFromJson<DoubleArrayPayload>(
-      state, kDoubleArrayPayloadMessageType, false, 0);
+  ArrayPayloadFromJson(state, kDoubleArrayPayloadMessageType, false, 0);
 }
 static void BM_StringArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  ArrayPayloadFromJson<StringArrayPayload>(
-      state, kStringArrayPayloadMessageType, false, 0);
+  ArrayPayloadFromJson(state, kStringArrayPayloadMessageType, false, 0);
 }
 
 // Helper function for benchmarking translation from nested JSON values.
