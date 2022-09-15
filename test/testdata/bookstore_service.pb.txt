@@ -374,6 +374,13 @@ types {
     type_url: "type.googleapis.com/google.protobuf.Value"
     json_name: "value"
   }
+  options {
+    name: "map_entry"
+    value {
+      type_url: "type.googleapis.com/google.protobuf.BoolValue"
+      value: ""
+    }
+  }
   source_context {
     file_name: "struct.proto"
   }
@@ -433,6 +440,19 @@ types {
   }
   source_context {
     file_name: "struct.proto"
+  }
+}
+types {
+  name: "google.protobuf.BoolValue"
+  fields {
+    kind: TYPE_BOOL
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
   }
 }
 enums {
