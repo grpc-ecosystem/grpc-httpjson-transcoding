@@ -410,7 +410,6 @@ TEST_F(ResponseToJsonTranslatorTest, Nested) {
   EXPECT_TRUE(tc->Test(3, 0.2));
 }
 
-// This test currently would time out
 TEST_F(ResponseToJsonTranslatorTest, StructValueFlat) {
   ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
   SetMessageType("google.protobuf.Struct");
