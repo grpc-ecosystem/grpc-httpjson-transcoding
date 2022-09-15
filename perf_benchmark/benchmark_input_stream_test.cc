@@ -14,15 +14,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "gtest/gtest.h"
 #include "perf_benchmark/benchmark_input_stream.h"
-#include "perf_benchmark/utils.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
+#include "google/api/service.pb.h"
 #include "grpc_transcoding/json_request_translator.h"
 #include "grpc_transcoding/type_helper.h"
+#include "gtest/gtest.h"
 #include "perf_benchmark/benchmark.pb.h"
-#include "google/api/service.pb.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/escaping.h"
+#include "perf_benchmark/utils.h"
 
 namespace google {
 namespace grpc {
@@ -30,8 +30,8 @@ namespace transcoding {
 
 namespace perf_benchmark {
 namespace {
-constexpr absl::string_view
-    kServiceConfigTextProtoFile = "benchmark_service.textproto";
+constexpr absl::string_view kServiceConfigTextProtoFile =
+    "benchmark_service.textproto";
 
 // Global type helper containing the type information of the benchmark_service
 // service config object.
@@ -70,8 +70,8 @@ std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
   request_info.message_type = type;
 
   std::string message;
-  JsonRequestTranslator translator
-      (type_helper.Resolver(), &is, request_info, false, false);
+  JsonRequestTranslator translator(type_helper.Resolver(), &is, request_info,
+                                   false, false);
   MessageStream& out = translator.Output();
   EXPECT_TRUE(out.Status().ok());
 
@@ -83,8 +83,9 @@ std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
 
 // class T protobuf class payload field type needs to support parsing 0 such as
 // int32, string, and double.
-template<class T>
-void IntegrationWithJsonRequestTranslatorArrayProtoHelper(absl::string_view msg_type) {
+template <class T>
+void IntegrationWithJsonRequestTranslatorArrayProtoHelper(
+    absl::string_view msg_type) {
   // JSON message containing an array of 3 zeros
   absl::string_view json_msg = R"({"payload":["0","0","0"]})";
   const uint64_t arr_length = 3;
@@ -123,15 +124,15 @@ uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
   return actual_layers;
 }
 
-} // namespace
+}  // namespace
 
 TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
-  absl::string_view json_msg_input[] =
-      {R"({"Hello":"World!"})",
-       R"([{"Hello":"World!"}])",
-       R"([{"Hello":"World!"},{"Hello":"World, Again!"}])"};
+  absl::string_view json_msg_input[] = {
+      R"({"Hello":"World!"})",
+      R"([{"Hello":"World!"}])",
+      R"([{"Hello":"World!"},{"Hello":"World, Again!"}])"};
 
-  for (auto& json_msg: json_msg_input) {
+  for (auto& json_msg : json_msg_input) {
     BenchmarkZeroCopyInputStream is(std::string(json_msg), 1);
 
     // TotalBytes and BytesAvailable should equal to json_msg.
@@ -160,10 +161,10 @@ TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
 
 TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamChunk) {
   absl::string_view json_msg = R"({"Hello":"World!"})";
-  const uint64_t
-      chunk_per_msg_input[] = {1, 2, 4, json_msg.size() - 1, json_msg.size()};
+  const uint64_t chunk_per_msg_input[] = {1, 2, 4, json_msg.size() - 1,
+                                          json_msg.size()};
 
-  for (uint64_t chunk_per_msg: chunk_per_msg_input) {
+  for (uint64_t chunk_per_msg : chunk_per_msg_input) {
     BenchmarkZeroCopyInputStream is(std::string(json_msg), chunk_per_msg);
     uint64_t expected_chunk_size = json_msg.size() / chunk_per_msg;
 
@@ -233,11 +234,9 @@ TEST(BenchmarkInputStreamTest,
      IntegrationWithJsonRequestTranslatorNestedProto) {
   absl::string_view nested_field_name = "nested";
   uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
-  for (uint64_t num_nested_layer: num_nested_layer_input) {
-    const std::string json_msg = GetNestedJsonString(num_nested_layer,
-                                                     nested_field_name,
-                                                     "payload",
-                                                     "Hello World!");
+  for (uint64_t num_nested_layer : num_nested_layer_input) {
+    const std::string json_msg = GetNestedJsonString(
+        num_nested_layer, nested_field_name, "payload", "Hello World!");
     const std::string proto_str =
         ParseJsonMessageToProtoMessage(json_msg, "NestedPayload", 1);
 
@@ -249,11 +248,9 @@ TEST(BenchmarkInputStreamTest,
      IntegrationWithJsonRequestTranslatorStructProto) {
   absl::string_view nested_field_name = "nested";
   uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
-  for (uint64_t num_nested_layer: num_nested_layer_input) {
-    const std::string json_msg = GetNestedJsonString(num_nested_layer,
-                                                     nested_field_name,
-                                                     "payload",
-                                                     "Hello World!");
+  for (uint64_t num_nested_layer : num_nested_layer_input) {
+    const std::string json_msg = GetNestedJsonString(
+        num_nested_layer, nested_field_name, "payload", "Hello World!");
     const std::string proto_str =
         ParseJsonMessageToProtoMessage(json_msg, "google.protobuf.Struct", 1);
 
@@ -266,11 +263,11 @@ TEST(BenchmarkInputStreamTest,
      IntegrationWithJsonRequestTranslatorChunkMessage) {
   // JSON message containing "Hello World!"
   absl::string_view expected_payload = "Hello World!";
-  const std::string
-      json_msg = absl::StrFormat(R"({"payload":"%s"})", expected_payload);
+  const std::string json_msg =
+      absl::StrFormat(R"({"payload":"%s"})", expected_payload);
   uint64_t chunk_size_input[] = {1, 2, 4, 8};
 
-  for (uint64_t chunk_size: chunk_size_input) {
+  for (uint64_t chunk_size : chunk_size_input) {
     std::string proto_str =
         ParseJsonMessageToProtoMessage(json_msg, "StringPayload", chunk_size);
 
@@ -281,8 +278,8 @@ TEST(BenchmarkInputStreamTest,
   }
 }
 
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

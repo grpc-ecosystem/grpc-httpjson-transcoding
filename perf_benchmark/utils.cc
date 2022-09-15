@@ -14,14 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include <fstream>
-#include <sstream>
-#include <limits>
 #include "perf_benchmark/utils.h"
-#include "google/protobuf/text_format.h"
-#include "absl/strings/escaping.h"
+#include <fstream>
+#include <limits>
+#include <sstream>
 #include "absl/random/random.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
+#include "google/protobuf/text_format.h"
 #include "nlohmann/json.hpp"
 
 namespace google {
@@ -35,8 +35,8 @@ namespace pb = ::google::protobuf;
 absl::StatusOr<std::string> LoadFile(absl::string_view file_name) {
   std::ifstream ifs(file_name.data(), std::ifstream::in);
   if (!ifs) {
-    return absl::InvalidArgumentError(absl::StrCat("Could not open ",
-                                                   file_name));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Could not open ", file_name));
   }
   std::ostringstream ss;
   ss << ifs.rdbuf();
@@ -59,15 +59,18 @@ absl::Status LoadService(absl::string_view config_pb_txt_file,
 
   if (!pb::TextFormat::ParseFromString(*config, service)) {
     return absl::InvalidArgumentError(absl::StrCat(
-        "Could not parse service config from ",
-        config_pb_txt_file));
+        "Could not parse service config from ", config_pb_txt_file));
   } else {
     return absl::OkStatus();
   }
 }
 double GetPercentile(const std::vector<double>& v, double perc) {
-  if (perc < 0) { perc = 0; }
-  if (perc > 100) { perc = 100; }
+  if (perc < 0) {
+    perc = 0;
+  }
+  if (perc > 100) {
+    perc = 100;
+  }
   // Making a copy since std::nth_element mutates the vector
   auto copy = std::vector<double>(v);
   size_t rough_position = copy.size() * perc / 100;
@@ -107,8 +110,7 @@ std::string GetRandomInt32ArrayString(uint64_t length) {
   std::ostringstream os;
   os << '[';
   for (int i = 0; i < length; ++i) {
-    os << int32_t(absl::Uniform(bitgen,
-                                std::numeric_limits<int32_t>::min(),
+    os << int32_t(absl::Uniform(bitgen, std::numeric_limits<int32_t>::min(),
                                 std::numeric_limits<int32_t>::max()));
     if (i != length - 1) {
       os << ',';
@@ -118,7 +120,8 @@ std::string GetRandomInt32ArrayString(uint64_t length) {
   return os.str();
 }
 
-std::string GetRepeatedValueArrayString(absl::string_view val, uint64_t length) {
+std::string GetRepeatedValueArrayString(absl::string_view val,
+                                        uint64_t length) {
   std::ostringstream os;
   os << '[';
   for (int i = 0; i < length; ++i) {
@@ -164,9 +167,8 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
   ss << ']';
   return ss.str();
 }
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
-
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

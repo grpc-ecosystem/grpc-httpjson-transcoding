@@ -23,8 +23,8 @@ namespace grpc {
 namespace transcoding {
 
 namespace perf_benchmark {
-BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
-                                                           uint64_t num_chunks_per_msg)
+BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(
+    std::string msg, uint64_t num_chunks_per_msg)
     : finished_(false),
       msg_(std::move(msg)),
       chunk_size_(msg_.size() / num_chunks_per_msg),
@@ -49,7 +49,7 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
     return false;
   }
   *data = msg_.data() + pos_;
-  if (pos_ + chunk_size_ >= msg_.size()) { // last message
+  if (pos_ + chunk_size_ >= msg_.size()) {  // last message
     *size = msg_.size() - pos_;
     finished_ = true;
   } else {
@@ -67,8 +67,8 @@ void BenchmarkZeroCopyInputStream::Reset() {
 uint64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
   return msg_.size();
 }
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

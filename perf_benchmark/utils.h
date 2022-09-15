@@ -19,9 +19,9 @@
 
 #include <string>
 
-#include "google/api/service.pb.h"
-#include "absl/strings/string_view.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
+#include "google/api/service.pb.h"
 
 namespace google {
 namespace grpc {
@@ -81,11 +81,11 @@ std::string GetNestedJsonString(uint64_t layers,
 // for stream_size > 1 -> "[json_msg,...,json_msg]"
 std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
 
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google
 
 // Macros
 
@@ -96,29 +96,29 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
 // it is recommended to run with --benchmark_repetitions=1000 CLI argument to
 // get comparable results.
 // Use this marco the same way as BENCHMARK macro.
-#define BENCHMARK_WITH_PERCENTILE(func)                                       \
-    BENCHMARK(func)                                                           \
-    ->ComputeStatistics("p25", [](const std::vector<double>& v) -> double {   \
-      return GetPercentile(v, 25);                                            \
-    })                                                                        \
-    ->ComputeStatistics("p75", [](const std::vector<double>& v) -> double {   \
-      return GetPercentile(v, 75);                                            \
-    })                                                                        \
-    ->ComputeStatistics("p90", [](const std::vector<double>& v) -> double {   \
-      return GetPercentile(v, 90);                                            \
-    })                                                                        \
-    ->ComputeStatistics("p99", [](const std::vector<double>& v) -> double {   \
-      return GetPercentile(v, 99);                                            \
-    })                                                                        \
-    ->ComputeStatistics("p999", [](const std::vector<double>& v) -> double {  \
-      return GetPercentile(v, 99.9);                                          \
-    })
+#define BENCHMARK_WITH_PERCENTILE(func)                                        \
+  BENCHMARK(func)                                                              \
+      ->ComputeStatistics("p25",                                               \
+                          [](const std::vector<double>& v) -> double {         \
+                            return GetPercentile(v, 25);                       \
+                          })                                                   \
+      ->ComputeStatistics("p75",                                               \
+                          [](const std::vector<double>& v) -> double {         \
+                            return GetPercentile(v, 75);                       \
+                          })                                                   \
+      ->ComputeStatistics("p90",                                               \
+                          [](const std::vector<double>& v) -> double {         \
+                            return GetPercentile(v, 90);                       \
+                          })                                                   \
+      ->ComputeStatistics("p99",                                               \
+                          [](const std::vector<double>& v) -> double {         \
+                            return GetPercentile(v, 99);                       \
+                          })                                                   \
+      ->ComputeStatistics("p999", [](const std::vector<double>& v) -> double { \
+        return GetPercentile(v, 99.9);                                         \
+      })
 
-#define BENCHMARK_STREAMING_WITH_PERCENTILE(func)                             \
-    BENCHMARK_WITH_PERCENTILE(func)                                           \
-    ->Arg(1)                                                                  \
-    ->Arg(1 << 2)                                                             \
-    ->Arg(1 << 4)                                                             \
-    ->Arg(1 << 6)
+#define BENCHMARK_STREAMING_WITH_PERCENTILE(func) \
+  BENCHMARK_WITH_PERCENTILE(func)->Arg(1)->Arg(1 << 2)->Arg(1 << 4)->Arg(1 << 6)
 
-#endif //PERF_BENCHMARK_UTILS_H_
+#endif  // PERF_BENCHMARK_UTILS_H_

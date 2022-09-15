@@ -17,9 +17,9 @@
 #ifndef PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
 #define PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
 
-#include "grpc_transcoding/transcoder_input_stream.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/stubs/logging.h"
+#include "grpc_transcoding/transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {
@@ -73,10 +73,10 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   uint64_t pos_;
 };
 
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google
 
-#endif //PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
+#endif  // PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
