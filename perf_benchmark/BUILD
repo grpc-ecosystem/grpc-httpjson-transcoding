@@ -43,7 +43,6 @@ cc_binary(
         "benchmark_service.textproto",
     ],
     deps = [
-        ":benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
@@ -104,16 +103,28 @@ cc_test(
         "benchmark_service.textproto",
     ],
     deps = [
+        ":benchmark_input_stream",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "benchmark_input_stream_translator_integration_test",
+    srcs = [
+        "benchmark_input_stream_translator_integration_test.cc",
+    ],
+    data = [
+        "benchmark_service.textproto",
+    ],
+    deps = [
         "com_google_protobuf_struct_cc_proto",
         ":benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
-        "//src:response_to_json_translator",
         "//src:type_helper",
-        "@com_github_nlohmann_json//:json",
         "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protobuf",
     ],
 )

@@ -410,6 +410,47 @@ TEST_F(ResponseToJsonTranslatorTest, Nested) {
   EXPECT_TRUE(tc->Test(3, 0.2));
 }
 
+TEST_F(ResponseToJsonTranslatorTest, StructValueFlat) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("google.protobuf.Struct");
+  AddMessage<::google::protobuf::Struct>(
+      R"(
+        fields {
+          key: "payload"
+          value { string_value: "Hello World!" }
+        })",
+      R"({"payload" : "Hello World!"})");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 0.2));
+}
+
+TEST_F(ResponseToJsonTranslatorTest, StructValueNested) {
+  ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
+  SetMessageType("google.protobuf.Struct");
+  AddMessage<::google::protobuf::Struct>(
+      R"(
+        fields {
+          key: "nested"
+          value {
+            struct_value: {
+              fields {
+                key: "payload"
+                value { string_value: "Hello World!" }
+              }
+            }
+          }
+        })",
+      R"({"nested" : {"payload" : "Hello World!"}})");
+
+  auto tc = Build();
+  EXPECT_TRUE(tc->Test(1, 1.0));
+  EXPECT_TRUE(tc->Test(2, 1.0));
+  EXPECT_TRUE(tc->Test(3, 0.2));
+}
+
 TEST_F(ResponseToJsonTranslatorTest, NestedAlwaysPrintPrimitiveFields) {
   ASSERT_TRUE(LoadService("bookstore_service.pb.txt"));
   SetMessageType("Book");

@@ -23,13 +23,13 @@ namespace grpc {
 namespace transcoding {
 
 namespace perf_benchmark {
-BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(std::string msg,
-                                                           uint64_t num_chunks_per_msg)
+BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(
+    std::string json_data, uint64_t num_checks)
     : finished_(false),
-      msg_(std::move(msg)),
-      chunk_size_(msg_.size() / num_chunks_per_msg),
+      msg_(std::move(json_data)),
+      chunk_size_(msg_.size() / num_checks),
       pos_(0) {
-  GOOGLE_CHECK(num_chunks_per_msg <= msg_.size());
+  GOOGLE_CHECK(num_checks <= msg_.size());
 }
 
 int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
@@ -50,7 +50,7 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
   }
 
   *data = msg_.data() + pos_;
-  if (pos_ + chunk_size_ >= msg_.size()) { // last message to be sent
+  if (pos_ + chunk_size_ >= msg_.size()) {  // last message to be sent
     *size = msg_.size() - pos_;
   } else {
     *size = chunk_size_;
@@ -72,16 +72,16 @@ void BenchmarkZeroCopyInputStream::Reset() {
 uint64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
   return msg_.size();
 }
+
 void BenchmarkZeroCopyInputStream::BackUp(int count) {
   GOOGLE_CHECK(count <= pos_);
   pos_ -= count;
   finished_ = false;
 }
-int64_t BenchmarkZeroCopyInputStream::ByteCount() const {
-  return pos_;
-}
-} // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+int64_t BenchmarkZeroCopyInputStream::ByteCount() const { return pos_; }
+}  // namespace perf_benchmark
+
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

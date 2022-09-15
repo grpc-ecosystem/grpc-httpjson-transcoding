@@ -14,11 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
-#include "gtest/gtest.h"
 #include "perf_benchmark/utils.h"
+#include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_split.h"
-#include "absl/strings/ascii.h"
+#include "gtest/gtest.h"
 
 namespace google {
 namespace grpc {
@@ -28,7 +28,7 @@ namespace perf_benchmark {
 
 TEST(UtilsTest, GetRandomBytesStringLength) {
   const int test_length_input[] = {0, 1, 10, 100};
-  for (auto length: test_length_input) {
+  for (auto length : test_length_input) {
     // Regular random string
     EXPECT_EQ(GetRandomBytesString(length, false).length(), length);
 
@@ -57,7 +57,7 @@ TEST(UtilsTest, GetPercentile) {
 }
 
 TEST(UtilsTest, GetRandomAlphanumericString) {
-  for (auto ch: GetRandomAlphanumericString(100)) {
+  for (auto ch : GetRandomAlphanumericString(100)) {
     std::cout << ch << std::endl;
     EXPECT_TRUE(absl::ascii_isalnum(ch));
   }
@@ -65,22 +65,22 @@ TEST(UtilsTest, GetRandomAlphanumericString) {
 
 TEST(UtilsTest, GetRandomAlphanumericStringLength) {
   const int test_length_input[] = {0, 1, 10, 100};
-  for (auto length: test_length_input) {
+  for (auto length : test_length_input) {
     EXPECT_EQ(GetRandomAlphanumericString(length).length(), length);
   }
 }
 
 TEST(UtilsTest, GetRandomInt32ArrayString) {
   const int test_length_input[] = {0, 1, 10, 100};
-  for (auto length: test_length_input) {
+  for (auto length : test_length_input) {
     std::string res = GetRandomInt32ArrayString(length);
     EXPECT_EQ(res.front(), '[');
     EXPECT_EQ(res.back(), ']');
 
     // Verify length
-    std::vector<std::string>
-        split = absl::StrSplit(res.substr(1, res.size() - 2), ',');
-    if (!split.empty() && split.at(0) != "") { // if a delimiter is found
+    std::vector<std::string> split =
+        absl::StrSplit(res.substr(1, res.size() - 2), ',');
+    if (!split.empty() && split.at(0) != "") {  // if a delimiter is found
       EXPECT_EQ(split.size(), length);
     }
   }
@@ -90,17 +90,17 @@ TEST(UtilsTest, GetRepeatedValueArrayString) {
   const int test_length_input[] = {0, 1, 10, 100};
   absl::string_view test_val = "TEST";
   absl::string_view expected_json_val = R"("TEST")";
-  for (auto length: test_length_input) {
+  for (auto length : test_length_input) {
     std::string res = GetRepeatedValueArrayString(test_val, length);
     EXPECT_EQ(res.front(), '[');
     EXPECT_EQ(res.back(), ']');
 
     // Verify length
-    std::vector<std::string>
-        split = absl::StrSplit(res.substr(1, res.size() - 2), ',');
-    if (split.at(0) != "") { // if a delimiter is found
+    std::vector<std::string> split =
+        absl::StrSplit(res.substr(1, res.size() - 2), ',');
+    if (split.at(0) != "") {  // if a delimiter is found
       EXPECT_EQ(split.size(), length);
-      for (const auto& s: split) {
+      for (const auto& s : split) {
         EXPECT_EQ(expected_json_val, s);
       }
     }
@@ -110,22 +110,19 @@ TEST(UtilsTest, GetRepeatedValueArrayString) {
 TEST(UtilsTest, GetNestedJsonStringZeroLayer) {
   EXPECT_EQ(
       R"({"inner_val":"inner_key"})",
-      GetNestedJsonString(0, "doesnt_matter", "inner_val", "inner_key")
-  );
+      GetNestedJsonString(0, "doesnt_matter", "inner_val", "inner_key"));
 }
 
 TEST(UtilsTest, GetNestedJsonStringMultiLayers) {
   EXPECT_EQ(
       R"({"nested_field_name":{"inner_val":"inner_key"}})",
-      GetNestedJsonString(1, "nested_field_name", "inner_val", "inner_key")
-  );
+      GetNestedJsonString(1, "nested_field_name", "inner_val", "inner_key"));
   EXPECT_EQ(
       R"({"nested_field_name":{"nested_field_name":{"inner_val":"inner_key"}}})",
-      GetNestedJsonString(2, "nested_field_name", "inner_val", "inner_key")
-  );
+      GetNestedJsonString(2, "nested_field_name", "inner_val", "inner_key"));
 }
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google

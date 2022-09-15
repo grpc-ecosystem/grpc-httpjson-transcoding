@@ -17,9 +17,9 @@
 #ifndef PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
 #define PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
 
-#include "grpc_transcoding/transcoder_input_stream.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/stubs/logging.h"
+#include "grpc_transcoding/transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {
@@ -38,11 +38,15 @@ namespace perf_benchmark {
 class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
  public:
   // Pre-Conditions:
-  // - num_chunks_per_msg <= msg.size()
+  // - num_checks <= json_data.size()
   //
-  // Note: num_chunks_per_msg could be off by a few chunks due to int rounding.
-  explicit BenchmarkZeroCopyInputStream(std::string msg,
-                                        uint64_t num_chunks_per_msg);
+  // json_data - a std::string containing the JSON data to be read.
+  // num_chunks - controls the number of calls to Next() that would yield the
+  //              full JSON message.
+  // Note: the actual number of checks could be off by a few chunks due to int
+  // rounding.
+  explicit BenchmarkZeroCopyInputStream(std::string json_data,
+                                        uint64_t num_checks);
   ~BenchmarkZeroCopyInputStream() override = default;
 
   int64_t BytesAvailable() const override;
@@ -70,10 +74,10 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   uint64_t pos_;
 };
 
-} // namespace perf_benchmark
+}  // namespace perf_benchmark
 
-} // namespace transcoding
-} // namespace grpc
-} // namespace google
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google
 
-#endif //PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
+#endif  // PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
