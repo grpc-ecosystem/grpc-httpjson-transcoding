@@ -63,12 +63,12 @@ TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
 
 TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamChunk) {
   absl::string_view json_msg = R"({"Hello":"World!"})";
-  const uint64_t chunk_per_msg_input[] = {1, 2, 4, json_msg.size() - 1,
-                                          json_msg.size()};
+  const uint64_t num_checks_input[] = {1, 2, 4, json_msg.size() - 1,
+                                       json_msg.size()};
 
-  for (uint64_t chunk_per_msg : chunk_per_msg_input) {
-    BenchmarkZeroCopyInputStream is(std::string(json_msg), chunk_per_msg);
-    uint64_t expected_chunk_size = json_msg.size() / chunk_per_msg;
+  for (uint64_t num_checks : num_checks_input) {
+    BenchmarkZeroCopyInputStream is(std::string(json_msg), num_checks);
+    uint64_t expected_chunk_size = json_msg.size() / num_checks;
 
     // Reading data.
     const void* data = nullptr;

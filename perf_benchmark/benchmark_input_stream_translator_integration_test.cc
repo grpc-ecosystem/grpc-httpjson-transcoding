@@ -56,8 +56,8 @@ constexpr absl::string_view kServiceConfigTextProtoFile =
 
 std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
                                            absl::string_view msg_type,
-                                           uint64_t chunk_size) {
-  BenchmarkZeroCopyInputStream is(std::string(json_msg), chunk_size);
+                                           uint64_t num_checks) {
+  BenchmarkZeroCopyInputStream is(std::string(json_msg), num_checks);
   // Get message type from the global TypeHelper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
   const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
@@ -184,11 +184,11 @@ TEST(BenchmarkInputStreamTest,
   absl::string_view expected_payload = "Hello World!";
   const std::string json_msg =
       absl::StrFormat(R"({"payload":"%s"})", expected_payload);
-  uint64_t chunk_size_input[] = {1, 2, 4, 8};
+  uint64_t num_checks_input[] = {1, 2, 4, 8};
 
-  for (uint64_t chunk_size : chunk_size_input) {
+  for (uint64_t num_checks : num_checks_input) {
     std::string proto_str =
-        ParseJsonMessageToProtoMessage(json_msg, "StringPayload", chunk_size);
+        ParseJsonMessageToProtoMessage(json_msg, "StringPayload", num_checks);
 
     // Verification - decoded message should equal the encoded one.
     StringPayload actual_proto;
