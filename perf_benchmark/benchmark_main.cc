@@ -96,12 +96,12 @@ constexpr uint64_t kSegmentedStringStreamingNumChunksPerMsg = 1 << 8;  // 256
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
 //             number of `json_msg` will be fed into translation.
 // stream_size - Number of streaming messages.
-// chunk_per_msg - Number of data chunks per message.
+// num_checks - Number of calls to NextMessage() that yields the full message.
 absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
                                       absl::string_view msg_type,
                                       absl::string_view json_msg,
                                       bool streaming, uint64_t stream_size,
-                                      uint64_t chunk_per_msg) {
+                                      uint64_t num_checks) {
   // Retrieve global type helper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
 
@@ -124,10 +124,10 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
   if (streaming) {
     std::string streaming_msg = GetStreamedJson(json_msg, stream_size);
     is = absl::make_unique<BenchmarkZeroCopyInputStream>(streaming_msg,
-                                                         chunk_per_msg);
+                                                         num_checks);
   } else {
     is = absl::make_unique<BenchmarkZeroCopyInputStream>(std::string(json_msg),
-                                                         chunk_per_msg);
+                                                         num_checks);
   }
 
   // Benchmark the transcoding process
@@ -169,9 +169,8 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
 }
 
 // Helper function for benchmarking single bytes payload translation from JSON.
-void BM_SinglePayloadFromJson(::benchmark::State& state,
-                              uint64_t payload_length, bool streaming,
-                              uint64_t stream_size) {
+void SinglePayloadFromJson(::benchmark::State& state, uint64_t payload_length,
+                           bool streaming, uint64_t stream_size) {
   std::string json_msg = absl::StrFormat(
       R"({"payload" : "%s"})", GetRandomBytesString(payload_length, true));
   absl::Status status = BenchmarkJsonTranslation(
@@ -182,18 +181,17 @@ void BM_SinglePayloadFromJson(::benchmark::State& state,
 }
 
 static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
-  BM_SinglePayloadFromJson(state, state.range(0), false, 0);
+  SinglePayloadFromJson(state, state.range(0), false, 0);
 }
 
 static void BM_SinglePayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_SinglePayloadFromJson(state, kBytesPayloadLengthForStreaming, true,
-                           state.range(0));
+  SinglePayloadFromJson(state, kBytesPayloadLengthForStreaming, true,
+                        state.range(0));
 }
 
 // Helper function for benchmarking int32 array payload translation from JSON.
-void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
-                                  uint64_t array_length, bool streaming,
-                                  uint64_t stream_size) {
+void Int32ArrayPayloadFromJson(::benchmark::State& state, uint64_t array_length,
+                               bool streaming, uint64_t stream_size) {
   std::string json_msg = absl::StrFormat(
       R"({"payload" : %s})", GetRandomInt32ArrayString(array_length));
   absl::Status status =
@@ -206,20 +204,19 @@ void BM_Int32ArrayPayloadFromJson(::benchmark::State& state,
 
 static void BM_Int32ArrayPayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_Int32ArrayPayloadFromJson(state, state.range(0), false, 0);
+  Int32ArrayPayloadFromJson(state, state.range(0), false, 0);
 }
 
 static void BM_Int32ArrayPayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_Int32ArrayPayloadFromJson(state, kInt32ArrayPayloadLengthForStreaming,
-                               true, state.range(0));
+  Int32ArrayPayloadFromJson(state, kInt32ArrayPayloadLengthForStreaming, true,
+                            state.range(0));
 }
 
 // Helper function for benchmarking translation from JSON to payload of
 // different types.
 template <class T>
-void BM_ArrayPayloadFromJson(::benchmark::State& state,
-                             absl::string_view msg_type, bool streaming,
-                             uint64_t stream_size) {
+void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
+                          bool streaming, uint64_t stream_size) {
   auto json_msg = absl::StrFormat(
       R"({"payload" : %s})",
       GetRepeatedValueArrayString("0", kArrayPayloadLengthForStreaming));
@@ -232,24 +229,24 @@ void BM_ArrayPayloadFromJson(::benchmark::State& state,
 
 static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_ArrayPayloadFromJson<Int32ArrayPayload>(
-      state, kInt32ArrayPayloadMessageType, false, 0);
+  ArrayPayloadFromJson<Int32ArrayPayload>(state, kInt32ArrayPayloadMessageType,
+                                          false, 0);
 }
 static void BM_DoubleArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_ArrayPayloadFromJson<DoubleArrayPayload>(
+  ArrayPayloadFromJson<DoubleArrayPayload>(
       state, kDoubleArrayPayloadMessageType, false, 0);
 }
 static void BM_StringArrayTypePayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_ArrayPayloadFromJson<StringArrayPayload>(
+  ArrayPayloadFromJson<StringArrayPayload>(
       state, kStringArrayPayloadMessageType, false, 0);
 }
 
 // Helper function for benchmarking translation from nested JSON values.
-void BM_NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
-                              bool streaming, uint64_t stream_size,
-                              absl::string_view msg_type) {
+void NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
+                           bool streaming, uint64_t stream_size,
+                           absl::string_view msg_type) {
   const std::string json_msg = GetNestedJsonString(
       layers, kNestedFieldName, std::string(kInnerMostNestedFieldName), "buzz");
   absl::Status status = BenchmarkJsonTranslation(state, msg_type, json_msg,
@@ -261,31 +258,30 @@ void BM_NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
 
 static void BM_NestedProtoPayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, state.range(0), false, 0,
-                           kNestedPayloadMessageType);
+  NestedPayloadFromJson(state, state.range(0), false, 0,
+                        kNestedPayloadMessageType);
 }
 
 static void BM_NestedProtoPayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, kNumNestedLayersForStreaming, true,
-                           state.range(0), kNestedPayloadMessageType);
+  NestedPayloadFromJson(state, kNumNestedLayersForStreaming, true,
+                        state.range(0), kNestedPayloadMessageType);
 }
 
 static void BM_StructProtoPayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, state.range(0), false, 0,
-                           kStructPayloadMessageType);
+  NestedPayloadFromJson(state, state.range(0), false, 0,
+                        kStructPayloadMessageType);
 }
 
 static void BM_StructProtoPayloadFromJsonStreaming(::benchmark::State& state) {
-  BM_NestedPayloadFromJson(state, kNumNestedLayersForStreaming, true,
-                           state.range(0), kStructPayloadMessageType);
+  NestedPayloadFromJson(state, kNumNestedLayersForStreaming, true,
+                        state.range(0), kStructPayloadMessageType);
 }
 
 // Helper function for benchmarking translation from segmented JSON input
-void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
-                                       uint64_t payload_length, bool streaming,
-                                       uint64_t stream_size,
-                                       uint64_t num_chunks_per_msg) {
+void SegmentedStringPayloadFromJson(::benchmark::State& state,
+                                    uint64_t payload_length, bool streaming,
+                                    uint64_t stream_size, uint64_t num_checks) {
   // We are using GetRandomAlphanumericString instead of GetRandomBytesString
   // because JSON format reserves characters such as `"` and `\`.
   // We could generate `"` and `\` and escape them, but for simplicity, we are
@@ -295,7 +291,7 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
       R"({"payload" : "%s"})", GetRandomAlphanumericString(payload_length));
   absl::Status status =
       BenchmarkJsonTranslation(state, kStringPayloadMessageType, json_msg,
-                               streaming, stream_size, num_chunks_per_msg);
+                               streaming, stream_size, num_checks);
   if (!status.ok()) {
     state.SkipWithError(status.ToString().c_str());
   }
@@ -303,8 +299,8 @@ void BM_SegmentedStringPayloadFromJson(::benchmark::State& state,
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  BM_SegmentedStringPayloadFromJson(state, kSegmentedStringPayloadLength, false,
-                                    0, state.range(0));
+  SegmentedStringPayloadFromJson(state, kSegmentedStringPayloadLength, false, 0,
+                                 state.range(0));
 }
 
 static void BM_SegmentedStringPayloadFromJsonStreaming(
@@ -314,8 +310,8 @@ static void BM_SegmentedStringPayloadFromJsonStreaming(
   uint64_t stream_size = state.range(0);
   uint64_t num_chunks_per_msg =
       kSegmentedStringStreamingNumChunksPerMsg * stream_size;
-  BM_SegmentedStringPayloadFromJson(state, kSegmentedStringPayloadLength, true,
-                                    stream_size, num_chunks_per_msg);
+  SegmentedStringPayloadFromJson(state, kSegmentedStringPayloadLength, true,
+                                 stream_size, num_chunks_per_msg);
 }
 
 //

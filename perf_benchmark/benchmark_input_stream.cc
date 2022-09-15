@@ -24,12 +24,12 @@ namespace transcoding {
 
 namespace perf_benchmark {
 BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(
-    std::string msg, uint64_t num_chunks_per_msg)
+    std::string json_data, uint64_t num_checks)
     : finished_(false),
-      msg_(std::move(msg)),
-      chunk_size_(msg_.size() / num_chunks_per_msg),
+      msg_(std::move(json_data)),
+      chunk_size_(msg_.size() / num_checks),
       pos_(0) {
-  GOOGLE_CHECK(num_chunks_per_msg <= msg_.size());
+  GOOGLE_CHECK(num_checks <= msg_.size());
 }
 
 int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
