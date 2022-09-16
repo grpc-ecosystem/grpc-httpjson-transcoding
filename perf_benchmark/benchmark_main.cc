@@ -100,7 +100,7 @@ void SkipWithErrorIfNotOk(::benchmark::State& state,
   }
 }
 
-// Helper method to add custom benchmark counters to the state object.
+// Helper function to add custom benchmark counters to the state object.
 void AddBenchmarkCounters(::benchmark::State& state, uint64_t num_message,
                           uint64_t total_bytes) {
   auto request_processed = static_cast<double>(state.iterations());
@@ -121,7 +121,7 @@ void AddBenchmarkCounters(::benchmark::State& state, uint64_t num_message,
       Counter(message_processed, Counter::kIsRate | Counter::kInvert);
 }
 
-// Helper method to run Json Translation benchmark.
+// Helper function to run Json Translation benchmark.
 //
 // state - ::benchmark::State& variable used for collecting metrics.
 // msg_type - Protobuf message name for translation.
@@ -185,7 +185,7 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
   return absl::OkStatus();
 }
 
-// Helper method to run gRPC Translation benchmark.
+// Helper function to run gRPC Translation benchmark.
 // We use newline_delimited == true option which can generate JSON object in
 // streaming translation when the full message is not sent.
 //
