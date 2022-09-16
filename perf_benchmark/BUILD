@@ -123,8 +123,10 @@ cc_test(
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
+        "//src:response_to_json_translator",
         "//src:type_helper",
         "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
+        "@com_github_nlohmann_json//:json",
     ],
 )

@@ -18,11 +18,14 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "google/api/service.pb.h"
+#include "google/protobuf/text_format.h"
 #include "grpc_transcoding/json_request_translator.h"
+#include "grpc_transcoding/response_to_json_translator.h"
 #include "grpc_transcoding/type_helper.h"
 #include "gtest/gtest.h"
 #include "perf_benchmark/benchmark.pb.h"
 #include "perf_benchmark/utils.h"
+#include "nlohmann/json.hpp"
 
 namespace google {
 namespace grpc {
@@ -30,6 +33,8 @@ namespace transcoding {
 
 namespace perf_benchmark {
 namespace {
+namespace pb = ::google::protobuf;
+
 constexpr absl::string_view kServiceConfigTextProtoFile =
     "benchmark_service.textproto";
 
@@ -60,7 +65,7 @@ std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
   BenchmarkZeroCopyInputStream is(std::string(json_msg), num_checks);
   // Get message type from the global TypeHelper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
-  const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
+  const pb::Type* type = type_helper.Info()->GetTypeByTypeUrl(
       absl::StrFormat("type.googleapis.com/%s", msg_type));
 
   RequestInfo request_info;
@@ -112,11 +117,11 @@ uint64_t GetNestedProtoLayer(std::string proto_msg) {
 }
 
 uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
-  ::google::protobuf::Struct actual_proto;
+  pb::Struct actual_proto;
   actual_proto.ParseFromString(proto_msg);
 
   uint64_t actual_layers = 0;
-  const ::google::protobuf::Struct* it = &actual_proto;
+  const pb::Struct* it = &actual_proto;
   while (it->fields().contains(field_name)) {
     ++actual_layers;
     it = &(it->fields().at(field_name).struct_value());
@@ -124,8 +129,42 @@ uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
   return actual_layers;
 }
 
+// prefix the binary with a size to delimiter data segment and return
+std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
+  return absl::StrCat(SizeToDelimiter(proto_binary.size()), proto_binary);
+}
+
+// Parse the Grpc message binary to Json message using ResponseToJsonTranslator.
+template<class ProtoType>
+std::string ParseGrpcMessageToJsonMessage(ProtoType proto,
+                                          absl::string_view msg_type,
+                                          uint64_t chunk_size,
+                                          bool streaming) {
+  std::string proto_binary_str;
+  proto.SerializeToString(&proto_binary_str);
+  BenchmarkZeroCopyInputStream
+      is(WrapGrpcMessageWithDelimiter(proto_binary_str), chunk_size);
+
+  ResponseToJsonTranslator
+      translator(GetBenchmarkTypeHelper().Resolver(),
+                 absl::StrFormat("type.googleapis.com/%s", msg_type),
+                 streaming,
+                 &is);
+
+  std::string message;
+  while (translator.NextMessage(&message) ) {
+  }
+  EXPECT_TRUE(translator.Status().ok());
+
+  return message;
+}
+
+
 }  // namespace
 
+//
+// Start of JSON to GRPC integration benchmark tests
+//
 TEST(BenchmarkInputStreamTest, IntegrationWithJsonRequestTranslatorBytesProto) {
   // JSON message containing "Hello World!" encoded in base64 string.
   absl::string_view json_msg = R"({"payload":"SGVsbG8gV29ybGQh"})";
@@ -196,6 +235,96 @@ TEST(BenchmarkInputStreamTest,
     EXPECT_EQ(expected_payload, actual_proto.payload());
   }
 }
+
+//
+// Start of gRPC to JSON integration benchmark tests
+//
+TEST(BenchmarkInputStreamTest,
+     IntegrationWithGrpcResponseTranslatorBytesProto) {
+  // Proto message containing "Hello World!"
+  BytesPayload proto;
+  pb::TextFormat::ParseFromString(R"(payload : "Hello World!")", &proto);
+
+  const std::string json_str =
+      ParseGrpcMessageToJsonMessage<BytesPayload>(proto,
+                                                  "BytesPayload",
+                                                  1,
+                                                  false);
+
+  // "SGVsbG8gV29ybGQh" is the base64 encoded string of "Hello World!"
+  EXPECT_EQ(R"({"payload": "SGVsbG8gV29ybGQh"})"_json,
+            nlohmann::json::parse(json_str));
+}
+
+TEST(BenchmarkInputStreamTest,
+     IntegrationWithGrpcResponseTranslatorArrayProto) {
+  // Int32
+  Int32ArrayPayload int32_arr_payload;
+  pb::TextFormat::ParseFromString(R"(payload : [0,0,0])", &int32_arr_payload);
+  std::string int32_arr_msg = ParseGrpcMessageToJsonMessage<Int32ArrayPayload>(
+      int32_arr_payload,
+      "Int32ArrayPayload",
+      1,
+      false);
+  EXPECT_EQ(R"({"payload":[0,0,0]})"_json,
+            nlohmann::json::parse(int32_arr_msg));
+
+  // Double
+  DoubleArrayPayload double_arr_payload;
+  pb::TextFormat::ParseFromString(R"(payload : [0,0,0])", &double_arr_payload);
+  std::string double_arr_msg =
+      ParseGrpcMessageToJsonMessage<DoubleArrayPayload>(
+          double_arr_payload,
+          "DoubleArrayPayload",
+          1,
+          false);
+  EXPECT_EQ(R"({"payload":[0,0,0]})"_json,
+            nlohmann::json::parse(double_arr_msg));
+
+  // String
+  StringArrayPayload string_arr_payload;
+  pb::TextFormat::ParseFromString(R"(payload : ["0","0","0"])",
+                                  &string_arr_payload);
+  std::string string_arr_msg =
+      ParseGrpcMessageToJsonMessage<StringArrayPayload>(
+          string_arr_payload,
+          "StringArrayPayload",
+          1,
+          false);
+  EXPECT_EQ(R"({"payload":["0","0","0"]})"_json,
+            nlohmann::json::parse(string_arr_msg));
+}
+
+TEST(BenchmarkInputStreamTest,
+     IntegrationWithGrpcResponseTranslatorNestedProto) {
+  NestedPayload zero_nested;
+  pb::TextFormat::ParseFromString(R"(payload : "Hello World!")", &zero_nested);
+  const std::string zero_nested_json_str =
+      ParseGrpcMessageToJsonMessage<NestedPayload>(zero_nested,
+                                                   "NestedPayload",
+                                                   1,
+                                                   false);
+
+  EXPECT_EQ(R"({"payload": "Hello World!"})"_json,
+            nlohmann::json::parse(zero_nested_json_str));
+
+  NestedPayload two_nested;
+  pb::TextFormat::ParseFromString(R"(
+    nested {
+      nested {
+        payload : "Hello World!"
+      }
+    })", &two_nested);
+  const std::string two_nested_json_str =
+      ParseGrpcMessageToJsonMessage<NestedPayload>(two_nested,
+                                                   "NestedPayload",
+                                                   1,
+                                                   false);
+
+  EXPECT_EQ(R"({"nested": {"nested": {"payload": "Hello World!"}}})"_json,
+            nlohmann::json::parse(two_nested_json_str));
+}
+
 
 }  // namespace perf_benchmark
 
