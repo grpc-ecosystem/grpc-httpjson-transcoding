@@ -185,6 +185,40 @@ std::string SizeToDelimiter(unsigned size) {
   return std::string(reinterpret_cast<const char*>(delimiter),
                      sizeof(delimiter));
 }
+
+std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
+  return absl::StrCat(SizeToDelimiter(proto_binary.size()), proto_binary);
+}
+
+NestedPayload* GetNestedPayload(uint64_t layers, absl::string_view inner_val) {
+  NestedPayload* proto = new NestedPayload();
+  if (layers == 0) {
+    proto->set_payload(std::string(inner_val));
+    return proto;
+  }
+  // set_allocated sets the string object to the field and frees the previous
+  // field value if it exists.
+  proto->set_allocated_nested(GetNestedPayload(layers - 1, inner_val));
+  return proto;
+}
+
+::google::protobuf::Struct* GetNestedStructPayload(
+    uint64_t layers, std::string nested_field_name, std::string inner_key,
+    absl::string_view inner_val) {
+  ::google::protobuf::Struct* proto = new ::google::protobuf::Struct();
+  if (layers == 0) {
+    (*proto->mutable_fields())[inner_key].set_string_value(
+        std::string(inner_val));
+    return proto;
+  }
+  // set_allocated sets the string object to the field and frees the previous
+  // field value if it exists.
+  (*proto->mutable_fields())[nested_field_name].set_allocated_struct_value(
+      GetNestedStructPayload(layers - 1, nested_field_name, inner_key,
+                             inner_val));
+  return proto;
+}
+
 }  // namespace perf_benchmark
 
 }  // namespace transcoding

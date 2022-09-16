@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/api/service.pb.h"
+#include "perf_benchmark/benchmark.pb.h"
 
 namespace google {
 namespace grpc {
@@ -84,6 +85,20 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
 // Copied from "test/test_common.h".
 // Generates a gRPC message delimiter with the given message size.
 std::string SizeToDelimiter(unsigned size);
+
+// Prefix the binary with a size to delimiter data segment and return.
+std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary);
+
+// Return a pointer to a NestedPayload object. The caller will need to take the
+// ownership of the returned object by properly releasing the memory.
+NestedPayload* GetNestedPayload(uint64_t layers, absl::string_view inner_val);
+
+// Return a pointer to a ::google::protobuf::Struct object. The caller will need
+// to take the ownership of the returned object by properly releasing the
+// memory.
+::google::protobuf::Struct* GetNestedStructPayload(
+    uint64_t layers, std::string nested_field_name, std::string inner_key,
+    absl::string_view inner_val);
 
 }  // namespace perf_benchmark
 

@@ -43,11 +43,14 @@ cc_binary(
         "benchmark_service.textproto",
     ],
     deps = [
+        "benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
+        "//src:response_to_json_translator",
         "//src:type_helper",
         "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
@@ -62,6 +65,7 @@ cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
+        "benchmark_cc_proto",
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
@@ -125,8 +129,8 @@ cc_test(
         "//src:json_request_translator",
         "//src:response_to_json_translator",
         "//src:type_helper",
+        "@com_github_nlohmann_json//:json",
         "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
-        "@com_github_nlohmann_json//:json",
     ],
 )
