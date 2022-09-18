@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/api/service.pb.h"
+#include "google/protobuf/util/internal/type_info.h"
 
 namespace google {
 namespace grpc {
@@ -80,6 +81,14 @@ std::string GetNestedJsonString(uint64_t layers,
 // for stream_size == 1 -> "[json_msg]"
 // for stream_size > 1 -> "[json_msg,...,json_msg]"
 std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
+
+// Modified based on test/request_translator_test_base.cc.
+// Parse a dot delimited field path string into a vector of actual field
+// pointers.
+std::vector<const google::protobuf::Field*> ParseFieldPath(
+    const google::protobuf::Type& type,
+    google::protobuf::util::converter::TypeInfo& type_info,
+    const std::string& field_path_str);
 
 }  // namespace perf_benchmark
 

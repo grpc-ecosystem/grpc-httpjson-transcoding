@@ -21,6 +21,7 @@
 #include "absl/random/random.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/str_split.h"
 #include "google/protobuf/text_format.h"
 #include "nlohmann/json.hpp"
 
@@ -166,6 +167,30 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
   }
   ss << ']';
   return ss.str();
+}
+
+// Modified based on test/request_translator_test_base.cc.
+std::vector<const google::protobuf::Field*> ParseFieldPath(
+    const google::protobuf::Type& type,
+    google::protobuf::util::converter::TypeInfo& type_info,
+    const std::string& field_path_str) {
+  // First, split the field names by the "." delimiter
+  std::vector<std::string> field_names =
+      absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
+
+  auto current_type = &type;
+  std::vector<const google::protobuf::Field*> field_path;
+  for (size_t i = 0; i < field_names.size(); ++i) {
+    // Find the field by name
+    auto field = type_info.FindField(current_type, field_names[i]);
+    field_path.push_back(field);
+
+    if (i < field_names.size() - 1) {
+      // Update the type of the current field for the next iteration
+      current_type = type_info.GetTypeByTypeUrl(field->type_url());
+    }
+  }
+  return field_path;
 }
 }  // namespace perf_benchmark
 

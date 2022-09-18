@@ -41,6 +41,7 @@ constexpr absl::string_view kServiceConfigTextProtoFile =
     "benchmark_service.textproto";
 constexpr absl::string_view kNestedFieldName = "nested";
 constexpr absl::string_view kInnerMostNestedFieldName = "payload";
+constexpr absl::string_view kInnerMostNestedFieldValue = "Deep Hello World!";
 constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
 constexpr absl::string_view kStringPayloadMessageType = "StringPayload";
 constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
@@ -96,11 +97,15 @@ constexpr uint64_t kSegmentedStringStreamingNumChunksPerMsg = 1 << 8;  // 256
 //             number of `json_msg` will be fed into translation.
 // stream_size - Number of streaming messages.
 // num_checks - Number of calls to NextMessage() that yields the full message.
+// request_info - RequestInfo object specifies the URI mapping and bindings.
+//                body_field_path and message_type field of the object will be
+//                filled in from this method.
 absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
                                       absl::string_view msg_type,
                                       absl::string_view json_msg,
                                       bool streaming, uint64_t stream_size,
-                                      uint64_t num_checks) {
+                                      uint64_t num_checks,
+                                      RequestInfo request_info = {}) {
   // Retrieve global type helper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
 
@@ -112,10 +117,8 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
         absl::StrCat("Could not resolve the message type ", msg_type));
   }
 
-  RequestInfo request_info;
   // body field path used in this benchmark are all "*"
   request_info.body_field_path = "*";
-  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
   // Wrap json_msg inside BenchmarkZeroCopyInputStream.
@@ -243,7 +246,8 @@ void NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
   const std::string json_msg = GetNestedJsonString(
-      layers, kNestedFieldName, std::string(kInnerMostNestedFieldName), "buzz");
+      layers, kNestedFieldName, std::string(kInnerMostNestedFieldName),
+      kInnerMostNestedFieldValue);
   absl::Status status = BenchmarkJsonTranslation(state, msg_type, json_msg,
                                                  streaming, stream_size, 1);
   if (!status.ok()) {
@@ -309,6 +313,61 @@ static void BM_SegmentedStringPayloadFromJsonStreaming(
                                  stream_size, num_chunks_per_msg);
 }
 
+// Helper function for benchmarking translation from nested JSON input with URI
+// bindings.
+void NestedVariableBindingPayloadFromJson(::benchmark::State& state,
+                                          uint64_t layers, bool streaming,
+                                          uint64_t stream_size) {
+  // This json string will also work if it's an empty JSON object since the
+  // variable value comes from the binding. However, to better compare with
+  // NestedPayloadFromJson() benchmarks to see the extra overhead of the
+  // bindings, we use the same nested JSON string as in NestedPayloadFromJson().
+  const std::string json_msg = GetNestedJsonString(
+      layers, kNestedFieldName, std::string(kInnerMostNestedFieldName),
+      kInnerMostNestedFieldValue);
+
+  // Build the field_path bindings.
+  // First, build the dot delimited binding string based on the number of layers
+  std::string field_path_str;
+  for (uint64_t i = 0; i < layers; ++i) {
+    // Append the nested field name and a dot delimiter for each layer
+    absl::StrAppend(&field_path_str, kNestedFieldName, ".");
+  }
+  // Append the actual payload field name
+  absl::StrAppend(&field_path_str, kInnerMostNestedFieldName);
+
+  // Second, parse the field_path object from the string
+  const TypeHelper& type_helper = GetBenchmarkTypeHelper();
+  const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
+      absl::StrFormat("type.googleapis.com/%s", kNestedPayloadMessageType));
+  auto field_path = ParseFieldPath(*type, *type_helper.Info(), field_path_str);
+
+  // Finally, construct the RequestInfo object containing the binding.
+  // We only need to fill in variable_bindings, other fields are filled in
+  // by BenchmarkJsonTranslation().
+  RequestInfo request_info;
+  request_info.variable_bindings = {RequestWeaver::BindingInfo{
+      field_path, std::string(kInnerMostNestedFieldValue)}};
+
+  absl::Status status =
+      BenchmarkJsonTranslation(state, kNestedPayloadMessageType, json_msg,
+                               streaming, stream_size, 1, request_info);
+  if (!status.ok()) {
+    state.SkipWithError(status.ToString().c_str());
+  }
+}
+
+static void BM_NestedVariableBindingFromJsonNonStreaming(
+    ::benchmark::State& state) {
+  NestedVariableBindingPayloadFromJson(state, state.range(0), false, 0);
+}
+
+static void BM_NestedVariableBindingFromJsonStreaming(
+    ::benchmark::State& state) {
+  NestedVariableBindingPayloadFromJson(state, kNumNestedLayersForStreaming,
+                                       true, state.range(0));
+}
+
 //
 // Independent benchmark variable: JSON body length.
 //
@@ -366,6 +425,16 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
     ->Arg(1 << 8)    // 256 chunks per message
     ->Arg(1 << 12);  // 4096 chunks per message
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonStreaming);
+
+//
+// Independent benchmark variable: Variable binding depth
+//
+BENCHMARK_WITH_PERCENTILE(BM_NestedVariableBindingFromJsonNonStreaming)
+    ->Arg(0)    // flat JSON
+    ->Arg(1)    // nested with 1 layer
+    ->Arg(8)    // nested with 8 layers
+    ->Arg(32);  // nested with 32 layers
+BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedVariableBindingFromJsonStreaming);
 
 // Benchmark Main function
 BENCHMARK_MAIN();

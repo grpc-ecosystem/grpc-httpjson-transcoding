@@ -56,17 +56,16 @@ constexpr absl::string_view kServiceConfigTextProtoFile =
 
 std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
                                            absl::string_view msg_type,
-                                           uint64_t num_checks) {
+                                           uint64_t num_checks,
+                                           RequestInfo request_info = {}) {
   BenchmarkZeroCopyInputStream is(std::string(json_msg), num_checks);
   // Get message type from the global TypeHelper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
   const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
       absl::StrFormat("type.googleapis.com/%s", msg_type));
 
-  RequestInfo request_info;
   // body field path used in this benchmark are all "*"
   request_info.body_field_path = "*";
-  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
   std::string message;
@@ -194,6 +193,46 @@ TEST(BenchmarkInputStreamTest,
     StringPayload actual_proto;
     actual_proto.ParseFromString(proto_str);
     EXPECT_EQ(expected_payload, actual_proto.payload());
+  }
+}
+
+TEST(BenchmarkInputStreamTest,
+     IntegrationWithJsonRequestTranslatorNestedVariableBinding) {
+  absl::string_view nested_field_name = "nested";
+  uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
+  for (uint64_t num_nested_layer : num_nested_layer_input) {
+    // Variable value comes from binding, so an empty string is fine.
+    const std::string json_msg = "{}";
+
+    // Build the field_path bindings.
+    // First, build the dot delimited binding string based on the number of
+    // layers
+    std::string field_path_str;
+    for (uint64_t i = 0; i < num_nested_layer; ++i) {
+      // Append the nested field name and a dot delimiter for each layer
+      absl::StrAppend(&field_path_str, nested_field_name, ".");
+    }
+    // Append the actual payload field name
+    absl::StrAppend(&field_path_str, "payload");
+
+    // Second, parse the field_path object from the string
+    const TypeHelper& type_helper = GetBenchmarkTypeHelper();
+    const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
+        "type.googleapis.com/NestedPayload");
+    auto field_path =
+        ParseFieldPath(*type, *type_helper.Info(), field_path_str);
+
+    // Finally, construct the RequestInfo object containing the binding.
+    // We only need to fill in variable_bindings, other fields are filled in
+    // by BenchmarkJsonTranslation().
+    RequestInfo request_info;
+    request_info.variable_bindings = {
+        RequestWeaver::BindingInfo{field_path, "Hello World!"}};
+
+    const std::string proto_str = ParseJsonMessageToProtoMessage(
+        json_msg, "NestedPayload", 1, request_info);
+
+    EXPECT_EQ(GetNestedProtoLayer(proto_str), num_nested_layer);
   }
 }
 
