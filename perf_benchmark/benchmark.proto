@@ -64,6 +64,13 @@ service Benchmark {
       body: "*"
     };
   }
+  rpc MultiStringFieldPayloadBM(MultiStringFieldPayload)
+      returns (MultiStringFieldPayload) {
+    option (google.api.http) = {
+      post: "/payload/multi_string_field",
+      body: "*"
+    };
+  }
 }
 
 message BytesPayload {
@@ -89,4 +96,15 @@ message StringArrayPayload {
 message NestedPayload {
   optional NestedPayload nested = 1;
   optional string payload = 2;
+}
+
+message MultiStringFieldPayload {
+  optional string f1 = 1;
+  optional string f2 = 2;
+  optional string f3 = 3;
+  optional string f4 = 4;
+  optional string f5 = 5;
+  optional string f6 = 6;
+  optional string f7 = 7;
+  optional string f8 = 8;
 }

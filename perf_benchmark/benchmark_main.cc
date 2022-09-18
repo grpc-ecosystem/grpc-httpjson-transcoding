@@ -39,9 +39,6 @@ using namespace benchmark;
 
 constexpr absl::string_view kServiceConfigTextProtoFile =
     "benchmark_service.textproto";
-constexpr absl::string_view kNestedFieldName = "nested";
-constexpr absl::string_view kInnerMostNestedFieldName = "payload";
-constexpr absl::string_view kInnerMostNestedFieldValue = "Deep Hello World!";
 constexpr absl::string_view kBytesPayloadMessageType = "BytesPayload";
 constexpr absl::string_view kStringPayloadMessageType = "StringPayload";
 constexpr absl::string_view kNestedPayloadMessageType = "NestedPayload";
@@ -52,9 +49,14 @@ constexpr absl::string_view kDoubleArrayPayloadMessageType =
     "DoubleArrayPayload";
 constexpr absl::string_view kStringArrayPayloadMessageType =
     "StringArrayPayload";
+constexpr absl::string_view kMultiStringFieldPayloadMessageType =
+    "MultiStringFieldPayload";
 
 // Used for NestedPayload and StructPayload
 constexpr uint64_t kNumNestedLayersForStreaming = 32;
+constexpr absl::string_view kNestedFieldName = "nested";
+constexpr absl::string_view kInnerMostNestedFieldName = "payload";
+constexpr absl::string_view kInnerMostNestedFieldValue = "Deep Hello World!";
 // Used for ArrayPayload
 constexpr uint64_t kArrayPayloadLengthForStreaming = 1 << 10;  // 1024
 // Used for BytesPayload
@@ -64,6 +66,9 @@ constexpr uint64_t kInt32ArrayPayloadLengthForStreaming = 1 << 14;  // 16384
 // Used for Segmented StringPayload
 constexpr uint64_t kSegmentedStringPayloadLength = 1 << 20;            // 1 MiB
 constexpr uint64_t kSegmentedStringStreamingNumChunksPerMsg = 1 << 8;  // 256
+// Used for MultiStringFieldPayload
+constexpr uint64_t kNumFieldsInMultiStringFieldPayload = 8;
+constexpr absl::string_view kMultiStringFieldPrefix = "f";
 
 // Global type helper containing the type information of the benchmark_service
 // service config object.
@@ -315,9 +320,9 @@ static void BM_SegmentedStringPayloadFromJsonStreaming(
 
 // Helper function for benchmarking translation from nested JSON input with URI
 // bindings.
-void NestedVariableBindingPayloadFromJson(::benchmark::State& state,
-                                          uint64_t layers, bool streaming,
-                                          uint64_t stream_size) {
+void NestedVariableBindingsPayloadFromJson(::benchmark::State& state,
+                                           uint64_t layers, bool streaming,
+                                           uint64_t stream_size) {
   // This json string will also work if it's an empty JSON object since the
   // variable value comes from the binding. However, to better compare with
   // NestedPayloadFromJson() benchmarks to see the extra overhead of the
@@ -337,10 +342,8 @@ void NestedVariableBindingPayloadFromJson(::benchmark::State& state,
   absl::StrAppend(&field_path_str, kInnerMostNestedFieldName);
 
   // Second, parse the field_path object from the string
-  const TypeHelper& type_helper = GetBenchmarkTypeHelper();
-  const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
-      absl::StrFormat("type.googleapis.com/%s", kNestedPayloadMessageType));
-  auto field_path = ParseFieldPath(*type, *type_helper.Info(), field_path_str);
+  auto field_path = ParseFieldPath(GetBenchmarkTypeHelper(),
+                                   kNestedPayloadMessageType, field_path_str);
 
   // Finally, construct the RequestInfo object containing the binding.
   // We only need to fill in variable_bindings, other fields are filled in
@@ -357,15 +360,55 @@ void NestedVariableBindingPayloadFromJson(::benchmark::State& state,
   }
 }
 
-static void BM_NestedVariableBindingFromJsonNonStreaming(
+static void BM_NestedVariableBindingsFromJsonNonStreaming(
     ::benchmark::State& state) {
-  NestedVariableBindingPayloadFromJson(state, state.range(0), false, 0);
+  NestedVariableBindingsPayloadFromJson(state, state.range(0), false, 0);
 }
 
-static void BM_NestedVariableBindingFromJsonStreaming(
+// Helper function for benchmarking translation from JSON input with multiple
+// URI bindings.
+void NumVariableBindingsPayloadFromJson(::benchmark::State& state,
+                                        uint64_t num_bound_vars, bool streaming,
+                                        uint64_t stream_size) {
+  if (num_bound_vars > kNumFieldsInMultiStringFieldPayload) {
+    state.SkipWithError(
+        "Number of free variables exceeds the total number of fields in "
+        "MultiStringFieldMessage");
+    return;
+  }
+
+  // 1 MiB of data
+  const std::string field_val = GetRandomAlphanumericString(1 << 20);
+  // Generate a JSON message that has all the fields filled in.
+  // This is to make sure the input JSON size is equal for each benchmark, which
+  // nicely separates out the variable bindings as a single control variable.
+  const std::string json_msg = GenerateMultiStringFieldPayloadJsonStr(
+      kNumFieldsInMultiStringFieldPayload, kMultiStringFieldPayloadMessageType,
+      field_val);
+
+  // Create variable bindings for the bound fields.
+  // Note that field number starts at 1.
+  RequestInfo request_info;
+  for (uint64_t i = 1; i <= num_bound_vars; ++i) {
+    auto field_path = ParseFieldPath(
+        GetBenchmarkTypeHelper(), kMultiStringFieldPayloadMessageType,
+        absl::StrFormat("%s%d", kMultiStringFieldPrefix, i));
+
+    request_info.variable_bindings.emplace_back(
+        RequestWeaver::BindingInfo{field_path, field_val});
+  }
+
+  absl::Status status = BenchmarkJsonTranslation(
+      state, kMultiStringFieldPayloadMessageType, json_msg, streaming,
+      stream_size, 1, request_info);
+  if (!status.ok()) {
+    state.SkipWithError(status.ToString().c_str());
+  }
+}
+
+static void BM_NumVariableBindingsPayloadFromJsonNonStreaming(
     ::benchmark::State& state) {
-  NestedVariableBindingPayloadFromJson(state, kNumNestedLayersForStreaming,
-                                       true, state.range(0));
+  NumVariableBindingsPayloadFromJson(state, state.range(0), false, 0);
 }
 
 //
@@ -427,14 +470,28 @@ BENCHMARK_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonNonStreaming)
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_SegmentedStringPayloadFromJsonStreaming);
 
 //
-// Independent benchmark variable: Variable binding depth
+// Independent benchmark variable: Variable binding depth.
+// This only applies to JSON -> gRPC since there's no URI bindings from gRPC.
+// Streaming benchmark doesn't apply here because the same insights can be
+// collected from the Number of nested JSON layer benchmarks.
 //
-BENCHMARK_WITH_PERCENTILE(BM_NestedVariableBindingFromJsonNonStreaming)
+BENCHMARK_WITH_PERCENTILE(BM_NestedVariableBindingsFromJsonNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
     ->Arg(32);  // nested with 32 layers
-BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedVariableBindingFromJsonStreaming);
+
+//
+// Independent benchmark variable: Number of variable bindings.
+// This only applies to JSON -> gRPC since there's no URI bindings from gRPC.
+// Streaming benchmark doesn't apply here because the same insights can be
+// collected from the JSON body length benchmarks.
+//
+BENCHMARK_WITH_PERCENTILE(BM_NumVariableBindingsPayloadFromJsonNonStreaming)
+    ->Arg(0)   // 0 bound variable
+    ->Arg(2)   // 2 bound variables
+    ->Arg(4)   // 4 bound variables
+    ->Arg(8);  // 8 bound variables
 
 // Benchmark Main function
 BENCHMARK_MAIN();

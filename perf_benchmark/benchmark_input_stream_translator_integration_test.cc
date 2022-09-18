@@ -110,6 +110,18 @@ uint64_t GetNestedProtoLayer(std::string proto_msg) {
   return actual_layers;
 }
 
+std::string GetNestedProtoValue(std::string proto_msg) {
+  NestedPayload actual_proto;
+  actual_proto.ParseFromString(proto_msg);
+
+  const NestedPayload* it = &actual_proto;
+  // Iterate all the way to the leaf node
+  while (it->has_nested()) {
+    it = &(it->nested());
+  }
+  return it->payload();
+}
+
 uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
   ::google::protobuf::Struct actual_proto;
   actual_proto.ParseFromString(proto_msg);
@@ -216,11 +228,8 @@ TEST(BenchmarkInputStreamTest,
     absl::StrAppend(&field_path_str, "payload");
 
     // Second, parse the field_path object from the string
-    const TypeHelper& type_helper = GetBenchmarkTypeHelper();
-    const google::protobuf::Type* type = type_helper.Info()->GetTypeByTypeUrl(
-        "type.googleapis.com/NestedPayload");
-    auto field_path =
-        ParseFieldPath(*type, *type_helper.Info(), field_path_str);
+    auto field_path = ParseFieldPath(GetBenchmarkTypeHelper(), "NestedPayload",
+                                     field_path_str);
 
     // Finally, construct the RequestInfo object containing the binding.
     // We only need to fill in variable_bindings, other fields are filled in
@@ -233,6 +242,7 @@ TEST(BenchmarkInputStreamTest,
         json_msg, "NestedPayload", 1, request_info);
 
     EXPECT_EQ(GetNestedProtoLayer(proto_str), num_nested_layer);
+    EXPECT_EQ(GetNestedProtoValue(proto_str), "Hello World!");
   }
 }
 

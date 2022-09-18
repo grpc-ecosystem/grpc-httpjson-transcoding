@@ -21,6 +21,7 @@
 #include "absl/random/random.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "google/protobuf/text_format.h"
 #include "nlohmann/json.hpp"
@@ -171,26 +172,37 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
 
 // Modified based on test/request_translator_test_base.cc.
 std::vector<const google::protobuf::Field*> ParseFieldPath(
-    const google::protobuf::Type& type,
-    google::protobuf::util::converter::TypeInfo& type_info,
+    const TypeHelper& type_helper, absl::string_view msg_type,
     const std::string& field_path_str) {
   // First, split the field names by the "." delimiter
   std::vector<std::string> field_names =
       absl::StrSplit(field_path_str, ".", absl::SkipEmpty());
 
-  auto current_type = &type;
+  const google::protobuf::Type* current_type =
+      type_helper.Info()->GetTypeByTypeUrl(
+          absl::StrFormat("type.googleapis.com/%s", msg_type));
+
   std::vector<const google::protobuf::Field*> field_path;
   for (size_t i = 0; i < field_names.size(); ++i) {
     // Find the field by name
-    auto field = type_info.FindField(current_type, field_names[i]);
+    auto field = type_helper.Info()->FindField(current_type, field_names[i]);
     field_path.push_back(field);
 
     if (i < field_names.size() - 1) {
       // Update the type of the current field for the next iteration
-      current_type = type_info.GetTypeByTypeUrl(field->type_url());
+      current_type = type_helper.Info()->GetTypeByTypeUrl(field->type_url());
     }
   }
   return field_path;
+}
+std::string GenerateMultiStringFieldPayloadJsonStr(
+    uint64_t num_fields_exist, absl::string_view field_prefix,
+    absl::string_view val) {
+  nlohmann::json message;
+  for (int i = 1; i <= num_fields_exist; ++i) {
+    message[absl::StrFormat("%s%d", field_prefix, i)] = val;
+  }
+  return to_string(message);
 }
 }  // namespace perf_benchmark
 
