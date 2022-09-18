@@ -195,6 +195,7 @@ std::vector<const google::protobuf::Field*> ParseFieldPath(
   }
   return field_path;
 }
+
 std::string GenerateMultiStringFieldPayloadJsonStr(
     uint64_t num_fields_exist, absl::string_view field_prefix,
     absl::string_view val) {
