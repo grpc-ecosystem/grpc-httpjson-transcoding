@@ -102,7 +102,7 @@ void IntegrationWithJsonRequestTranslatorArrayProtoHelper(
   EXPECT_EQ(actual_proto.payload().size(), arr_length);
 }
 
-uint64_t GetNestedProtoLayer(std::string proto_msg) {
+uint64_t GetNestedProtoLayer(const std::string& proto_msg) {
   NestedPayload actual_proto;
   actual_proto.ParseFromString(proto_msg);
 
@@ -115,7 +115,7 @@ uint64_t GetNestedProtoLayer(std::string proto_msg) {
   return actual_layers;
 }
 
-std::string GetNestedProtoValue(std::string proto_msg) {
+std::string GetNestedProtoValue(const std::string& proto_msg) {
   NestedPayload actual_proto;
   actual_proto.ParseFromString(proto_msg);
 
@@ -127,7 +127,8 @@ std::string GetNestedProtoValue(std::string proto_msg) {
   return it->payload();
 }
 
-uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
+uint64_t GetStructProtoLayer(const std::string& proto_msg,
+                             const std::string& field_name) {
   pb::Struct actual_proto;
   actual_proto.ParseFromString(proto_msg);
 

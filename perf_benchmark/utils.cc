@@ -184,8 +184,7 @@ std::string SizeToDelimiter(unsigned size) {
   size >>= 8;
   delimiter[1] = 0xFF & size;
 
-  return std::string(reinterpret_cast<const char*>(delimiter),
-                     sizeof(delimiter));
+  return {reinterpret_cast<const char*>(delimiter), sizeof(delimiter)};
 }
 
 std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {

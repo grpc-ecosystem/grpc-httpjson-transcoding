@@ -209,8 +209,8 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
 template <class ProtoMessageType>
 absl::Status BenchmarkGrpcTranslation(::benchmark::State& state,
                                       absl::string_view msg_type,
-                                      const ProtoMessageType& proto, bool streaming,
-                                      uint64_t stream_size,
+                                      const ProtoMessageType& proto,
+                                      bool streaming, uint64_t stream_size,
                                       uint64_t num_checks) {
   std::string proto_binary;
   proto.SerializeToString(&proto_binary);
@@ -372,8 +372,8 @@ void ArrayPayloadFromGrpc(::benchmark::State& state, absl::string_view msg_type,
     proto.add_payload(val);
   }
 
-  auto status = BenchmarkGrpcTranslation<ProtoMessageType>(state, msg_type, proto,
-                                                           streaming, stream_size, 1);
+  auto status = BenchmarkGrpcTranslation<ProtoMessageType>(
+      state, msg_type, proto, streaming, stream_size, 1);
   SkipWithErrorIfNotOk(state, status);
 }
 
