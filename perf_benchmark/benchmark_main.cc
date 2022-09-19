@@ -410,7 +410,7 @@ void NestedPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
   // GetNestedPayload transfers the pointer ownership to the caller.
-  // We wrap the pointer with unique_ptr to manage the pointer.
+  // We wrap the pointer with unique_ptr to manage the pointer lifecycle.
   std::unique_ptr<NestedPayload> proto(GetNestedPayload(layers, "buzz"));
 
   auto status = BenchmarkGrpcTranslation<NestedPayload>(
@@ -423,7 +423,7 @@ void StructPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
   // GetNestedStructPayload transfers the pointer ownership to the caller.
-  // We wrap the pointer with unique_ptr to manage the pointer.
+  // We wrap the pointer with unique_ptr to manage the pointer lifecycle.
   std::unique_ptr<pb::Struct> proto(
       GetNestedStructPayload(layers, std::string(kNestedFieldName),
                              std::string(kInnerMostNestedFieldName), "buzz"));
