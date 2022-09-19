@@ -62,12 +62,14 @@ cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
+        "//src:type_helper",
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/api:service_cc_proto",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 

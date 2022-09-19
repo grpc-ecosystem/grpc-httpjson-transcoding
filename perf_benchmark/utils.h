@@ -22,6 +22,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/api/service.pb.h"
+#include "google/protobuf/util/internal/type_info.h"
+#include "src/include/grpc_transcoding/type_helper.h"
 
 namespace google {
 namespace grpc {
@@ -80,6 +82,19 @@ std::string GetNestedJsonString(uint64_t layers,
 // for stream_size == 1 -> "[json_msg]"
 // for stream_size > 1 -> "[json_msg,...,json_msg]"
 std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
+
+// Parse a dot delimited field path string into a vector of actual field
+// pointers.
+std::vector<const google::protobuf::Field*> ParseFieldPath(
+    const TypeHelper& type_helper, absl::string_view msg_type,
+    const std::string& field_path_str);
+
+// Generate a JSON string corresponds to MultiStringFieldMessage.
+// For the 8 fields in the message, we will fill in the first `num_fields_exist`
+// number of fields with the given `val`.
+std::string GenerateMultiStringFieldPayloadJsonStr(
+    uint64_t num_fields_exist, absl::string_view field_prefix,
+    absl::string_view val);
 
 }  // namespace perf_benchmark
 
