@@ -16,6 +16,7 @@
 #
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
 
 cc_proto_library(
     name = "benchmark_cc_proto",
@@ -55,6 +56,11 @@ cc_binary(
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googleapis//google/api:service_cc_proto",
     ],
+)
+
+cc_image(
+    name = "benchmark_main_image",
+    binary = ":benchmark_main",
 )
 
 cc_library(
