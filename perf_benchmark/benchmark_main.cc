@@ -252,9 +252,10 @@ void SinglePayloadFromJson(::benchmark::State& state, uint64_t payload_length,
                            bool streaming, uint64_t stream_size) {
   std::string json_msg = absl::StrFormat(
       R"({"payload" : "%s"})", GetRandomBytesString(payload_length, true));
-  SkipWithErrorIfNotOk(
-      state, BenchmarkJsonTranslation(state, kBytesPayloadMessageType, json_msg,
-                                      streaming, stream_size, 1));
+
+  auto status = BenchmarkJsonTranslation(state, kBytesPayloadMessageType,
+                                         json_msg, streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 // Helper function for benchmarking single bytes payload translation from gRPC.
@@ -262,9 +263,10 @@ void SinglePayloadFromGrpc(::benchmark::State& state, uint64_t payload_length,
                            bool streaming, uint64_t stream_size) {
   BytesPayload proto;
   proto.set_payload(GetRandomBytesString(payload_length, true));
-  SkipWithErrorIfNotOk(state, BenchmarkGrpcTranslation<BytesPayload>(
-                                  state, kBytesPayloadMessageType, proto,
-                                  streaming, stream_size, 1));
+
+  auto status = BenchmarkGrpcTranslation<BytesPayload>(
+      state, kBytesPayloadMessageType, proto, streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 static void BM_SinglePayloadFromJsonNonStreaming(::benchmark::State& state) {
@@ -290,9 +292,10 @@ void Int32ArrayPayloadFromJson(::benchmark::State& state, uint64_t array_length,
                                bool streaming, uint64_t stream_size) {
   std::string json_msg = absl::StrFormat(
       R"({"payload" : %s})", GetRandomInt32ArrayString(array_length));
-  SkipWithErrorIfNotOk(
-      state, BenchmarkJsonTranslation(state, kInt32ArrayPayloadMessageType,
-                                      json_msg, streaming, stream_size, 1));
+
+  auto status = BenchmarkJsonTranslation(state, kInt32ArrayPayloadMessageType,
+                                         json_msg, streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 // Helper function for benchmarking int32 array payload translation from gRPC.
@@ -304,9 +307,10 @@ void Int32ArrayPayloadFromGrpc(::benchmark::State& state, uint64_t array_length,
     proto.add_payload(absl::Uniform(bitgen, std::numeric_limits<int32_t>::min(),
                                     std::numeric_limits<int32_t>::max()));
   }
-  SkipWithErrorIfNotOk(state, BenchmarkGrpcTranslation<Int32ArrayPayload>(
-                                  state, kBytesPayloadMessageType, proto,
-                                  streaming, stream_size, 1));
+
+  auto status = BenchmarkGrpcTranslation<Int32ArrayPayload>(
+      state, kBytesPayloadMessageType, proto, streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 static void BM_Int32ArrayPayloadFromJsonNonStreaming(
@@ -336,9 +340,10 @@ void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
   auto json_msg = absl::StrFormat(
       R"({"payload" : %s})",
       GetRepeatedValueArrayString("0", kArrayPayloadLength));
-  SkipWithErrorIfNotOk(
-      state, BenchmarkJsonTranslation(state, msg_type, json_msg, streaming,
-                                      stream_size, 1));
+
+  auto status = BenchmarkJsonTranslation(state, msg_type, json_msg, streaming,
+                                         stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 // Helper function for benchmarking translation from gRPC to payload of
@@ -353,9 +358,10 @@ void ArrayPayloadFromGrpc(::benchmark::State& state, absl::string_view msg_type,
   for (uint64_t i = 0; i < kArrayPayloadLength; ++i) {
     proto.add_payload(val);
   }
-  SkipWithErrorIfNotOk(
-      state, BenchmarkGrpcTranslation<ProtoType>(state, msg_type, proto,
-                                                 streaming, stream_size, 1));
+
+  auto status = BenchmarkGrpcTranslation<ProtoType>(state, msg_type, proto,
+                                                    streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 static void BM_Int32ArrayTypePayloadFromJsonNonStreaming(
@@ -393,32 +399,38 @@ void NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
                            absl::string_view msg_type) {
   const std::string json_msg = GetNestedJsonString(
       layers, kNestedFieldName, std::string(kInnerMostNestedFieldName), "buzz");
-  SkipWithErrorIfNotOk(
-      state, BenchmarkJsonTranslation(state, msg_type, json_msg, streaming,
-                                      stream_size, 1));
+
+  auto status = BenchmarkJsonTranslation(state, msg_type, json_msg, streaming,
+                                         stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 // Helper function for benchmarking translation from nested gRPC values.
 void NestedPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
+  // GetNestedPayload transfers the pointer ownership to the caller.
+  // We wrap the pointer with unique_ptr to manage the pointer.
   std::unique_ptr<NestedPayload> proto(GetNestedPayload(layers, "buzz"));
-  SkipWithErrorIfNotOk(state,
-                       BenchmarkGrpcTranslation<NestedPayload>(
-                           state, msg_type, *proto, streaming, stream_size, 1));
+
+  auto status = BenchmarkGrpcTranslation<NestedPayload>(
+      state, msg_type, *proto, streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 // Helper function for benchmarking translation from nested gRPC values.
 void StructPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
+  // GetNestedStructPayload transfers the pointer ownership to the caller.
+  // We wrap the pointer with unique_ptr to manage the pointer.
   std::unique_ptr<pb::Struct> proto(
       GetNestedStructPayload(layers, std::string(kNestedFieldName),
                              std::string(kInnerMostNestedFieldName), "buzz"));
 
-  SkipWithErrorIfNotOk(
-      state, BenchmarkGrpcTranslation<pb::Struct>(state, msg_type, *proto,
-                                                  streaming, stream_size, 1));
+  auto status = BenchmarkGrpcTranslation<pb::Struct>(state, msg_type, *proto,
+                                                     streaming, stream_size, 1);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 static void BM_NestedProtoPayloadFromJsonNonStreaming(
@@ -476,9 +488,11 @@ void SegmentedStringPayloadFromJson(::benchmark::State& state,
   // This would also be a more common for string proto.
   const std::string json_msg = absl::StrFormat(
       R"({"payload" : "%s"})", GetRandomAlphanumericString(payload_length));
-  SkipWithErrorIfNotOk(state, BenchmarkJsonTranslation(
-                                  state, kStringPayloadMessageType, json_msg,
-                                  streaming, stream_size, num_checks));
+
+  auto status =
+      BenchmarkJsonTranslation(state, kStringPayloadMessageType, json_msg,
+                               streaming, stream_size, num_checks);
+  SkipWithErrorIfNotOk(state, status);
 }
 
 static void BM_SegmentedStringPayloadFromJsonNonStreaming(
