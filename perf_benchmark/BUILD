@@ -67,7 +67,6 @@ cc_library(
     deps = [
         "benchmark_cc_proto",
         "//src:type_helper",
-        "//test:test_common",
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",

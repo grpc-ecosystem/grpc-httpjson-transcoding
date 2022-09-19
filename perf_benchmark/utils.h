@@ -84,6 +84,10 @@ std::string GetNestedJsonString(uint64_t layers,
 // for stream_size > 1 -> "[json_msg,...,json_msg]"
 std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size);
 
+// Copied from "test/test_common.h".
+// Generates a gRPC message delimiter with the given message size.
+std::string SizeToDelimiter(unsigned size);
+
 // Prefix the binary with a size to delimiter data segment and return.
 std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary);
 
