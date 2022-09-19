@@ -141,14 +141,16 @@ std::string ParseGrpcMessageToJsonMessage(ProtoType proto,
       WrapGrpcMessageWithDelimiter(proto_binary);
 
   if (streaming) {
+    // Need to make a copy otherwise the call to absl::StrAppend is undefined.
+    std::string copy = proto_binary_with_delimiter;
     // Append stream_size - 1 proto binary to the original binary string
     for (uint64_t i = 1; i < stream_size; ++i) {
-      // Need to make a copy otherwise the call to absl::StrAppend is undefined.
-      std::string copy = proto_binary_with_delimiter;
       absl::StrAppend(&proto_binary_with_delimiter, copy);
     }
   }
   BenchmarkZeroCopyInputStream is(proto_binary_with_delimiter, num_checks);
+  // We use newline delimited to get each JSON object separated by \n instead
+  // of in an array.
   const JsonResponseTranslateOptions options{pb::util::JsonPrintOptions(),
                                              true};
   ResponseToJsonTranslator translator(
@@ -301,17 +303,17 @@ TEST(BenchmarkInputStreamTest,
 TEST(BenchmarkInputStreamTest,
      IntegrationWithGrpcResponseTranslatorNestedProtoNested) {
   NestedPayload two_nested;
-  pb::TextFormat::ParseFromString(R"(
-    nested {
+  pb::TextFormat::ParseFromString(
+      R"(
       nested {
-        payload : "Hello World!"
-      }
-    })",
-                                  &two_nested);
+        nested {
+          payload : "Hello World!"
+        }
+      })",
+      &two_nested);
   const std::string two_nested_json_str =
       ParseGrpcMessageToJsonMessage<NestedPayload>(two_nested, "NestedPayload",
                                                    1, false, 1);
-
   ExpectJsonStrEqual(two_nested_json_str,
                      R"({"nested": {"nested": {"payload": "Hello World!"}}})");
 }
@@ -319,12 +321,13 @@ TEST(BenchmarkInputStreamTest,
 TEST(BenchmarkInputStreamTest,
      IntegrationWithGrpcResponseTranslatorStructProtoFlat) {
   pb::Struct zero_nested;
-  pb::TextFormat::ParseFromString(R"(
-        fields {
-          key: "payload"
-          value { string_value: "Hello World!" }
-        })",
-                                  &zero_nested);
+  pb::TextFormat::ParseFromString(
+      R"(
+      fields {
+        key: "payload"
+        value { string_value: "Hello World!" }
+      })",
+      &zero_nested);
   const std::string zero_nested_json_str =
       ParseGrpcMessageToJsonMessage<pb::Struct>(
           zero_nested, "google.protobuf.Struct", 1, false, 1);
