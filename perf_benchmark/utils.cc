@@ -25,6 +25,7 @@
 #include "absl/strings/str_split.h"
 #include "google/protobuf/text_format.h"
 #include "nlohmann/json.hpp"
+#include "test/test_common.h"
 
 namespace google {
 namespace grpc {
@@ -170,26 +171,8 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
   return ss.str();
 }
 
-// Copied from "test/test_common.h".
-std::string SizeToDelimiter(unsigned size) {
-  unsigned char delimiter[5];
-  // Byte 0 is the compression bit - set to 0 (no compression)
-  delimiter[0] = 0;
-  // Bytes 1-4 are big-endian 32-bit message size
-  delimiter[4] = 0xFF & size;
-  size >>= 8;
-  delimiter[3] = 0xFF & size;
-  size >>= 8;
-  delimiter[2] = 0xFF & size;
-  size >>= 8;
-  delimiter[1] = 0xFF & size;
-
-  return std::string(reinterpret_cast<const char*>(delimiter),
-                     sizeof(delimiter));
-}
-
 std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
-  return absl::StrCat(SizeToDelimiter(proto_binary.size()), proto_binary);
+  return absl::StrCat(testing::SizeToDelimiter(proto_binary.size()), proto_binary);
 }
 
 // The caller will need to take the ownership of the returned object by properly
