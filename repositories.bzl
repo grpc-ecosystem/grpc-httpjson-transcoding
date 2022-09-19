@@ -185,7 +185,7 @@ cc_library(
         build_file_content = BUILD,
     )
 
-RULES_DOCKER_COMMIT = "0.25.0"  # Jul 25, 2022
+RULES_DOCKER_COMMIT = "0.25.0"  # Jun 22, 2022
 RULES_DOCKER_SHA256 = "b1e80761a8a8243d03ebca8845e9cc1ba6c82ce7c5179ce2b295cd36f7e394bf"
 
 def io_bazel_rules_docker(bind = True):
