@@ -184,3 +184,13 @@ cc_library(
         sha256 = "d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273",
         build_file_content = BUILD,
     )
+
+RULES_DOCKER_COMMIT = "0.25.0"  # Jul 25, 2022
+RULES_DOCKER_SHA256 = "b1e80761a8a8243d03ebca8845e9cc1ba6c82ce7c5179ce2b295cd36f7e394bf"
+
+def io_bazel_rules_docker(bind = True):
+    http_archive(
+        name = "io_bazel_rules_docker",
+        sha256 = RULES_DOCKER_SHA256,
+        urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v" + RULES_DOCKER_COMMIT + "/rules_docker-v" + RULES_DOCKER_COMMIT + ".tar.gz"],
+    )
