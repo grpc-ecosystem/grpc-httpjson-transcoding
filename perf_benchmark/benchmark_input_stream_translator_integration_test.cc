@@ -61,17 +61,16 @@ constexpr absl::string_view kServiceConfigTextProtoFile =
 
 std::string ParseJsonMessageToProtoMessage(absl::string_view json_msg,
                                            absl::string_view msg_type,
-                                           uint64_t num_checks) {
+                                           uint64_t num_checks,
+                                           RequestInfo request_info = {}) {
   BenchmarkZeroCopyInputStream is(std::string(json_msg), num_checks);
   // Get message type from the global TypeHelper
   const TypeHelper& type_helper = GetBenchmarkTypeHelper();
   const pb::Type* type = type_helper.Info()->GetTypeByTypeUrl(
       absl::StrFormat("type.googleapis.com/%s", msg_type));
 
-  RequestInfo request_info;
   // body field path used in this benchmark are all "*"
   request_info.body_field_path = "*";
-  request_info.variable_bindings = std::vector<RequestWeaver::BindingInfo>();
   request_info.message_type = type;
 
   std::string message;
@@ -114,6 +113,18 @@ uint64_t GetNestedProtoLayer(std::string proto_msg) {
     it = &(it->nested());
   }
   return actual_layers;
+}
+
+std::string GetNestedProtoValue(std::string proto_msg) {
+  NestedPayload actual_proto;
+  actual_proto.ParseFromString(proto_msg);
+
+  const NestedPayload* it = &actual_proto;
+  // Iterate all the way to the leaf node
+  while (it->has_nested()) {
+    it = &(it->nested());
+  }
+  return it->payload();
 }
 
 uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
@@ -400,6 +411,44 @@ TEST(BenchmarkInputStreamTest, IntegrationWithGrpcRequestTranslatorStreaming) {
     // Verification - decoded message should equal the encoded one.
     EXPECT_EQ(nlohmann::json::parse(json_str),
               nlohmann::json::parse(expected_json_str));
+  }
+}
+
+TEST(BenchmarkInputStreamTest,
+     IntegrationWithJsonRequestTranslatorNestedVariableBinding) {
+  absl::string_view nested_field_name = "nested";
+  uint64_t num_nested_layer_input[] = {0, 1, 2, 4, 8, 16, 32};
+  for (uint64_t num_nested_layer : num_nested_layer_input) {
+    // Variable value comes from binding, so an empty string is fine.
+    const std::string json_msg = "{}";
+
+    // Build the field_path bindings.
+    // First, build the dot delimited binding string based on the number of
+    // layers
+    std::string field_path_str;
+    for (uint64_t i = 0; i < num_nested_layer; ++i) {
+      // Append the nested field name and a dot delimiter for each layer
+      absl::StrAppend(&field_path_str, nested_field_name, ".");
+    }
+    // Append the actual payload field name
+    absl::StrAppend(&field_path_str, "payload");
+
+    // Second, parse the field_path object from the string
+    auto field_path = ParseFieldPath(GetBenchmarkTypeHelper(), "NestedPayload",
+                                     field_path_str);
+
+    // Finally, construct the RequestInfo object containing the binding.
+    // We only need to fill in variable_bindings, other fields are filled in
+    // by BenchmarkJsonTranslation().
+    RequestInfo request_info;
+    request_info.variable_bindings = {
+        RequestWeaver::BindingInfo{field_path, "Hello World!"}};
+
+    const std::string proto_str = ParseJsonMessageToProtoMessage(
+        json_msg, "NestedPayload", 1, request_info);
+
+    EXPECT_EQ(GetNestedProtoLayer(proto_str), num_nested_layer);
+    EXPECT_EQ(GetNestedProtoValue(proto_str), "Hello World!");
   }
 }
 

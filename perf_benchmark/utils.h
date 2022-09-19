@@ -22,7 +22,9 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/api/service.pb.h"
+#include "google/protobuf/util/internal/type_info.h"
 #include "perf_benchmark/benchmark.pb.h"
+#include "src/include/grpc_transcoding/type_helper.h"
 
 namespace google {
 namespace grpc {
@@ -97,6 +99,20 @@ std::unique_ptr<NestedPayload> GetNestedPayload(uint64_t layers,
 std::unique_ptr<::google::protobuf::Struct> GetNestedStructPayload(
     uint64_t layers, absl::string_view nested_field_name,
     absl::string_view inner_key, absl::string_view inner_val);
+
+// Parse a dot delimited field path string into a vector of actual field
+// pointers.
+std::vector<const google::protobuf::Field*> ParseFieldPath(
+    const TypeHelper& type_helper, absl::string_view msg_type,
+    const std::string& field_path_str);
+
+// Generate a JSON string corresponds to MultiStringFieldMessage.
+// For the 8 fields in the message, we will fill in the first
+// `num_fields_exist`
+// number of fields with the given `val`.
+std::string GenerateMultiStringFieldPayloadJsonStr(
+    uint64_t num_fields_exist, absl::string_view field_prefix,
+    absl::string_view val);
 
 }  // namespace perf_benchmark
 

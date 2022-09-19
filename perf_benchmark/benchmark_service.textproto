@@ -35,6 +35,11 @@ apis {
     request_type_url: "type.googleapis.com/google.protobuf.Struct"
     response_type_url: "type.googleapis.com/google.protobuf.Struct"
   }
+  methods {
+    name: "MultiStringFieldPayloadBM"
+    request_type_url: "type.googleapis.com/MultiStringFieldPayload"
+    response_type_url: "type.googleapis.com/MultiStringFieldPayload"
+  }
 }
 types {
   name: "BytesPayload"
@@ -112,6 +117,67 @@ types {
     number: 2
     name: "payload"
     json_name: "payload"
+  }
+  source_context {
+  }
+}
+types {
+  name: "MultiStringFieldPayload"
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "f1"
+    json_name: "f1"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 2
+    name: "f2"
+    json_name: "f2"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 3
+    name: "f3"
+    json_name: "f3"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 4
+    name: "f4"
+    json_name: "f4"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 5
+    name: "f5"
+    json_name: "f5"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 6
+    name: "f6"
+    json_name: "f6"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 7
+    name: "f7"
+    json_name: "f7"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 8
+    name: "f8"
+    json_name: "f8"
   }
   source_context {
   }
