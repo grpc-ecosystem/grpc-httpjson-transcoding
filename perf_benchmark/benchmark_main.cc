@@ -409,9 +409,7 @@ void NestedPayloadFromJson(::benchmark::State& state, uint64_t layers,
 void NestedPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
-  // GetNestedPayload transfers the pointer ownership to the caller.
-  // We wrap the pointer with unique_ptr to manage the pointer lifecycle.
-  std::unique_ptr<NestedPayload> proto(GetNestedPayload(layers, "buzz"));
+  std::unique_ptr<NestedPayload> proto = GetNestedPayload(layers, "buzz");
 
   auto status = BenchmarkGrpcTranslation<NestedPayload>(
       state, msg_type, *proto, streaming, stream_size, 1);
@@ -422,11 +420,9 @@ void NestedPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
 void StructPayloadFromGrpc(::benchmark::State& state, uint64_t layers,
                            bool streaming, uint64_t stream_size,
                            absl::string_view msg_type) {
-  // GetNestedStructPayload transfers the pointer ownership to the caller.
-  // We wrap the pointer with unique_ptr to manage the pointer lifecycle.
-  std::unique_ptr<pb::Struct> proto(
+  std::unique_ptr<pb::Struct> proto =
       GetNestedStructPayload(layers, std::string(kNestedFieldName),
-                             std::string(kInnerMostNestedFieldName), "buzz"));
+                             std::string(kInnerMostNestedFieldName), "buzz");
 
   auto status = BenchmarkGrpcTranslation<pb::Struct>(state, msg_type, *proto,
                                                      streaming, stream_size, 1);

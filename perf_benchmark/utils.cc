@@ -190,33 +190,52 @@ std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
   return absl::StrCat(SizeToDelimiter(proto_binary.size()), proto_binary);
 }
 
-NestedPayload* GetNestedPayload(uint64_t layers, absl::string_view inner_val) {
-  NestedPayload* proto = new NestedPayload();
+// The caller will need to take the ownership of the returned object by properly
+// releasing the memory.
+NestedPayload* GetNestedPayloadRecursive(uint64_t layers,
+                                         absl::string_view inner_val) {
+  auto* proto = new NestedPayload();
   if (layers == 0) {
     proto->set_payload(std::string(inner_val));
     return proto;
   }
   // set_allocated sets the string object to the field and frees the previous
   // field value if it exists.
-  proto->set_allocated_nested(GetNestedPayload(layers - 1, inner_val));
+  proto->set_allocated_nested(GetNestedPayloadRecursive(layers - 1, inner_val));
   return proto;
 }
 
-::google::protobuf::Struct* GetNestedStructPayload(
-    uint64_t layers, std::string nested_field_name, std::string inner_key,
-    absl::string_view inner_val) {
-  ::google::protobuf::Struct* proto = new ::google::protobuf::Struct();
+// The caller will need  to take the ownership of the returned object by
+// properly releasing the memory.
+std::unique_ptr<NestedPayload> GetNestedPayload(uint64_t layers,
+                                                absl::string_view inner_val) {
+  return std::unique_ptr<NestedPayload>(
+      GetNestedPayloadRecursive(layers, inner_val));
+}
+
+::google::protobuf::Struct* GetNestedStructPayloadRecursive(
+    uint64_t layers, absl::string_view nested_field_name,
+    absl::string_view inner_key, absl::string_view inner_val) {
+  auto* proto = new ::google::protobuf::Struct();
   if (layers == 0) {
-    (*proto->mutable_fields())[inner_key].set_string_value(
+    (*proto->mutable_fields())[std::string(inner_key)].set_string_value(
         std::string(inner_val));
     return proto;
   }
   // set_allocated sets the string object to the field and frees the previous
   // field value if it exists.
-  (*proto->mutable_fields())[nested_field_name].set_allocated_struct_value(
-      GetNestedStructPayload(layers - 1, nested_field_name, inner_key,
-                             inner_val));
+  (*proto->mutable_fields())[std::string(nested_field_name)]
+      .set_allocated_struct_value(GetNestedStructPayloadRecursive(
+          layers - 1, nested_field_name, inner_key, inner_val));
   return proto;
+}
+
+std::unique_ptr<::google::protobuf::Struct> GetNestedStructPayload(
+    uint64_t layers, absl::string_view nested_field_name,
+    absl::string_view inner_key, absl::string_view inner_val) {
+  return std::unique_ptr<::google::protobuf::Struct>(
+      GetNestedStructPayloadRecursive(layers, nested_field_name, inner_key,
+                                      inner_val));
 }
 
 }  // namespace perf_benchmark

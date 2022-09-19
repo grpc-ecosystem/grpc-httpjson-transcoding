@@ -126,7 +126,8 @@ TEST(UtilsTest, GetNestedJsonStringMultiLayers) {
 TEST(UtilsTest, GetNestedPayload) {
   std::string payload = "Hello World!";
   for (uint64_t num_layers : {0, 5, 50, 100}) {
-    std::unique_ptr<NestedPayload> proto(GetNestedPayload(num_layers, payload));
+    std::unique_ptr<NestedPayload> proto =
+        GetNestedPayload(num_layers, payload);
     uint64_t counter = 0;
     const NestedPayload* it = proto.get();
     while (it->has_nested()) {
@@ -141,8 +142,8 @@ TEST(UtilsTest, GetNestedPayload) {
 TEST(UtilsTest, GetNestedStructPayload) {
   std::string inner_val = "Hello World!";
   for (uint64_t num_layers : {0, 5, 50, 100}) {
-    std::unique_ptr<::google::protobuf::Struct> proto(
-        GetNestedStructPayload(num_layers, "nested", "payload", inner_val));
+    std::unique_ptr<::google::protobuf::Struct> proto =
+        GetNestedStructPayload(num_layers, "nested", "payload", inner_val);
     uint64_t counter = 0;
     const ::google::protobuf::Struct* it = proto.get();
     while (it->fields().contains("nested")) {
