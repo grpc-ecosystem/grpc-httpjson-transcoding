@@ -141,8 +141,8 @@ uint64_t GetStructProtoLayer(std::string proto_msg, std::string field_name) {
 }
 
 // Parse the Grpc message binary to Json message using ResponseToJsonTranslator.
-template <class ProtoType>
-std::string ParseGrpcMessageToJsonMessage(ProtoType proto,
+template <class ProtoMessageType>
+std::string ParseGrpcMessageToJsonMessage(const ProtoMessageType& proto,
                                           absl::string_view msg_type,
                                           uint64_t num_checks, bool streaming,
                                           uint64_t stream_size) {

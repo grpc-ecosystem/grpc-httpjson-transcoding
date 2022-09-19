@@ -197,19 +197,19 @@ absl::Status BenchmarkJsonTranslation(::benchmark::State& state,
 // We use newline_delimited == true option which can generate JSON object in
 // streaming translation when the full message is not sent.
 //
-// template ProtoType - ProtoBuffer object that will be serialized for
-//                      translation.
+// template ProtoMessageType - ProtoBuffer message object that will be
+//                             serialized for translation.
 // state - ::benchmark::State& variable used for collecting metrics.
 // msg_type - Protobuf message name for translation.
-// proto - ProtoBuffer object with ProtoType
+// proto - ProtoBuffer object with ProtoMessageType
 // streaming - Flag for streaming testing. When true, a stream of `stream_size`
 //             number of `json_msg` will be fed into translation.
 // stream_size - Number of streaming messages.
 // num_checks - Number of calls to NextMessage() that yields the full message.
-template <class ProtoType>
+template <class ProtoMessageType>
 absl::Status BenchmarkGrpcTranslation(::benchmark::State& state,
                                       absl::string_view msg_type,
-                                      ProtoType proto, bool streaming,
+                                      const ProtoMessageType& proto, bool streaming,
                                       uint64_t stream_size,
                                       uint64_t num_checks) {
   std::string proto_binary;
@@ -356,22 +356,24 @@ void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
 
 // Helper function for benchmarking translation from gRPC to payload of
 // different types.
-// template ProtoType - ProtoBuffer message type. E.g. this can be BytesPayload.
+// template ProtoMessageType - ProtoBuffer message type. E.g. this can be
+//                             BytesPayload.
 // template PayloadType - `payload` field type of the ProtoBuffer message.
 //                        E.g. the `payload` field in `BytesPayload` is bytes,
 //                        which corresponds to std::string in C++. Then,
-//                        PayloadType for BytesPayload ProtoType is std::string.
-template <class ProtoType, class PayloadType>
+//                        PayloadType for BytesPayload ProtoMessageType is
+//                        std::string.
+template <class ProtoMessageType, class PayloadType>
 void ArrayPayloadFromGrpc(::benchmark::State& state, absl::string_view msg_type,
-                          PayloadType val, bool streaming,
+                          const PayloadType& val, bool streaming,
                           uint64_t stream_size) {
-  ProtoType proto;
+  ProtoMessageType proto;
   for (uint64_t i = 0; i < kArrayPayloadLength; ++i) {
     proto.add_payload(val);
   }
 
-  auto status = BenchmarkGrpcTranslation<ProtoType>(state, msg_type, proto,
-                                                    streaming, stream_size, 1);
+  auto status = BenchmarkGrpcTranslation<ProtoMessageType>(state, msg_type, proto,
+                                                           streaming, stream_size, 1);
   SkipWithErrorIfNotOk(state, status);
 }
 
