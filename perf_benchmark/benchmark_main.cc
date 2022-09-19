@@ -356,8 +356,11 @@ void ArrayPayloadFromJson(::benchmark::State& state, absl::string_view msg_type,
 
 // Helper function for benchmarking translation from gRPC to payload of
 // different types.
-// template ProtoType - ProtoBuffer object type.
-// template PayloadType - Payload type of the ProtoBuffer.
+// template ProtoType - ProtoBuffer message type. E.g. this can be BytesPayload.
+// template PayloadType - `payload` field type of the ProtoBuffer message.
+//                        E.g. the `payload` field in `BytesPayload` is bytes,
+//                        which corresponds to std::string in C++. Then,
+//                        PayloadType for BytesPayload ProtoType is std::string.
 template <class ProtoType, class PayloadType>
 void ArrayPayloadFromGrpc(::benchmark::State& state, absl::string_view msg_type,
                           PayloadType val, bool streaming,
