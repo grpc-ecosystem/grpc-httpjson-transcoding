@@ -19,6 +19,10 @@
 bazel build //...
 bazel test //... --test_output=errors
 
-# Push benchmark binary image to cloudesf-testing GCR.
+# Authenticate from gcloud using service account credentials.
 gcloud config set core/project cloudesf-testing
+gcloud auth activate-service-account \
+  --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+
+# Push benchmark binary image to cloudesf-testing GCR.
 bazel run //perf_benchmark:benchmark_main_image_push --define=PUSH_REGISTRY=gcr.io --define=PUSH_PROJECT=cloudesf-testing --define=PUSH_TAG=github-latest
