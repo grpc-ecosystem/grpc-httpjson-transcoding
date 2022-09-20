@@ -56,3 +56,6 @@ build:asan-replay --@rules_fuzzing//fuzzing:cc_engine_sanitizer=asan
 build:oss-fuzz --@rules_fuzzing//fuzzing:cc_engine=@rules_fuzzing_oss_fuzz//:oss_fuzz_engine
 build:oss-fuzz --@rules_fuzzing//fuzzing:cc_engine_instrumentation=oss-fuzz
 build:oss-fuzz --@rules_fuzzing//fuzzing:cc_engine_sanitizer=none
+
+# Default build parameters so that `bazel build //...` can always find them.
+build --define=PUSH_REGISTRY=gcr.io --define=PUSH_PROJECT=project-id --define=PUSH_TAG=latest

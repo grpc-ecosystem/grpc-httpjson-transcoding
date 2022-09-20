@@ -69,12 +69,15 @@ cc_image(
 )
 
 # Example run command:
-# bazel run //perf_benchmark:benchmark_main_image_push --define=PUSH_PROJECT=project-id --define=PUSH_TAG=latest
+# bazel run //perf_benchmark:benchmark_main_image_push \
+# --define=PUSH_REGISTRY=gcr.io \
+# --define=PUSH_PROJECT=project-id \
+# --define=PUSH_TAG=latest
 container_push(
     name = "benchmark_main_image_push",
     format = "Docker",
     image = ":benchmark_main_image",
-    registry = "gcr.io",
+    registry = "$(PUSH_REGISTRY)",
     repository = "$(PUSH_PROJECT)/grpc-httpjson-transcoding-benchmark",
     tag = "$(PUSH_TAG)",
 )
