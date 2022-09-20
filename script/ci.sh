@@ -18,5 +18,3 @@
 
 bazel build //...
 bazel test //... --test_output=errors
-
-bazel run //perf_benchmark:benchmark_main_image_push --define=PUSH_PROJECT=cloudesf-testing --define=PUSH_TAG=github-latest
