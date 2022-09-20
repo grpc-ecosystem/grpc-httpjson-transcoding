@@ -18,3 +18,7 @@
 
 bazel build //...
 bazel test //... --test_output=errors
+
+# Push benchmark binary image to cloudesf-testing GCR.
+gcloud config set core/project cloudesf-testing
+bazel run //perf_benchmark:benchmark_main_image_push --define=PUSH_REGISTRY=gcr.io --define=PUSH_PROJECT=cloudesf-testing --define=PUSH_TAG=github-latest
