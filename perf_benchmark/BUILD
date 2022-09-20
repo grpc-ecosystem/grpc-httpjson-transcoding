@@ -59,11 +59,17 @@ cc_binary(
     ],
 )
 
+# Note: cc_image rule won't build the binary inside the container. It builds the
+# binary locally and copies the binary into the container.
+# This cc_image rule with v.0.25.0 rules_docker release uses Debian 11 as base.
+# Please make sure if you're building from Debian 11 system as well.
 cc_image(
     name = "benchmark_main_image",
     binary = ":benchmark_main",
 )
 
+# Example run command:
+# bazel run //perf_benchmark:benchmark_main_image_push --define=PUSH_PROJECT=project-id --define=PUSH_TAG=latest
 container_push(
     name = "benchmark_main_image_push",
     format = "Docker",
