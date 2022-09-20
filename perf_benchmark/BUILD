@@ -17,6 +17,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_push")
 
 cc_proto_library(
     name = "benchmark_cc_proto",
@@ -61,6 +62,15 @@ cc_binary(
 cc_image(
     name = "benchmark_main_image",
     binary = ":benchmark_main",
+)
+
+container_push(
+    name = "benchmark_main_image_push",
+    format = "Docker",
+    image = ":benchmark_main_image",
+    registry = "gcr.io",
+    repository = "$(PUSH_PROJECT)/grpc-httpjson-transcoding-benchmark",
+    tag = "$(PUSH_TAG)",
 )
 
 cc_library(
