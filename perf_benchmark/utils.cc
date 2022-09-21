@@ -201,11 +201,10 @@ std::unique_ptr<::google::protobuf::Struct> GetNestedStructPayload(
   }
   // set_allocated sets the string object to the field and frees the previous
   // field value if it exists, so we are transferring the ownership.
+  auto inner = GetNestedStructPayload(layers - 1, nested_field_name, inner_key,
+                                      inner_val);
   (*proto->mutable_fields())[std::string(nested_field_name)]
-      .set_allocated_struct_value(GetNestedStructPayload(layers - 1,
-                                                         nested_field_name,
-                                                         inner_key, inner_val)
-                                      .release());
+      .set_allocated_struct_value(inner.release());
   return proto;
 }
 
