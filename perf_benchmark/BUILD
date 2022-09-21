@@ -42,6 +42,7 @@ cc_binary(
     data = [
         "benchmark_service.textproto",
     ],
+    testonly = 1,
     deps = [
         "benchmark_cc_proto",
         ":benchmark_input_stream",
@@ -64,9 +65,11 @@ cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
+    testonly = 1,
     deps = [
         "benchmark_cc_proto",
         "//src:type_helper",
+        "//test:test_common",
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
@@ -81,6 +84,7 @@ cc_library(
     name = "benchmark_input_stream",
     srcs = ["benchmark_input_stream.cc"],
     hdrs = ["benchmark_input_stream.h"],
+    testonly = 1,
     deps = [
         "//src:transcoder_input_stream",
         "@com_google_absl//absl/strings",
