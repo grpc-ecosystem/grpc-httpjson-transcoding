@@ -14,7 +14,7 @@ our performance benchmark. Variable being tested
 ## How to run
 
 ```bash
-bazel run //perf_benchmark:benchmark_main -- \
+bazel run //perf_benchmark:benchmark_main --compilation_mode=opt -- \
   --benchmark_min_warmup_time=3 \
   --benchmark_repetitions=1000 \
   --benchmark_format=console \
@@ -24,15 +24,19 @@ bazel run //perf_benchmark:benchmark_main -- \
 
 Options meaning:
 
-- `benchmark_min_warmup_time=<int>`: the amount of time for which the warmup should be run 
+- `--compilation_mode=opt`: Bazel option to build the library in release mode.
+  Without this, the library runs in debug mode.
+- `benchmark_min_warmup_time=<int>`: the amount of time for which the warmup
+  should be run
 - `benchmark_repetitions=<int>`: the test will automatically run several
   iterations, but only one data point is captured per run. Setting repetition to
   1000 gives us 1000 data points, which would make percentiles and standard
   deviation more meaningful.
 - `benchmark_format=<console|json|csv>`: where to output benchmark results.
-- `benchmark_counters_tabular=<true|false>`: it's useful when outputting to console.
-- `benchmark_filter=<regex>`: it can be used to only run the benchmarks that match
-  the specified <regex>.
+- `benchmark_counters_tabular=<true|false>`: it's useful when outputting to
+  console.
+- `benchmark_filter=<regex>`: it can be used to only run the benchmarks that
+  match the specified <regex>.
 
 ## Captured data
 
