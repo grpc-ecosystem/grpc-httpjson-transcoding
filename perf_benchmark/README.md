@@ -8,6 +8,8 @@ our performance benchmark. Variable being tested
 - JSON value data type
 - JSON body length
 - Message chunk size
+- Variable binding depth (JSON -> gRPC only)
+- Number of variable bindings (JSON -> gRPC only)
 
 ## How to run
 
