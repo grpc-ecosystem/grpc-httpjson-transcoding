@@ -48,13 +48,18 @@ bool BenchmarkZeroCopyInputStream::Next(const void** data, int* size) {
     *size = 0;
     return false;
   }
+
   *data = msg_.data() + pos_;
-  if (pos_ + chunk_size_ >= msg_.size()) {  // last message
+  if (pos_ + chunk_size_ >= msg_.size()) {  // last message to be sent
     *size = msg_.size() - pos_;
-    finished_ = true;
   } else {
     *size = chunk_size_;
-    pos_ += chunk_size_;
+  }
+  pos_ += *size;
+
+  // Check if we have reached the end.
+  if (pos_ >= msg_.size()) {
+    finished_ = true;
   }
   return true;
 }
@@ -67,6 +72,14 @@ void BenchmarkZeroCopyInputStream::Reset() {
 uint64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
   return msg_.size();
 }
+
+void BenchmarkZeroCopyInputStream::BackUp(int count) {
+  GOOGLE_CHECK(count <= pos_);
+  pos_ -= count;
+  finished_ = false;
+}
+
+int64_t BenchmarkZeroCopyInputStream::ByteCount() const { return pos_; }
 }  // namespace perf_benchmark
 
 }  // namespace transcoding

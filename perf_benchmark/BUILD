@@ -19,17 +19,20 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 cc_proto_library(
     name = "benchmark_cc_proto",
+    testonly = 1,
     deps = [":benchmark_proto"],
 )
 
 cc_proto_library(
     name = "com_google_protobuf_struct_cc_proto",
+    testonly = 1,
     deps = ["@com_google_protobuf//:struct_proto"],
 )
 
 proto_library(
     name = "benchmark_proto",
     srcs = ["benchmark.proto"],
+    testonly = 1,
     deps = [
         "@com_google_googleapis//google/api:annotations_proto",
         "@com_google_protobuf//:struct_proto",
@@ -42,12 +45,16 @@ cc_binary(
     data = [
         "benchmark_service.textproto",
     ],
+    testonly = 1,
     deps = [
+        "benchmark_cc_proto",
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
+        "//src:response_to_json_translator",
         "//src:type_helper",
         "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
@@ -61,8 +68,11 @@ cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
+    testonly = 1,
     deps = [
+        "benchmark_cc_proto",
         "//src:type_helper",
+        "//test:test_common",
         "@com_github_nlohmann_json//:json",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",
@@ -77,6 +87,7 @@ cc_library(
     name = "benchmark_input_stream",
     srcs = ["benchmark_input_stream.cc"],
     hdrs = ["benchmark_input_stream.h"],
+    testonly = 1,
     deps = [
         "//src:transcoder_input_stream",
         "@com_google_absl//absl/strings",
@@ -125,7 +136,9 @@ cc_test(
         ":benchmark_input_stream",
         ":utils",
         "//src:json_request_translator",
+        "//src:response_to_json_translator",
         "//src:type_helper",
+        "@com_github_nlohmann_json//:json",
         "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
     ],

@@ -25,6 +25,7 @@
 #include "absl/strings/str_split.h"
 #include "google/protobuf/text_format.h"
 #include "nlohmann/json.hpp"
+#include "test/test_common.h"
 
 namespace google {
 namespace grpc {
@@ -170,6 +171,43 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
   return ss.str();
 }
 
+std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
+  return absl::StrCat(testing::SizeToDelimiter(proto_binary.size()),
+                      proto_binary);
+}
+
+std::unique_ptr<NestedPayload> GetNestedPayload(uint64_t layers,
+                                                absl::string_view inner_val) {
+  auto proto = absl::make_unique<NestedPayload>();
+  if (layers == 0) {
+    proto->set_payload(std::string(inner_val));
+    return proto;
+  }
+  // set_allocated sets the string object to the field and frees the previous
+  // field value if it exists, so we are transferring the ownership.
+  proto->set_allocated_nested(
+      GetNestedPayload(layers - 1, inner_val).release());
+  return proto;
+}
+
+std::unique_ptr<::google::protobuf::Struct> GetNestedStructPayload(
+    uint64_t layers, absl::string_view nested_field_name,
+    absl::string_view inner_key, absl::string_view inner_val) {
+  auto proto = absl::make_unique<::google::protobuf::Struct>();
+  if (layers == 0) {
+    (*proto->mutable_fields())[std::string(inner_key)].set_string_value(
+        std::string(inner_val));
+    return proto;
+  }
+  // set_allocated sets the string object to the field and frees the previous
+  // field value if it exists, so we are transferring the ownership.
+  auto inner = GetNestedStructPayload(layers - 1, nested_field_name, inner_key,
+                                      inner_val);
+  (*proto->mutable_fields())[std::string(nested_field_name)]
+      .set_allocated_struct_value(inner.release());
+  return proto;
+}
+
 // Modified based on test/request_translator_test_base.cc.
 std::vector<const google::protobuf::Field*> ParseFieldPath(
     const TypeHelper& type_helper, absl::string_view msg_type,
@@ -205,6 +243,7 @@ std::string GenerateMultiStringFieldPayloadJsonStr(
   }
   return to_string(message);
 }
+
 }  // namespace perf_benchmark
 
 }  // namespace transcoding

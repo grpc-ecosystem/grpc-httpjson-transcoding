@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 #include "perf_benchmark/utils.h"
+#include <memory>
 #include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_split.h"
@@ -121,6 +122,39 @@ TEST(UtilsTest, GetNestedJsonStringMultiLayers) {
       R"({"nested_field_name":{"nested_field_name":{"inner_val":"inner_key"}}})",
       GetNestedJsonString(2, "nested_field_name", "inner_val", "inner_key"));
 }
+
+TEST(UtilsTest, GetNestedPayload) {
+  std::string payload = "Hello World!";
+  for (uint64_t num_layers : {0, 5, 50, 100}) {
+    std::unique_ptr<NestedPayload> proto =
+        GetNestedPayload(num_layers, payload);
+    uint64_t counter = 0;
+    const NestedPayload* it = proto.get();
+    while (it->has_nested()) {
+      ++counter;
+      it = &it->nested();
+    }
+    EXPECT_EQ(it->payload(), payload);
+    EXPECT_EQ(counter, num_layers);
+  }
+}
+
+TEST(UtilsTest, GetNestedStructPayload) {
+  std::string inner_val = "Hello World!";
+  for (uint64_t num_layers : {0, 5, 50, 100}) {
+    std::unique_ptr<::google::protobuf::Struct> proto =
+        GetNestedStructPayload(num_layers, "nested", "payload", inner_val);
+    uint64_t counter = 0;
+    const ::google::protobuf::Struct* it = proto.get();
+    while (it->fields().contains("nested")) {
+      ++counter;
+      it = &it->fields().at("nested").struct_value();
+    }
+    EXPECT_EQ(it->fields().at("payload").string_value(), inner_val);
+    EXPECT_EQ(counter, num_layers);
+  }
+}
+
 }  // namespace perf_benchmark
 
 }  // namespace transcoding
