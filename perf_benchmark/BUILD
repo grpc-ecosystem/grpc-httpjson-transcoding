@@ -19,17 +19,20 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 cc_proto_library(
     name = "benchmark_cc_proto",
+    testonly = 1,
     deps = [":benchmark_proto"],
 )
 
 cc_proto_library(
     name = "com_google_protobuf_struct_cc_proto",
+    testonly = 1,
     deps = ["@com_google_protobuf//:struct_proto"],
 )
 
 proto_library(
     name = "benchmark_proto",
     srcs = ["benchmark.proto"],
+    testonly = 1,
     deps = [
         "@com_google_googleapis//google/api:annotations_proto",
         "@com_google_protobuf//:struct_proto",
