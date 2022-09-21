@@ -53,15 +53,12 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   bool Finished() const override { return finished_; };
 
   bool Next(const void** data, int* size) override;
-  void BackUp(int count) override { GOOGLE_LOG(FATAL) << "Not implemented"; };
+  void BackUp(int count) override;
   bool Skip(int count) override {
     GOOGLE_LOG(FATAL) << "Not implemented";
     return false;
   };
-  int64_t ByteCount() const override {
-    GOOGLE_LOG(FATAL) << "Not implemented";
-    return 0;
-  };
+  int64_t ByteCount() const override;
 
   // Reset the input stream back to the original start state.
   // This should be called after one iteration of benchmark.

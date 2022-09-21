@@ -23,7 +23,6 @@ namespace grpc {
 namespace transcoding {
 
 namespace perf_benchmark {
-
 TEST(BenchmarkInputStreamTest, BenchmarkZeroCopyInputStreamSimple) {
   absl::string_view json_msg_input[] = {
       R"({"Hello":"World!"})",
