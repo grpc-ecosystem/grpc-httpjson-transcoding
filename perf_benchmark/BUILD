@@ -73,6 +73,7 @@ cc_binary(
 cc_image(
     name = "benchmark_main_image",
     binary = ":benchmark_main",
+    testonly = 1,
 )
 
 # Example run command:
@@ -84,6 +85,7 @@ container_push(
     name = "benchmark_main_image_push",
     format = "Docker",
     image = ":benchmark_main_image",
+    testonly = 1,
     registry = "$(PUSH_REGISTRY)",
     repository = "$(PUSH_PROJECT)/grpc-httpjson-transcoding-benchmark",
     tag = "$(PUSH_TAG)",
