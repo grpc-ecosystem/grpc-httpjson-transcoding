@@ -172,11 +172,12 @@ std::string GetStreamedJson(absl::string_view json_msg, uint64_t stream_size) {
 }
 
 std::string WrapGrpcMessageWithDelimiter(absl::string_view proto_binary) {
-  return absl::StrCat(testing::SizeToDelimiter(proto_binary.size()), proto_binary);
+  return absl::StrCat(testing::SizeToDelimiter(proto_binary.size()),
+                      proto_binary);
 }
 
 std::unique_ptr<NestedPayload> GetNestedPayload(uint64_t layers,
-                                         absl::string_view inner_val) {
+                                                absl::string_view inner_val) {
   auto proto = absl::make_unique<NestedPayload>();
   if (layers == 0) {
     proto->set_payload(std::string(inner_val));
@@ -184,7 +185,8 @@ std::unique_ptr<NestedPayload> GetNestedPayload(uint64_t layers,
   }
   // set_allocated sets the string object to the field and frees the previous
   // field value if it exists, so we are transferring the ownership.
-  proto->set_allocated_nested(GetNestedPayload(layers - 1, inner_val).release());
+  proto->set_allocated_nested(
+      GetNestedPayload(layers - 1, inner_val).release());
   return proto;
 }
 
@@ -200,8 +202,10 @@ std::unique_ptr<::google::protobuf::Struct> GetNestedStructPayload(
   // set_allocated sets the string object to the field and frees the previous
   // field value if it exists, so we are transferring the ownership.
   (*proto->mutable_fields())[std::string(nested_field_name)]
-      .set_allocated_struct_value(GetNestedStructPayload(
-          layers - 1, nested_field_name, inner_key, inner_val).release());
+      .set_allocated_struct_value(GetNestedStructPayload(layers - 1,
+                                                         nested_field_name,
+                                                         inner_key, inner_val)
+                                      .release());
   return proto;
 }
 
