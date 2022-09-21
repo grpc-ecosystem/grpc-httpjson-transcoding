@@ -669,25 +669,30 @@ BENCHMARK_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
-    ->Arg(32);  // nested with 32 layers
+                // More than 32 layers would fail the parsing for struct proto.
+                // To be consistent for all nested cases, we set to 31.
+    ->Arg(31);  // nested with 31 layers
 BENCHMARK_WITH_PERCENTILE(BM_NestedProtoPayloadFromGrpcNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
-    ->Arg(32);  // nested with 32 layers
+                // More than 32 layers would fail the parsing for struct proto.
+                // To be consistent for all nested cases, we set to 31.
+    ->Arg(31);  // nested with 31 layers
 BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
                 // More than 32 layers would fail the parsing for struct proto.
-                // To be consistent with gRPC->JSON test case, we set to 31.
-    ->Arg(31);  // nested with 32 layers
+                // To be consistent for all nested cases, we set to 31.
+    ->Arg(31);  // nested with 31 layers
 BENCHMARK_WITH_PERCENTILE(BM_StructProtoPayloadFromGrpcNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
-                // More than 31 layers would fail the parsing for struct proto.
-    ->Arg(31);  // nested with 32 layers
+                // More than 32 layers would fail the parsing for struct proto.
+                // To be consistent for all nested cases, we set to 31.
+    ->Arg(31);  // nested with 31 layers
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedProtoPayloadFromJsonStreaming);
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_NestedProtoPayloadFromGrpcStreaming);
 BENCHMARK_STREAMING_WITH_PERCENTILE(BM_StructProtoPayloadFromJsonStreaming);
@@ -716,7 +721,7 @@ BENCHMARK_WITH_PERCENTILE(BM_NestedVariableBindingsFromJsonNonStreaming)
     ->Arg(0)    // flat JSON
     ->Arg(1)    // nested with 1 layer
     ->Arg(8)    // nested with 8 layers
-    ->Arg(32);  // nested with 32 layers
+    ->Arg(31);  // nested with 31 layers
 
 //
 // Independent benchmark variable: Number of variable bindings.
