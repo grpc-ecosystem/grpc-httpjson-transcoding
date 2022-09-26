@@ -218,12 +218,12 @@ absl::Status BenchmarkGrpcTranslation(::benchmark::State& state,
       WrapGrpcMessageWithDelimiter(proto_binary);
 
   if (streaming) {
-    // Append stream_size - 1 proto binary to the original binary string
-    for (uint64_t i = 1; i < stream_size; ++i) {
-      // Need to make a copy otherwise the call to absl::StrAppend is undefined.
-      std::string copy = proto_binary_with_delimiter;
-      absl::StrAppend(&proto_binary_with_delimiter, copy);
+    // Combine stream_size proto binary to the original binary string
+    std::stringstream ss("");
+    for (uint64_t i = 0; i < stream_size; ++i) {
+      ss << proto_binary_with_delimiter;
     }
+    proto_binary_with_delimiter = ss.str();
   }
 
   // Wrap proto binary inside BenchmarkZeroCopyInputStream.
