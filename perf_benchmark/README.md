@@ -74,10 +74,11 @@ bazel run //perf_benchmark:benchmark_main_image_push \
 ### Environment Setup
 
 We ran the benchmark on the `n1-highmem-32` machines offered from Google Cloud
-Kubernettes Engine (GKE). The request memory and cpu are `512Mi` and `500m`
-respectively, and the limit memory and cpu are `2Gi` and `2` respectively. The
-transcoder and benchmark binaries run in a single-thread, so vCPU with 2 cores
-is sufficient.
+Kubernetes Engine (GKE). The container is running in Debian 12.
+
+The request memory and cpu are `512Mi` and `500m` respectively, and the limit
+memory and cpu are `2Gi` and `2` respectively. The transcoder and benchmark
+binaries run in a single-thread, so vCPU with 2 cores is sufficient.
 
 The benchmark was started using the following arguments
 
@@ -104,7 +105,7 @@ nested layers during the transcoding.
 - Transcoding streamed messages doesn't add extra overhead.
 - The per-byte latency of nested structure does not conform to a trend.
 
-![Number of Nested Layers Visualization](image/nested_layers.jpg "Number of Nesetd Layers")
+![Number of Nested Layers Visualization](image/nested_layers.jpg "Number of Nested Layers")
 
 ### Array Length
 
@@ -130,10 +131,10 @@ with varying data length.
 - Streaming messages has almost little overhead.
 
 _Note: The JSON representation of `bytes` typed protobuf field is encoded in
-base64. Therefore, 1 MiB sized message in gRPC would have roughtly 1.33 MiB in
+base64. Therefore, 1 MiB sized message in gRPC would have roughly 1.33 MiB in
 JSON. The per-byte latency is calculated using the unencoded data size, which is
-why the per-byte latency would gives around 34000 for 32 MiB of data, whereas
-the message latency for 32 MiB is actually around 50000._
+why the per-byte latency would give around 34000 for 32 MiB of data, whereas the
+message latency for 32 MiB is actually around 50000._
 
 ![Body Length Visualization](image/body_length.jpg "Body Length")
 
@@ -164,7 +165,7 @@ We benchmarked transcoding from an array of zeros `[0, 0, ..., 0]` into `string`
 
 ### Variable Binding Depth
 
-We benchmarked the effects of having deeply nesetd variable bindings in JSON ->
+We benchmarked the effects of having deeply nested variable bindings in JSON ->
 gRPC. There is no variable binding from gRPC -> JSON. Streaming benchmark
 doesn't apply here because the same insights can be collected from the JSON body
 length benchmarks.
@@ -182,4 +183,4 @@ JSON -> gRPC.
 
 - The overhead of a deeper variable binding scales linearly.
 
-![Number of Variable Bindings Visualization](image/num_variable_bindings.jpg "Number of Variable Bindingsh")
+![Number of Variable Bindings Visualization](image/num_variable_bindings.jpg "Number of Variable Bindings")
