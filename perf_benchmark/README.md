@@ -49,6 +49,20 @@ We also capture p25, p50, p75, p90, p99, and p999 for each test,
 but `--benchmark_repetitions=1000` is recommended for the results to be
 meaningful.
 
+## Run in docker
+We use [rules_docker](https://github.com/bazelbuild/rules_docker) to package the benchmark binary into a docker image. To build it
+```bash
+# change `bazel build` to `bazel run` to start the container directly
+bazel build //perf_benchmark:benchmark_main_image --compilation_mode=opt
+```
+There is also a `benchmark_main_image_push` rule to push the image to a docker registry. 
+```bash
+bazel run //perf_benchmark:benchmark_main_image_push \
+ --define=PUSH_REGISTRY=gcr.io \
+ --define=PUSH_PROJECT=project-id \
+ --define=PUSH_TAG=latest
+```
+
 ## Benchmark Results
 
 ### Environment Setup
