@@ -42,8 +42,10 @@ Options meaning:
 
 - Elapsed time and CPU time
 - Byte latency and throughput
-- Message latency and throughput (message latency should equal to CPU time).
+- Message latency and throughput 
+  - _Note: message latency should equal to CPU time_
 - Request latency and throughput
+  - `Request Latency` = `Message Latency` * `Number of Streamed Messages`. _Note: Request latency equals to message latency in non-streaming benchmarks._
 
 We also capture p25, p50, p75, p90, p99, and p999 for each test,
 but `--benchmark_repetitions=1000` is recommended for the results to be
@@ -97,7 +99,7 @@ repetitions.
 There are two ways to represent nested JSON structure - using a recursively
 defined protobuf message (`NestedPayload` in `benchmark.proto`) or
 using `google/protobuf/struct.proto`. We benchmarked the effects of having
-nested layers during the transcoding.
+0, 1, 8, and 31 nested layers of a string payload "Deep Hello World!".
 
 - The performance of `google/protobuf/struct.proto` is worse than a recursively
   defined protobuf message in both JSON -> gRPC and gRPC -> JSON cases.
@@ -109,7 +111,7 @@ nested layers during the transcoding.
 
 ### Array Length
 
-We benchmarked the effects of varying array length during transcoding.
+We benchmarked the effects of having just an int32 array of 1, 256, 1024, and 16384 random integeres.
 
 - Transcoding for JSON -> gRPC has much worse performance than transcoding for
   gRPC -> JSON.
@@ -122,13 +124,7 @@ We benchmarked the effects of varying array length during transcoding.
 ### Body Length
 
 We benchmarked the effects of a message containing a single `bytes` typed field
-with varying data length.
-
-- Transcoding for JSON -> gRPC has worse performance than transcoding for gRPC
-  -> JSON.
-- The per-byte latency for non-streaming message converges to 0.01 us for JSON
-  -> gRPC and 0.005 us for gRPC -> JSON.
-- Streaming messages has almost little overhead.
+with data length of 1 byte, 1 KiB, 1 MiB, and 32 MiB.
 
 _Note: The JSON representation of `bytes` typed protobuf field is encoded in
 base64. Therefore, 1 MiB sized message in gRPC would have roughly 1.33 MiB in
@@ -136,11 +132,17 @@ JSON. The per-byte latency is calculated using the unencoded data size, which is
 why the per-byte latency would give around 34000 for 32 MiB of data, whereas the
 message latency for 32 MiB is actually around 50000._
 
+- Transcoding for JSON -> gRPC has worse performance than transcoding for gRPC
+  -> JSON.
+- The per-byte latency for non-streaming message converges to 0.01 us for JSON
+  -> gRPC and 0.005 us for gRPC -> JSON.
+- Streaming messages has almost little overhead.
+
 ![Body Length Visualization](image/body_length.jpg "Body Length")
 
 ### Number of Message Segments
 
-We benchmarked the effects for messages arrive in segments. This only applies to
+We benchmarked the effects for a 1 MiB string message to arrive in 1, 16, 256, and 4096 segments. This only applies to
 JSON -> gRPC since gRPC doesn't support incomplete messages. Currently, the
 caller needs to make sure the message arrives in full before transcoding from
 gRPC.
@@ -155,7 +157,7 @@ gRPC.
 
 ### Value Data Type
 
-We benchmarked transcoding from an array of zeros `[0, 0, ..., 0]` into `string`
+We benchmarked transcoding from an array of 1024 zeros `[0, 0, ..., 0]` into `string`
 , `double`, and `int32` type.
 
 - `string` data type has the less overhead.
@@ -165,8 +167,8 @@ We benchmarked transcoding from an array of zeros `[0, 0, ..., 0]` into `string`
 
 ### Variable Binding Depth
 
-We benchmarked the effects of having deeply nested variable bindings in JSON ->
-gRPC. There is no variable binding from gRPC -> JSON. Streaming benchmark
+We benchmarked the effects of having 0, 1, 8, and 32 nested variable bindings in JSON ->
+gRPC. We used the same `NestedPayload` as in the [number of nested layers variable](#number-of-nested-layers) except that the field value comes from the variable binding instead of the JSON input. There is no variable binding from gRPC -> JSON. Streaming benchmark
 doesn't apply here because the same insights can be collected from the JSON body
 length benchmarks.
 
@@ -178,8 +180,9 @@ length benchmarks.
 
 ### Number of Variable Bindings
 
-Similarly, we benchmarked the effects of having multiple variable bindings in
-JSON -> gRPC.
+Similarly, we benchmarked the effects of having 0, 2, 4, and 8 variable bindings in
+JSON -> gRPC. We used `MultiStringFieldPayload` in `benchmark.proto` which has 8 string fields. We made sure the input
+to the benchmark is the same for all the test cases - a JSON object having 8 random string of 1 MiB size. When the number of variable bindings is `x`, `8-x` field will be set from the JSON input, and `x` fields will be set from the variable bindings.
 
 - The overhead of a deeper variable binding scales linearly.
 
