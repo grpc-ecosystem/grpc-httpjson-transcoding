@@ -166,6 +166,31 @@ into `string`, `double`, and `int32` type.
 - `string` data type has the less overhead.
 - `double` has the most significant overhead for transcoding.
 
+The performance difference is caused from
+the [protocol buffer wire types](https://developers.google.com/protocol-buffers/docs/encoding#structure)
+. `double` uses `64-bit` wire encoding, `string` uses `Length-delimited`
+encoding, and `int32` uses `Varint` encoding. In `64-bit` encoding, number 0 is
+encoded into 8 bytes, whereas in `Varint` and `Length-delimited` encoding would
+make it are shorter than 8 bytes.
+
+Also note the following encoded message length - benchmark uses `proto3` syntax
+which by default
+uses [packed repeated fields](https://developers.google.com/protocol-buffers/docs/encoding#packed)
+to encode arrays. However, transcoding library does not use this by default.
+This caused the difference between JSON -> gRPC and gRPC -> JSON binary length
+for int32 and double types.
+
+```
+JSON -> gRPC: Int32ArrayPayload  proto binary length: 2048
+gRPC -> JSON: Int32ArrayPayload  proto binary length: 1027
+
+JSON -> gRPC: DoubleArrayPayload  proto binary length: 9216
+gRPC -> JSON: DoubleArrayPayload  proto binary length: 8195
+
+JSON -> gRPC: StringArrayPayload  proto binary length: 3072
+gRPC -> JSON: StringArrayPayload  proto binary length: 3072
+```
+
 ![Value Data Type Visualization](image/value_data_type.png "Value Data Type")
 
 ### Variable Binding Depth
