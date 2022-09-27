@@ -45,8 +45,8 @@ Options meaning:
 - Message latency and throughput
     - _Note: message latency should equal to CPU time_
 - Request latency and throughput
-    - `Request Latency` = `Message Latency` * `Number of Streamed Messages`. _
-      Note: Request latency equals to message latency in non-streaming
+    - `Request Latency` = `Message Latency` * `Number of Streamed Messages`.
+      _Note: Request latency equals to message latency in non-streaming
       benchmarks._
 
 We also capture p25, p50, p75, p90, p99, and p999 for each test,
@@ -171,7 +171,7 @@ into `string`, `double`, and `int32` type.
 ### Variable Binding Depth
 
 We benchmarked the effects of having 0, 1, 8, and 32 nested variable bindings in
-JSON -> gRPC. We used the same `NestedPayload` as in
+JSON -> gRPC. We used the same `NestedPayload` setup as in
 the [number of nested layers variable](#number-of-nested-layers) except that the
 field value comes from the variable binding instead of the JSON input. There is
 no variable binding from gRPC -> JSON. Streaming benchmark doesn't apply here
