@@ -16,6 +16,8 @@
 #
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_push")
 
 cc_proto_library(
     name = "benchmark_cc_proto",
@@ -62,6 +64,31 @@ cc_binary(
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googleapis//google/api:service_cc_proto",
     ],
+)
+
+# Note: cc_image rule won't build the binary inside the container. It builds the
+# binary locally and copies the binary into the container.
+# This cc_image rule with v.0.25.0 rules_docker release uses Debian 11 as base.
+# Please make sure if you're building from Debian 11 system as well.
+cc_image(
+    name = "benchmark_main_image",
+    binary = ":benchmark_main",
+    testonly = 1,
+)
+
+# Example run command:
+# bazel run //perf_benchmark:benchmark_main_image_push \
+# --define=PUSH_REGISTRY=gcr.io \
+# --define=PUSH_PROJECT=project-id \
+# --define=PUSH_TAG=latest
+container_push(
+    name = "benchmark_main_image_push",
+    format = "Docker",
+    image = ":benchmark_main_image",
+    testonly = 1,
+    registry = "$(PUSH_REGISTRY)",
+    repository = "$(PUSH_PROJECT)/grpc-httpjson-transcoding-benchmark",
+    tag = "$(PUSH_TAG)",
 )
 
 cc_library(

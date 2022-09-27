@@ -21,6 +21,7 @@ load(
     "googleapis_repositories",
     "googlebenchmark_repositories",
     "googletest_repositories",
+    "io_bazel_rules_docker",
     "nlohmannjson_repositories",
     "protobuf_repositories",
 )
@@ -57,6 +58,26 @@ googleapis_repositories()
 googlebenchmark_repositories()
 
 nlohmannjson_repositories()
+
+# Followed https://github.com/bazelbuild/rules_docker#setup and
+# https://github.com/bazelbuild/rules_docker#cc_image.
+# BEGIN io_bazel_rules_docker
+io_bazel_rules_docker()
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load(
+    "@io_bazel_rules_docker//cc:image.bzl",
+    _cc_image_repos = "repositories",
+)
+
+_cc_image_repos()
+# END io_bazel_rules_docker
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
