@@ -542,7 +542,8 @@ TEST_F(JsonRequestTranslatorTest, WrongBindingType) {
   Build();
   Finish();
   EXPECT_TRUE(Tester().ExpectNone());
-  EXPECT_TRUE(Tester().ExpectStatusEq(absl::StatusCode::kInvalidArgument));
+  EXPECT_TRUE(Tester().ExpectStatusEq(
+      google::protobuf::util::StatusCode::kInvalidArgument));
 }
 
 TEST_F(JsonRequestTranslatorTest, StreamingSimple) {

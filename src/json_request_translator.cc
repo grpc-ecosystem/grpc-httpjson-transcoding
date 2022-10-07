@@ -90,11 +90,10 @@ class LazyRequestTranslator : public MessageStream {
       // End of input
       if (!seen_input_) {
         // If there was no input at all translate an empty JSON object ("{}").
-        status_ = json_parser_->Parse("{}");
-        return status_.ok();
+        return CheckParsingStatus(json_parser_->Parse("{}"));
       }
       // No more data to translate, finish the parser and return false.
-      status_ = json_parser_->FinishParse();
+      CheckParsingStatus(json_parser_->FinishParse());
       return false;
     } else if (0 == size) {
       // No data at this point, but there might be more input later.
@@ -103,8 +102,15 @@ class LazyRequestTranslator : public MessageStream {
     seen_input_ = true;
 
     // Feed the chunk to the parser & check the status.
-    status_ = json_parser_->Parse(
-        internal::string_view(reinterpret_cast<const char*>(data), size));
+    return CheckParsingStatus(json_parser_->Parse(
+        internal::string_view(reinterpret_cast<const char*>(data), size)));
+  }
+
+  // If parsing status fails, return false.
+  // check translated status, if fails, return false.
+  // save failed status.
+  bool CheckParsingStatus(pbutil::Status parsing_status) {
+    status_ = parsing_status;
     if (!status_.ok()) {
       return false;
     }
