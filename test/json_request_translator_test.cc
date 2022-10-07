@@ -533,6 +533,19 @@ TEST_F(JsonRequestTranslatorTest, ErrorInvalidJson) {
   }
 }
 
+TEST_F(JsonRequestTranslatorTest, WrongBindingType) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("GetShelfRequest");
+  // "shelf" field type should be integer, but set as string
+  AddVariableBinding("shelf", "abc");
+
+  Build();
+  Finish();
+  EXPECT_TRUE(Tester().ExpectNone());
+  EXPECT_TRUE(Tester().ExpectStatusEq(
+      google::protobuf::util::StatusCode::kInvalidArgument));
+}
+
 TEST_F(JsonRequestTranslatorTest, StreamingSimple) {
   LoadService("bookstore_service.pb.txt");
   SetMessageType("Shelf");
