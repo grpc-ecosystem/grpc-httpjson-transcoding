@@ -259,8 +259,7 @@ class ResponseToJsonTranslatorTestCase {
 class ResponseToJsonTranslatorTest : public ::testing::Test {
  protected:
   ResponseToJsonTranslatorTest()
-      : streaming_(false),
-        json_response_translate_options_({pbutil::JsonPrintOptions(), false}) {}
+      : json_response_translate_options_({pbutil::JsonPrintOptions(), false}) {}
 
   // Load the service config to be used for testing. This must be the first call
   // in a test.
@@ -335,7 +334,7 @@ class ResponseToJsonTranslatorTest : public ::testing::Test {
 
   std::string type_url_;
   JsonResponseTranslateOptions json_response_translate_options_;
-  bool streaming_;
+  bool streaming_ = false;
 
   // The entire input
   std::string input_;
