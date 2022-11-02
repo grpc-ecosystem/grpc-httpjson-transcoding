@@ -11,6 +11,8 @@ interface to gRPC service.
 
 [![CI Status](https://oss.gprow.dev/badge.svg?jobs=grpc-transcoder-periodic)](https://testgrid.k8s.io/googleoss-grpc-transcoder#Summary)
 
+[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/grpc-httpjson-transcoding.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:grpc-httpjson-transcoding)
+
 ## Develop
 
 [Bazel](https://bazel.build/) is used for build and dependency management. The
