@@ -135,6 +135,12 @@ class PathMatcherBuilder {
     match_unregistered_custom_verb_ = match_unregistered_custom_verb;
   }
 
+  // If true, all further calls to Register will return false on duplicate
+  // paths in addition to invalid ones. Default is false.
+  void SetFailRegistrationOnDuplicate(bool fail_registration_on_duplicate) {
+    fail_registration_on_duplicate_ = fail_registration_on_duplicate;
+  }
+
   // Returns a unique_ptr to a thread safe PathMatcher that contains all
   // registered path-WrapperGraph pairs. Note the PathMatchBuilder instance
   // will be moved so cannot use after invoking Build().
@@ -142,9 +148,9 @@ class PathMatcherBuilder {
 
  private:
   // Inserts a path to a PathMatcherNode.
-  void InsertPathToNode(const PathMatcherNode::PathInfo& path,
+  bool InsertPathToNode(const PathMatcherNode::PathInfo& path,
                         void* method_data, std::string http_method,
-                        bool mark_duplicates, PathMatcherNode* root_ptr);
+                        PathMatcherNode* root_ptr);
   // A root node shared by all services, i.e. paths of all services will be
   // registered to this node.
   std::unique_ptr<PathMatcherNode> root_ptr_;
@@ -159,6 +165,7 @@ class PathMatcherBuilder {
       UrlUnescapeSpec::kAllCharactersExceptReserved;
   bool query_param_unescape_plus_ = false;
   bool match_unregistered_custom_verb_ = false;
+  bool fail_registration_on_duplicate_ = false;
 
   friend class PathMatcher<Method>;
 };
@@ -400,15 +407,15 @@ PathMatcherPtr<Method> PathMatcherBuilder<Method>::Build() {
 }
 
 template <class Method>
-void PathMatcherBuilder<Method>::InsertPathToNode(
+bool PathMatcherBuilder<Method>::InsertPathToNode(
     const PathMatcherNode::PathInfo& path, void* method_data,
-    std::string http_method, bool mark_duplicates, PathMatcherNode* root_ptr) {
-  if (root_ptr->InsertPath(path, http_method, method_data, mark_duplicates)) {
-    //    VLOG(3) << "Registered WrapperGraph for " <<
-    //    http_template.as_string();
-  } else {
-    //    VLOG(3) << "Replaced WrapperGraph for " << http_template.as_string();
+    std::string http_method, PathMatcherNode* root_ptr) {
+  if (!root_ptr->InsertPath(path, http_method, method_data, true)) {
+    if (fail_registration_on_duplicate_) {
+      return false;
+    }
   }
+  return true;
 }
 
 // This wrapper converts the |http_rule| into a HttpTemplate. Then, inserts the
@@ -433,8 +440,10 @@ bool PathMatcherBuilder<Method>::Register(
   method_data->body_field_path = body_field_path;
   method_data->system_query_parameter_names = system_query_parameter_names;
 
-  InsertPathToNode(path_info, method_data.get(), http_method + ht->verb(), true,
-                   root_ptr_.get());
+  if (!InsertPathToNode(path_info, method_data.get(), http_method + ht->verb(),
+                        root_ptr_.get())) {
+    return false;
+  }
   // Add the method_data to the methods_ vector for cleanup
   methods_.emplace_back(std::move(method_data));
   if (!ht->verb().empty()) {

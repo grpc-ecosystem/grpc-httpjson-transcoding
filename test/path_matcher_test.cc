@@ -132,6 +132,10 @@ class PathMatcherTest : public ::testing::Test {
     builder_.SetMatchUnregisteredCustomVerb(match_unregistered_custom_verb);
   }
 
+  void SetFailRegistrationOnDuplicate(bool fail_registration_on_duplicate) {
+    builder_.SetFailRegistrationOnDuplicate(fail_registration_on_duplicate);
+  }
+
   void Build() { matcher_ = builder_.Build(); }
 
   MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
@@ -940,6 +944,29 @@ TEST_F(PathMatcherTest, WildCardMatchesManyWithoutStackOverflow) {
   std::string lotsOfSlashes(64000, '/');
   EXPECT_EQ(LookupNoBindings("GET", "/a/" + lotsOfSlashes + "/x"), a);
   EXPECT_EQ(LookupNoBindings("GET", "/a/" + lotsOfSlashes + "/y"), nullptr);
+}
+
+TEST_F(PathMatcherTest, LookupSilentlyFailsOnDuplicate) {
+  MethodInfo* a = AddGetPath("/a/b");
+  MethodInfo* b = AddGetPath("/a/b");
+  Build();
+
+  EXPECT_NE(nullptr, a);
+  EXPECT_NE(nullptr, b);
+
+  EXPECT_EQ(LookupNoBindings("GET", "/a/b"), nullptr);
+}
+
+TEST_F(PathMatcherTest, RegisterFailsOnDuplicateIfOptIn) {
+  SetFailRegistrationOnDuplicate(true);
+  MethodInfo* a = AddGetPath("/a/b");
+  MethodInfo* b = AddGetPath("/a/b");
+  Build();
+
+  EXPECT_NE(nullptr, a);
+  EXPECT_EQ(nullptr, b);
+
+  EXPECT_EQ(LookupNoBindings("GET", "/a/b"), nullptr);
 }
 
 }  // namespace
