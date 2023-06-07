@@ -16,15 +16,12 @@
 #
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-ABSEIL_COMMIT = "99477fa9f1e89a7d8253c8aeee331864710d080c"
-ABSEIL_SHA256 = "495e8e1c481018126b2a84bfe36e273907ce282b135e7d161e138e463d295f3d"
-
 def absl_repositories(bind = True):
     http_archive(
         name = "com_google_absl",
-        strip_prefix = "abseil-cpp-" + ABSEIL_COMMIT,
-        url = "https://github.com/abseil/abseil-cpp/archive/" + ABSEIL_COMMIT + ".tar.gz",
-        sha256 = ABSEIL_SHA256,
+        sha256 = "ea1d31db00eb37e607bfda17ffac09064670ddf05da067944c4766f517876390",
+        strip_prefix = "abseil-cpp-c2435f8342c2d0ed8101cb43adfd605fdc52dca2",
+        urls = ["https://github.com/abseil/abseil-cpp/archive/c2435f8342c2d0ed8101cb43adfd605fdc52dca2.zip"],
     )
 
 def zlib_repositories(bind = True):
@@ -180,4 +177,12 @@ def io_bazel_rules_docker(bind = True):
         name = "io_bazel_rules_docker",
         sha256 = RULES_DOCKER_SHA256,
         urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v" + RULES_DOCKER_COMMIT + "/rules_docker-v" + RULES_DOCKER_COMMIT + ".tar.gz"],
+    )
+
+def protoconverter_repositories(bind = True):
+    http_archive(
+        name = "com_google_protoconverter",
+        sha256 = "1bfb2db800c5d339687dfcdb96740d296d8a1bb9ea06ab8f48a81981d3d8bba9",
+        strip_prefix = "proto-converter-2c4192cf3bdd2ccdd5a812293df135cdbe0baae5",
+        urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/2c4192cf3bdd2ccdd5a812293df135cdbe0baae5.zip"],
     )
