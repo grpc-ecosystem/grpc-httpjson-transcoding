@@ -88,8 +88,6 @@ _cc_image_repos()
 
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 
-rules_proto_dependencies()
-
 rules_proto_toolchains()
 
 load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
