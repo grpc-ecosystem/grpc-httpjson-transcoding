@@ -97,8 +97,7 @@ def protobuf_repositories(bind = True):
         name = "com_google_protobuf",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
         urls = [
-            "https://github.com/google/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
-            "https://github.com/protocolbuffers/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
+            "https://github.com/google/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
         ],
         sha256 = PROTOBUF_SHA256,
     )
