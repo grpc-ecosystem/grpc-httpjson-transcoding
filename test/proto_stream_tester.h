@@ -17,7 +17,6 @@
 
 #include <string>
 
-#include "google/protobuf/stubs/status.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "grpc_transcoding/message_stream.h"

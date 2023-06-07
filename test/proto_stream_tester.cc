@@ -17,8 +17,6 @@
 #include "proto_stream_tester.h"
 
 #include <string>
-
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest.h"
 
 namespace google {

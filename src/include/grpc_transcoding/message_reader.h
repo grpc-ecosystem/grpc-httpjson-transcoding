@@ -17,7 +17,6 @@
 
 #include <memory>
 
-#include "google/protobuf/stubs/status.h"
 #include "transcoder_input_stream.h"
 #include "absl/status/status.h"
 

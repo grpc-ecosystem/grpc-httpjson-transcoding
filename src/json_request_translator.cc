@@ -19,7 +19,6 @@
 #include <string>
 
 #include "google/protobuf/io/zero_copy_stream.h"
-#include "google/protobuf/stubs/status.h"
 #include "google/protobuf/util/converter/json_stream_parser.h"
 #include "google/protobuf/util/converter/object_writer.h"
 #include "grpc_transcoding/internal/protobuf_types.h"

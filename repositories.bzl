@@ -15,6 +15,7 @@
 ################################################################################
 #
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 def absl_repositories(bind = True):
     http_archive(
@@ -184,7 +185,7 @@ def io_bazel_rules_docker(bind = True):
 def protoconverter_repositories(bind = True):
     http_archive(
         name = "com_google_protoconverter",
-        sha256 = "1bfb2db800c5d339687dfcdb96740d296d8a1bb9ea06ab8f48a81981d3d8bba9",
-        strip_prefix = "proto-converter-2c4192cf3bdd2ccdd5a812293df135cdbe0baae5",
-        urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/2c4192cf3bdd2ccdd5a812293df135cdbe0baae5.zip"],
+        sha256 = "6081836fa3838ebb1aa15089a5c3e20f877a0244c7a39b92a2000efb40408dcb",
+        strip_prefix = "proto-converter-d77ff301f48bf2e7a0f8935315e847c1a8e00017",
+        urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/d77ff301f48bf2e7a0f8935315e847c1a8e00017.zip"],
     )
