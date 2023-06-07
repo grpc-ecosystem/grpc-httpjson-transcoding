@@ -24,6 +24,7 @@ load(
     "io_bazel_rules_docker",
     "nlohmannjson_repositories",
     "protobuf_repositories",
+    "protoconverter_repositories",
 )
 
 # See
@@ -39,6 +40,8 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_fuzzing/archive/v0.3.2.zip"],
 )
 
+absl_repositories()
+
 load("@rules_fuzzing//fuzzing:repositories.bzl", "rules_fuzzing_dependencies")
 
 rules_fuzzing_dependencies()
@@ -47,9 +50,13 @@ load("@rules_fuzzing//fuzzing:init.bzl", "rules_fuzzing_init")
 
 rules_fuzzing_init()
 
-absl_repositories()
-
 protobuf_repositories()
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+protoconverter_repositories()
 
 googletest_repositories()
 
@@ -79,13 +86,7 @@ load(
 _cc_image_repos()
 # END io_bazel_rules_docker
 
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-
-rules_proto_dependencies()
 
 rules_proto_toolchains()
 

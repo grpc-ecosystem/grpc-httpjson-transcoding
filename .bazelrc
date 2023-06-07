@@ -19,6 +19,9 @@
 build --action_env=CC=clang-10
 build --action_env=CXX=clang++-10
 
+build --cxxopt=-std=c++14
+build --host_cxxopt=-std=c++14
+
 # The ASAN configuration suitable for C++ unit tests.
 build:asan --copt=-fsanitize=address
 build:asan --linkopt=-fsanitize=address

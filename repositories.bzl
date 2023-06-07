@@ -15,16 +15,14 @@
 ################################################################################
 #
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-ABSEIL_COMMIT = "99477fa9f1e89a7d8253c8aeee331864710d080c"
-ABSEIL_SHA256 = "495e8e1c481018126b2a84bfe36e273907ce282b135e7d161e138e463d295f3d"
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 def absl_repositories(bind = True):
     http_archive(
         name = "com_google_absl",
-        strip_prefix = "abseil-cpp-" + ABSEIL_COMMIT,
-        url = "https://github.com/abseil/abseil-cpp/archive/" + ABSEIL_COMMIT + ".tar.gz",
-        sha256 = ABSEIL_SHA256,
+        sha256 = "ea1d31db00eb37e607bfda17ffac09064670ddf05da067944c4766f517876390",
+        strip_prefix = "abseil-cpp-c2435f8342c2d0ed8101cb43adfd605fdc52dca2",  # May 04, 2023.
+        urls = ["https://github.com/abseil/abseil-cpp/archive/c2435f8342c2d0ed8101cb43adfd605fdc52dca2.zip"],
     )
 
 def zlib_repositories(bind = True):
@@ -92,28 +90,17 @@ cc_library(
         build_file_content = BUILD,
     )
 
-PROTOBUF_COMMIT = "3.16.0"  # Mar 04, 2021
-PROTOBUF_SHA256 = "7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5"
-
-RULES_PROTO_SHA = "97d8af4dc474595af3900dd85cb3a29ad28cc313"  # Oct 31, 2019
-RULES_PROTO_SHA256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208"
+PROTOBUF_COMMIT = "315ffb5be89460f2857387d20aefc59b76b8bdc3"  # May 31, 2023
+PROTOBUF_SHA256 = "aa61db6ff113a1c76eac9408144c6e996c5e2d6b2410818fd7f1b0d222a50bf8"
 
 def protobuf_repositories(bind = True):
     http_archive(
         name = "com_google_protobuf",
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
-        url = "https://github.com/google/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
-        sha256 = PROTOBUF_SHA256,
-    )
-
-    http_archive(
-        name = "rules_proto",
-        sha256 = RULES_PROTO_SHA256,
-        strip_prefix = "rules_proto-" + RULES_PROTO_SHA,
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
-            "https://github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
+            "https://github.com/google/protobuf/archive/" + PROTOBUF_COMMIT + ".tar.gz",
         ],
+        sha256 = PROTOBUF_SHA256,
     )
 
 GOOGLETEST_COMMIT = "703bd9caab50b139428cea1aaff9974ebee5742e"  # v1.10.0: Oct 2, 2019
@@ -193,4 +180,12 @@ def io_bazel_rules_docker(bind = True):
         name = "io_bazel_rules_docker",
         sha256 = RULES_DOCKER_SHA256,
         urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v" + RULES_DOCKER_COMMIT + "/rules_docker-v" + RULES_DOCKER_COMMIT + ".tar.gz"],
+    )
+
+def protoconverter_repositories(bind = True):
+    http_archive(
+        name = "com_google_protoconverter",
+        sha256 = "6081836fa3838ebb1aa15089a5c3e20f877a0244c7a39b92a2000efb40408dcb",
+        strip_prefix = "proto-converter-d77ff301f48bf2e7a0f8935315e847c1a8e00017",
+        urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/d77ff301f48bf2e7a0f8935315e847c1a8e00017.zip"],
     )

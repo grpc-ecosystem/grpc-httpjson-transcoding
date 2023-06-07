@@ -19,7 +19,7 @@
 #include <functional>
 #include <memory>
 
-#include "google/protobuf/util/internal/object_writer.h"
+#include "google/protobuf/util/converter/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
@@ -71,7 +71,7 @@ class RequestStreamTranslator
   // MessageStream methods
   bool NextMessage(std::string* message);
   bool Finished() const;
-  google::protobuf::util::Status Status() const { return status_; }
+  absl::Status Status() const { return status_; }
 
  private:
   // ObjectWriter methods.
@@ -110,7 +110,7 @@ class RequestStreamTranslator
   google::protobuf::util::TypeResolver& type_resolver_;
 
   // The status of the translation
-  google::protobuf::util::Status status_;
+  absl::Status status_;
 
   // The request info
   RequestInfo request_info_;

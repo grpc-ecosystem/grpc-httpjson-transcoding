@@ -18,7 +18,7 @@
 #define PERF_BENCHMARK_BENCHMARK_INPUT_STREAM_H_
 
 #include "absl/strings/string_view.h"
-#include "google/protobuf/stubs/logging.h"
+#include "absl/log/absl_log.h"
 #include "grpc_transcoding/transcoder_input_stream.h"
 
 namespace google {
@@ -55,7 +55,7 @@ class BenchmarkZeroCopyInputStream : public TranscoderInputStream {
   bool Next(const void** data, int* size) override;
   void BackUp(int count) override;
   bool Skip(int count) override {
-    GOOGLE_LOG(FATAL) << "Not implemented";
+    ABSL_LOG(FATAL) << "Not implemented";
     return false;
   };
   int64_t ByteCount() const override;

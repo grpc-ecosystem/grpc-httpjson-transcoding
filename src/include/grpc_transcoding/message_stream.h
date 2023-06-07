@@ -19,8 +19,8 @@
 #include <string>
 
 #include "google/protobuf/io/zero_copy_stream.h"
-#include "google/protobuf/stubs/status.h"
 #include "transcoder_input_stream.h"
+#include "absl/status/status.h"
 
 namespace google {
 namespace grpc {
@@ -70,7 +70,7 @@ class MessageStream {
   // false.
   virtual bool Finished() const = 0;
   // Stream status to report errors
-  virtual ::google::protobuf::util::Status Status() const = 0;
+  virtual absl::Status Status() const = 0;
   // Virtual destructor
   virtual ~MessageStream() {}
   // Creates ZeroCopyInputStream implementation based on this stream

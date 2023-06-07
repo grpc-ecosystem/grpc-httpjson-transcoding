@@ -52,8 +52,8 @@ class TestMessageStream : public MessageStream {
     }
   }
   bool Finished() const { return messages_.empty() && finished_; }
-  google::protobuf::util::Status Status() const {
-    return google::protobuf::util::Status();
+  absl::Status Status() const {
+    return absl::Status();
   }
 
  private:

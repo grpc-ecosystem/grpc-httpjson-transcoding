@@ -66,7 +66,7 @@ RequestStreamTranslator* RequestStreamTranslator::StartObject(
   }
   if (depth_ == 0) {
     // In depth_ == 0 case we expect only StartList()
-    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+    status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                              "Expected an array instead of an object");
     return this;
   }
@@ -87,7 +87,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndObject() {
   }
   --depth_;
   if (depth_ < 1) {
-    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+    status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                              "Mismatched end of object.");
     return this;
   }
@@ -129,7 +129,7 @@ RequestStreamTranslator* RequestStreamTranslator::EndList() {
   }
   --depth_;
   if (depth_ < 0) {
-    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+    status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                              "Mismatched end of array.");
     return this;
   }
@@ -252,7 +252,7 @@ void RequestStreamTranslator::EndMessageTranslator() {
     // This shouldn't happen unless something like StartList(), StartObject(),
     // EndList() has been called
     status_ =
-        pbutil::Status(pbutil::StatusCode::kInvalidArgument, "Invalid object");
+        absl::Status(absl::StatusCode::kInvalidArgument, "Invalid object");
   }
   translator_.reset();
 }
@@ -265,7 +265,7 @@ void RequestStreamTranslator::RenderData(internal::string_view name,
   }
   if (depth_ == 0) {
     // In depth_ == 0 case we expect only a StartList()
-    status_ = pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+    status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                              "Expected an array instead of a scalar value.");
   } else if (depth_ == 1) {
     // This means we have an array of scalar values. This can happen if the HTTP

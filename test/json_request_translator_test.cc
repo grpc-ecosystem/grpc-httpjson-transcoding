@@ -528,7 +528,7 @@ TEST_F(JsonRequestTranslatorTest, ErrorInvalidJson) {
       Finish();
       EXPECT_TRUE(Tester().ExpectNone());
       EXPECT_TRUE(Tester().ExpectStatusEq(
-          google::protobuf::util::StatusCode::kInvalidArgument));
+          absl::StatusCode::kInvalidArgument));
     }
   }
 }
@@ -543,7 +543,7 @@ TEST_F(JsonRequestTranslatorTest, WrongBindingType) {
   Finish();
   EXPECT_TRUE(Tester().ExpectNone());
   EXPECT_TRUE(Tester().ExpectStatusEq(
-      google::protobuf::util::StatusCode::kInvalidArgument));
+      absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(JsonRequestTranslatorTest, StreamingSimple) {
@@ -791,7 +791,7 @@ TEST_F(JsonRequestTranslatorTest, StreamingErrorNotAnArray) {
   Finish();
   EXPECT_TRUE(Tester().ExpectNone());
   EXPECT_TRUE(Tester().ExpectStatusEq(
-      google::protobuf::util::StatusCode::kInvalidArgument));
+      absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

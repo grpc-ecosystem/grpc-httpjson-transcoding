@@ -18,14 +18,18 @@
 
 #include <string>
 #include <vector>
+#include <float.h>
+#include <cmath>
+#include <limits>
 
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_cat.h"
 
-#include "google/protobuf/stubs/mathutil.h"
+#include "google/protobuf/util/field_comparator.h"
 #include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/datapiece.h"
-#include "google/protobuf/util/internal/object_writer.h"
+#include "google/protobuf/util/converter/datapiece.h"
+#include "google/protobuf/util/converter/object_writer.h"
 
 namespace google {
 namespace grpc {
@@ -37,22 +41,28 @@ namespace pbconv = google::protobuf::util::converter;
 
 namespace {
 
-pb::util::Status bindingFailureStatus(internal::string_view field_name,
+
+bool AlmostEquals(float a, float b) {
+  return fabs(a - b) < 32 * FLT_EPSILON;
+}
+
+
+absl::Status bindingFailureStatus(internal::string_view field_name,
                                       internal::string_view type,
                                       const pbconv::DataPiece& value) {
-  return pb::util::Status(
-      pb::util::StatusCode::kInvalidArgument,
-      pb::StrCat("Failed to convert binding value ", field_name, ":",
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      absl::StrCat("Failed to convert binding value ", field_name, ":",
                  value.ValueAsStringOrDefault(""), " to ", type));
 }
 
-pb::util::Status isEqual(internal::string_view field_name,
+absl::Status isEqual(internal::string_view field_name,
                          const pbconv::DataPiece& value_in_body,
                          const pbconv::DataPiece& value_in_binding) {
   bool value_is_same = true;
   switch (value_in_body.type()) {
     case pbconv::DataPiece::TYPE_INT32: {
-      pb::util::StatusOr<int32_t> status = value_in_binding.ToInt32();
+      absl::StatusOr<int32_t> status = value_in_binding.ToInt32();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "int32", value_in_binding);
       }
@@ -62,7 +72,7 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_INT64: {
-      pb::util::StatusOr<uint32_t> status = value_in_binding.ToInt64();
+      absl::StatusOr<uint32_t> status = value_in_binding.ToInt64();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "int64", value_in_binding);
       }
@@ -72,7 +82,7 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_UINT32: {
-      pb::util::StatusOr<uint32_t> status = value_in_binding.ToUint32();
+      absl::StatusOr<uint32_t> status = value_in_binding.ToUint32();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "uint32", value_in_binding);
       }
@@ -82,7 +92,7 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_UINT64: {
-      pb::util::StatusOr<uint32_t> status = value_in_binding.ToUint64();
+      absl::StatusOr<uint32_t> status = value_in_binding.ToUint64();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "uint64", value_in_binding);
       }
@@ -92,29 +102,29 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_DOUBLE: {
-      pb::util::StatusOr<double> status = value_in_binding.ToDouble();
+      absl::StatusOr<double> status = value_in_binding.ToDouble();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "double", value_in_binding);
       }
-      if (!pb::MathUtil::AlmostEquals<double>(
+      if (!AlmostEquals(
               status.value(), value_in_body.ToDouble().value())) {
         value_is_same = false;
       }
       break;
     }
     case pbconv::DataPiece::TYPE_FLOAT: {
-      pb::util::StatusOr<float> status = value_in_binding.ToFloat();
+      absl::StatusOr<float> status = value_in_binding.ToFloat();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "float", value_in_binding);
       }
-      if (!pb::MathUtil::AlmostEquals<float>(status.value(),
+      if (!AlmostEquals(status.value(),
                                              value_in_body.ToFloat().value())) {
         value_is_same = false;
       }
       break;
     }
     case pbconv::DataPiece::TYPE_BOOL: {
-      pb::util::StatusOr<bool> status = value_in_binding.ToBool();
+      absl::StatusOr<bool> status = value_in_binding.ToBool();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "bool", value_in_binding);
       }
@@ -124,7 +134,7 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_STRING: {
-      pb::util::StatusOr<std::string> status = value_in_binding.ToString();
+      absl::StatusOr<std::string> status = value_in_binding.ToString();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "string", value_in_binding);
       }
@@ -134,7 +144,7 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
     }
     case pbconv::DataPiece::TYPE_BYTES: {
-      pb::util::StatusOr<std::string> status = value_in_binding.ToBytes();
+      absl::StatusOr<std::string> status = value_in_binding.ToBytes();
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "bytes", value_in_binding);
       }
@@ -147,15 +157,15 @@ pb::util::Status isEqual(internal::string_view field_name,
       break;
   }
   if (!value_is_same) {
-    return pb::util::Status(
-        pb::util::StatusCode::kInvalidArgument,
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
         absl::StrFormat("The binding value %s of the field %s is "
                         "conflicting with the value %s in the body.",
                         value_in_binding.ValueAsStringOrDefault(""),
                         std::string(field_name),
                         value_in_body.ValueAsStringOrDefault("")));
   }
-  return pb::util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -361,7 +371,7 @@ void RequestWeaver::CollisionCheck(internal::string_view name,
       } else if (report_collisions_) {
         pbconv::DataPiece value_in_binding =
             pbconv::DataPiece(internal::string_view(it->second), true);
-        pb::util::Status compare_status =
+        absl::Status compare_status =
             isEqual(name, value_in_body, value_in_binding);
         if (!compare_status.ok()) {
           error_listener_->set_status(compare_status);

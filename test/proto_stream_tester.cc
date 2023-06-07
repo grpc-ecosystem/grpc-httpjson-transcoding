@@ -17,8 +17,6 @@
 #include "proto_stream_tester.h"
 
 #include <string>
-
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest.h"
 
 namespace google {
@@ -32,7 +30,7 @@ ProtoStreamTester::ProtoStreamTester(MessageStream& stream, bool delimiters)
 
 bool ProtoStreamTester::ExpectNone() {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
+  if (!ExpectStatusEq(absl::StatusCode::kOk)) {
     return false;
   }
   std::string message;
@@ -46,7 +44,7 @@ bool ProtoStreamTester::ExpectNone() {
 
 bool ProtoStreamTester::ExpectFinishedEq(bool expected) {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
+  if (!ExpectStatusEq(absl::StatusCode::kOk)) {
     return false;
   }
   if (expected != stream_.Finished()) {
@@ -78,7 +76,7 @@ unsigned DelimiterToSize(const unsigned char* delimiter) {
 
 bool ProtoStreamTester::ValidateDelimiter(const std::string& message) {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
+  if (!ExpectStatusEq(absl::StatusCode::kOk)) {
     return false;
   }
   if (message.size() < kDelimiterSize) {
@@ -99,7 +97,7 @@ bool ProtoStreamTester::ValidateDelimiter(const std::string& message) {
 }
 
 bool ProtoStreamTester::ExpectStatusEq(
-    google::protobuf::util::StatusCode error_code) {
+    absl::StatusCode error_code) {
   if (error_code != stream_.Status().code()) {
     ADD_FAILURE()
         << "ObjectTranslatorTest::ValidateStatus: Status doesn't match "

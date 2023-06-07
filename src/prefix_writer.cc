@@ -19,7 +19,7 @@
 #include <string>
 
 #include "absl/strings/str_split.h"
-#include "google/protobuf/util/internal/object_writer.h"
+#include "google/protobuf/util/converter/object_writer.h"
 
 namespace google {
 namespace grpc {

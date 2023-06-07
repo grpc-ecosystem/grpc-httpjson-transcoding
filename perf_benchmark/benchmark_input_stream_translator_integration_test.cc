@@ -17,6 +17,7 @@
 #include "perf_benchmark/benchmark_input_stream.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
+#include "absl/log/absl_check.h"
 #include "google/api/service.pb.h"
 #include "google/protobuf/text_format.h"
 #include "grpc_transcoding/json_request_translator.h"
@@ -48,7 +49,7 @@ constexpr absl::string_view kServiceConfigTextProtoFile =
     // unnecessary heap allocations and create minor performance concerns.
     // For a small benchmark script, this is okay.
     auto* service = new google::api::Service();
-    GOOGLE_CHECK_OK(
+    ABSL_CHECK_OK(
         LoadService(std::string(kServiceConfigTextProtoFile), service));
 
     // Create a TypeHelper based on the service config.

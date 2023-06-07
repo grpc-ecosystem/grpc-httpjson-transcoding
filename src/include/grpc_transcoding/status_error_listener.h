@@ -1,8 +1,9 @@
 #ifndef GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 #define GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 
-#include "google/protobuf/util/internal/error_listener.h"
+#include "google/protobuf/util/converter/error_listener.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
+#include "absl/status/status.h"
 
 namespace google {
 namespace grpc {
@@ -16,7 +17,7 @@ class StatusErrorListener
   StatusErrorListener() {}
   virtual ~StatusErrorListener() {}
 
-  ::google::protobuf::util::Status status() const { return status_; }
+  absl::Status status() const { return status_; }
 
   // ErrorListener implementation
   void InvalidName(
@@ -29,12 +30,13 @@ class StatusErrorListener
       const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
       internal::string_view missing_name);
 
-  void set_status(::google::protobuf::util::Status status) { status_ = status; }
+  void set_status(absl::Status status) { status_ = status; }
 
  private:
-  ::google::protobuf::util::Status status_;
+  absl::Status status_;
 
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(StatusErrorListener);
+  StatusErrorListener(const StatusErrorListener&) = delete;
+  StatusErrorListener& operator=(const StatusErrorListener&) = delete;
 };
 
 }  // namespace src::include::grpc_transcoding}  // namespace transcoding
