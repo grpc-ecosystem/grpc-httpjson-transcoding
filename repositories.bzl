@@ -20,7 +20,7 @@ def absl_repositories(bind = True):
     http_archive(
         name = "com_google_absl",
         sha256 = "ea1d31db00eb37e607bfda17ffac09064670ddf05da067944c4766f517876390",
-        strip_prefix = "abseil-cpp-c2435f8342c2d0ed8101cb43adfd605fdc52dca2",
+        strip_prefix = "abseil-cpp-c2435f8342c2d0ed8101cb43adfd605fdc52dca2",  # May 04, 2023.
         urls = ["https://github.com/abseil/abseil-cpp/archive/c2435f8342c2d0ed8101cb43adfd605fdc52dca2.zip"],
     )
 
