@@ -39,6 +39,13 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_fuzzing/archive/v0.3.2.zip"],
 )
 
+http_archive(
+    name = "com_google_absl",
+    sha256 = "ea1d31db00eb37e607bfda17ffac09064670ddf05da067944c4766f517876390",
+    strip_prefix = "abseil-cpp-c2435f8342c2d0ed8101cb43adfd605fdc52dca2",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/c2435f8342c2d0ed8101cb43adfd605fdc52dca2.zip"],
+)
+
 load("@rules_fuzzing//fuzzing:repositories.bzl", "rules_fuzzing_dependencies")
 
 rules_fuzzing_dependencies()
@@ -47,9 +54,18 @@ load("@rules_fuzzing//fuzzing:init.bzl", "rules_fuzzing_init")
 
 rules_fuzzing_init()
 
-absl_repositories()
-
 protobuf_repositories()
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+http_archive(
+    name = "com_google_protoconverter",
+    sha256 = "1bfb2db800c5d339687dfcdb96740d296d8a1bb9ea06ab8f48a81981d3d8bba9",
+    strip_prefix = "proto-converter-2c4192cf3bdd2ccdd5a812293df135cdbe0baae5",
+    urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/2c4192cf3bdd2ccdd5a812293df135cdbe0baae5.zip"],
+)
 
 googletest_repositories()
 
@@ -78,10 +94,6 @@ load(
 
 _cc_image_repos()
 # END io_bazel_rules_docker
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
 
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 

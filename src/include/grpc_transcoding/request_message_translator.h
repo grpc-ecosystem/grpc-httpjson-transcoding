@@ -20,8 +20,8 @@
 
 #include "google/protobuf/stubs/bytestream.h"
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/error_listener.h"
-#include "google/protobuf/util/internal/protostream_objectwriter.h"
+#include "google/protobuf/util/converter/error_listener.h"
+#include "google/protobuf/util/converter/protostream_objectwriter.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
@@ -118,7 +118,7 @@ class RequestMessageTranslator : public MessageStream {
   // MessageStream methods
   bool NextMessage(std::string* message);
   bool Finished() const;
-  google::protobuf::util::Status Status() const {
+  absl::Status Status() const {
     return error_listener_.status();
   }
 

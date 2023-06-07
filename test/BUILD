@@ -79,6 +79,7 @@ cc_test(
         "//src:prefix_writer",
         "@com_google_googletest//:gtest_main",
         "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:testing",
     ],
 )
 
@@ -92,6 +93,7 @@ cc_test(
         "//src:request_weaver",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
+        "@com_google_protoconverter//:testing",
     ],
 )
 

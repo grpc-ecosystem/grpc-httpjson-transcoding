@@ -16,7 +16,7 @@
 //
 
 #include "perf_benchmark/benchmark_input_stream.h"
-#include "google/protobuf/stubs/logging.h"
+#include "absl/log/absl_check.h"
 
 namespace google {
 namespace grpc {
@@ -29,7 +29,7 @@ BenchmarkZeroCopyInputStream::BenchmarkZeroCopyInputStream(
       msg_(std::move(json_data)),
       chunk_size_(msg_.size() / num_checks),
       pos_(0) {
-  GOOGLE_CHECK(num_checks <= msg_.size());
+  ABSL_CHECK(num_checks <= msg_.size());
 }
 
 int64_t BenchmarkZeroCopyInputStream::BytesAvailable() const {
@@ -74,7 +74,7 @@ uint64_t BenchmarkZeroCopyInputStream::TotalBytes() const {
 }
 
 void BenchmarkZeroCopyInputStream::BackUp(int count) {
-  GOOGLE_CHECK(count <= pos_);
+  ABSL_CHECK(count <= pos_);
   pos_ -= count;
   finished_ = false;
 }

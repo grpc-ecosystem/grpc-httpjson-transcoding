@@ -92,11 +92,8 @@ cc_library(
         build_file_content = BUILD,
     )
 
-PROTOBUF_COMMIT = "3.16.0"  # Mar 04, 2021
-PROTOBUF_SHA256 = "7892a35d979304a404400a101c46ce90e85ec9e2a766a86041bb361f626247f5"
-
-RULES_PROTO_SHA = "97d8af4dc474595af3900dd85cb3a29ad28cc313"  # Oct 31, 2019
-RULES_PROTO_SHA256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208"
+PROTOBUF_COMMIT = "315ffb5be89460f2857387d20aefc59b76b8bdc3"  # May 31, 2023
+PROTOBUF_SHA256 = "aa61db6ff113a1c76eac9408144c6e996c5e2d6b2410818fd7f1b0d222a50bf8"
 
 def protobuf_repositories(bind = True):
     http_archive(
@@ -104,16 +101,6 @@ def protobuf_repositories(bind = True):
         strip_prefix = "protobuf-" + PROTOBUF_COMMIT,
         url = "https://github.com/google/protobuf/archive/v" + PROTOBUF_COMMIT + ".tar.gz",
         sha256 = PROTOBUF_SHA256,
-    )
-
-    http_archive(
-        name = "rules_proto",
-        sha256 = RULES_PROTO_SHA256,
-        strip_prefix = "rules_proto-" + RULES_PROTO_SHA,
-        urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
-            "https://github.com/bazelbuild/rules_proto/archive/" + RULES_PROTO_SHA + ".tar.gz",
-        ],
     )
 
 GOOGLETEST_COMMIT = "703bd9caab50b139428cea1aaff9974ebee5742e"  # v1.10.0: Oct 2, 2019

@@ -136,13 +136,13 @@ class Transcoder {
   virtual TranscoderInputStream* RequestOutput() = 0;
 
   // The status of request transcoding
-  virtual ::google::protobuf::util::Status RequestStatus() = 0;
+  virtual absl::Status RequestStatus() = 0;
 
   // ZeroCopyInputStream to read the transcoded response.
   virtual ::google::protobuf::io::ZeroCopyInputStream* ResponseOutput() = 0;
 
   // The status of response transcoding
-  virtual ::google::protobuf::util::Status ResponseStatus() = 0;
+  virtual absl::Status ResponseStatus() = 0;
 
   // Virtual destructor
   virtual ~Transcoder() {}

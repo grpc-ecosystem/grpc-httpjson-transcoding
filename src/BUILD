@@ -26,6 +26,7 @@ cc_library(
     ],
     deps = [
         "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )
 
@@ -78,6 +79,7 @@ cc_library(
     ],
     deps = [
         ":transcoder_input_stream",
+        "@com_google_absl//absl/status",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -276,6 +278,7 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )
 
@@ -292,6 +295,7 @@ cc_library(
     ],
     deps = [
         ":protobuf",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
     ],

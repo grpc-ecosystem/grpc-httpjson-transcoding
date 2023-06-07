@@ -22,7 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/api/service.pb.h"
-#include "google/protobuf/util/internal/type_info.h"
+#include "google/protobuf/util/converter/type_info.h"
 #include "perf_benchmark/benchmark.pb.h"
 #include "src/include/grpc_transcoding/type_helper.h"
 

@@ -16,7 +16,7 @@
 #define GRPC_TRANSCODING_TYPE_HELPER_H_
 
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/type_info.h"
+#include "google/protobuf/util/converter/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
 
 #include <memory>
@@ -57,7 +57,7 @@ class TypeHelper {
   // list of the field names or empty:
   //    FieldPath = "" | Field {"." Field};
   //    Field     = <protobuf field name>;
-  ::google::protobuf::util::Status ResolveFieldPath(
+  absl::Status ResolveFieldPath(
       const ::google::protobuf::Type& type, const std::string& field_path_str,
       std::vector<const ::google::protobuf::Field*>* field_path) const;
 
@@ -65,7 +65,7 @@ class TypeHelper {
   // vector of actual protobuf Field pointers.
   // Similiar to the above method but accepts the field path as a vector of
   // names instead of one dot-delimited string.
-  ::google::protobuf::util::Status ResolveFieldPath(
+  absl::Status ResolveFieldPath(
       const ::google::protobuf::Type& type,
       const std::vector<std::string>& field_path_unresolved,
       std::vector<const ::google::protobuf::Field*>* field_path_resolved) const;
@@ -77,7 +77,7 @@ class TypeHelper {
 
   const google::protobuf::Field* FindField(
       const google::protobuf::Type* type,
-      google::protobuf::StringPiece name) const;
+      absl::string_view name) const;
 
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::unique_ptr<::google::protobuf::util::converter::TypeInfo> type_info_;

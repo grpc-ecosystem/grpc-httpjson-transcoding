@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/object_writer.h"
+#include "google/protobuf/util/converter/object_writer.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
 #include "grpc_transcoding/status_error_listener.h"
 
@@ -78,7 +78,7 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
                 google::protobuf::util::converter::ObjectWriter* ow,
                 StatusErrorListener* el, bool report_collisions);
 
-  ::google::protobuf::util::Status Status() {
+  absl::Status Status() {
     return error_listener_->status();
   }
 

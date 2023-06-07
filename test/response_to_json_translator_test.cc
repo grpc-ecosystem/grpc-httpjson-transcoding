@@ -705,7 +705,7 @@ TEST_F(ResponseToJsonTranslatorTest, ErrorInvalidType) {
   // Call NextMessage() to trigger the error
   std::string message;
   EXPECT_FALSE(translator.NextMessage(&message));
-  EXPECT_EQ(pbutil::StatusCode::kNotFound, translator.Status().code());
+  EXPECT_EQ(absl::StatusCode::kNotFound, translator.Status().code());
 }
 
 TEST_F(ResponseToJsonTranslatorTest, DirectTest) {

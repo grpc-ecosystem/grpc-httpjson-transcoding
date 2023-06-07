@@ -90,7 +90,7 @@ class ResponseToJsonTranslator : public MessageStream {
   // MessageStream implementation
   bool NextMessage(std::string* message);
   bool Finished() const { return finished_ || !status_.ok(); }
-  ::google::protobuf::util::Status Status() const { return status_; }
+  absl::Status Status() const { return status_; }
 
  private:
   // Translates a single message
@@ -110,7 +110,7 @@ class ResponseToJsonTranslator : public MessageStream {
   bool first_;
 
   bool finished_;
-  ::google::protobuf::util::Status status_;
+  absl::Status status_;
 };
 
 }  // namespace transcoding

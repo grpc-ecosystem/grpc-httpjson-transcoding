@@ -19,8 +19,8 @@
 #include <string>
 
 #include "google/protobuf/stubs/bytestream.h"
-#include "google/protobuf/util/internal/error_listener.h"
-#include "google/protobuf/util/internal/protostream_objectwriter.h"
+#include "google/protobuf/util/converter/error_listener.h"
+#include "google/protobuf/util/converter/protostream_objectwriter.h"
 #include "grpc_transcoding/prefix_writer.h"
 #include "grpc_transcoding/request_weaver.h"
 

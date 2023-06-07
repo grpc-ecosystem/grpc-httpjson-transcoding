@@ -25,7 +25,7 @@
 #include "absl/strings/string_view.h"
 
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/expecting_objectwriter.h"
+#include "google/protobuf/util/converter/expecting_objectwriter.h"
 #include "grpc_transcoding/status_error_listener.h"
 #include "gtest/gtest.h"
 
@@ -122,7 +122,7 @@ TEST_F(RequestWeaverTest, PassThrough) {
   w->EndObject();
   w->EndObject();
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level0Bindings) {
@@ -153,7 +153,7 @@ TEST_F(RequestWeaverTest, Level0Bindings) {
   w->RenderString("x", "d");
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level1Bindings) {
@@ -199,7 +199,7 @@ TEST_F(RequestWeaverTest, Level1Bindings) {
   w->EndObject();  // B
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level2Bindings) {
@@ -265,7 +265,7 @@ TEST_F(RequestWeaverTest, Level2Bindings) {
   w->EndObject();  // "D"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, Level2WeaveNewSubTree) {
@@ -315,7 +315,7 @@ TEST_F(RequestWeaverTest, Level2WeaveNewSubTree) {
   w->EndObject();  // "D"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, MixedBindings) {
@@ -358,7 +358,7 @@ TEST_F(RequestWeaverTest, MixedBindings) {
   w->EndObject();  // "A"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, MoreMixedBindings) {
@@ -414,7 +414,7 @@ TEST_F(RequestWeaverTest, MoreMixedBindings) {
   w->EndObject();  // "B"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, CollisionIgnored) {
@@ -441,7 +441,7 @@ TEST_F(RequestWeaverTest, CollisionIgnored) {
   w->EndObject();  // "A"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, CollisionReportedInvalidBinding) {
@@ -471,7 +471,7 @@ TEST_F(RequestWeaverTest, CollisionReportedInvalidBinding) {
   w->StartObject("A");
   w->RenderBool("bool_field", false);
   EXPECT_EQ(w->Status().code(),
-            ::google::protobuf::util::StatusCode::kInvalidArgument);
+            absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(
       w->Status().ToString(),
       HasSubstr(
@@ -541,26 +541,26 @@ TEST_F(RequestWeaverTest, CollisionNotReported) {
   w->StartObject("");
   w->StartObject("A");
   w->RenderBool("bool_field", true);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderInt32("int32_field", -2);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderUint32("uint32_field", 2);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderInt64("int64_field", -2);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderUint64("uint64_field", 2);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderString("string_field", "a");
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderFloat("float_field", 1.01);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderDouble("double_field", 1.01);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->RenderBytes("bytes_field", "b");
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->StartObject("B");
   w->RenderBool("B_bool_field", true);
-  EXPECT_EQ(w->Status().code(), google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
   w->EndObject();  // "B"
   w->EndObject();  // "A"
   w->EndObject();  // ""
@@ -601,7 +601,7 @@ TEST_F(RequestWeaverTest, CollisionReported) {
   w->StartObject("A");
   w->RenderBool("bool_field", false);
   EXPECT_EQ(w->Status().code(),
-            google::protobuf::util::StatusCode::kInvalidArgument);
+            absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(w->Status().ToString(),
               HasSubstr("The binding value \"true\" of the field bool_field is "
                         "conflicting with the value false in the body."));
@@ -682,7 +682,7 @@ TEST_F(RequestWeaverTest, CollisionRepeated) {
   w->EndObject();  // "A"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 TEST_F(RequestWeaverTest, IgnoreListTest) {
@@ -740,7 +740,7 @@ TEST_F(RequestWeaverTest, IgnoreListTest) {
   w->EndObject();  // "A"
   w->EndObject();  // ""
 
-  EXPECT_EQ(w->Status().code(), ::google::protobuf::util::StatusCode::kOk);
+  EXPECT_EQ(w->Status().code(), absl::StatusCode::kOk);
 }
 
 }  // namespace

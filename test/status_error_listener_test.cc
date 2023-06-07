@@ -1,7 +1,7 @@
 #include "grpc_transcoding/status_error_listener.h"
 
 #include "gmock/gmock.h"
-#include "google/protobuf/util/internal/object_location_tracker.h"
+#include "google/protobuf/util/converter/object_location_tracker.h"
 #include "gtest/gtest.h"
 
 namespace google {
@@ -12,8 +12,8 @@ namespace testing {
 namespace {
 
 using ::testing::HasSubstr;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
+using absl::Status;
+using absl::StatusCode;
 namespace pbconv = google::protobuf::util::converter;
 
 class StatusErrorListenerTest : public ::testing::Test {

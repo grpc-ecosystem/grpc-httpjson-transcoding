@@ -45,7 +45,7 @@ class ProtoStreamTester {
   bool ExpectNextEq(const std::string& expected_proto_text);
   bool ExpectNone();
   bool ExpectFinishedEq(bool expected);
-  bool ExpectStatusEq(google::protobuf::util::StatusCode error_code);
+  bool ExpectStatusEq(absl::StatusCode error_code);
 
  private:
   // Validates the GRPC message delimiter at the beginning
@@ -61,7 +61,7 @@ class ProtoStreamTester {
 template <typename MessageType>
 bool ProtoStreamTester::ExpectNextEq(const std::string& expected_proto_text) {
   // First check the status of the stream
-  if (!ExpectStatusEq(google::protobuf::util::StatusCode::kOk)) {
+  if (!ExpectStatusEq(absl::StatusCode::kOk)) {
     return false;
   }
   // Try to get a message
@@ -70,7 +70,7 @@ bool ProtoStreamTester::ExpectNextEq(const std::string& expected_proto_text) {
     ADD_FAILURE() << "ProtoStreamTester::ValidateNext: NextMessage() "
                      "returned false\n";
     // Use ExpectStatusEq() to output the status if it's not OK.
-    ExpectStatusEq(google::protobuf::util::StatusCode::kOk);
+    ExpectStatusEq(absl::StatusCode::kOk);
     return false;
   }
   // Validate the delimiter if it's expected

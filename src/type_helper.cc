@@ -22,7 +22,7 @@
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
 #include "google/protobuf/type.pb.h"
-#include "google/protobuf/util/internal/type_info.h"
+#include "google/protobuf/util/converter/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
 #include "grpc_transcoding/percent_encoding.h"
 
@@ -55,31 +55,31 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
 
   // TypeResolver implementation
   // Resolves a type url for a message type.
-  virtual pbutil::Status ResolveMessageType(
+  virtual absl::Status ResolveMessageType(
       const std::string& type_url, google::protobuf::Type* type) override {
     auto i = type_map_.find(type_url);
     if (end(type_map_) != i) {
       if (nullptr != type) {
         *type = *i->second;
       }
-      return pbutil::Status();
+      return absl::Status();
     } else {
-      return pbutil::Status(pbutil::StatusCode::kNotFound,
+      return absl::Status(absl::StatusCode::kNotFound,
                             "Type '" + type_url + "' cannot be found.");
     }
   }
 
   // Resolves a type url for an enum type.
-  virtual pbutil::Status ResolveEnumType(
+  virtual absl::Status ResolveEnumType(
       const std::string& type_url, google::protobuf::Enum* enum_type) override {
     auto i = enum_map_.find(type_url);
     if (end(enum_map_) != i) {
       if (nullptr != enum_type) {
         *enum_type = *i->second;
       }
-      return pbutil::Status();
+      return absl::Status();
     } else {
-      return pbutil::Status(pbutil::StatusCode::kNotFound,
+      return absl::Status(absl::StatusCode::kNotFound,
                             "Enum '" + type_url + "' cannot be found.");
     }
   }
@@ -114,27 +114,27 @@ class LockedTypeInfo : public pbconv::TypeInfo {
  public:
   LockedTypeInfo(pbconv::TypeInfo* type_info) : type_info_(type_info) {}
 
-  pbutil::StatusOr<const google::protobuf::Type*> ResolveTypeUrl(
-      google::protobuf::StringPiece type_url) const override {
+  absl::StatusOr<const google::protobuf::Type*> ResolveTypeUrl(
+      absl::string_view type_url) const override {
     absl::MutexLock lock(&mutex_);
     return type_info_->ResolveTypeUrl(type_url);
   }
 
   const google::protobuf::Type* GetTypeByTypeUrl(
-      google::protobuf::StringPiece type_url) const override {
+      absl::string_view type_url) const override {
     absl::MutexLock lock(&mutex_);
     return type_info_->GetTypeByTypeUrl(type_url);
   }
 
   const google::protobuf::Enum* GetEnumByTypeUrl(
-      google::protobuf::StringPiece type_url) const override {
+      absl::string_view type_url) const override {
     absl::MutexLock lock(&mutex_);
     return type_info_->GetEnumByTypeUrl(type_url);
   }
 
   const google::protobuf::Field* FindField(
       const google::protobuf::Type* type,
-      google::protobuf::StringPiece camel_case_name) const override {
+      absl::string_view camel_case_name) const override {
     absl::MutexLock lock(&mutex_);
     return type_info_->FindField(type, camel_case_name);
   }
@@ -174,7 +174,7 @@ void TypeHelper::AddEnum(const google::protobuf::Enum& e) {
   reinterpret_cast<SimpleTypeResolver*>(type_resolver_)->AddEnum(e);
 }
 
-pbutil::Status TypeHelper::ResolveFieldPath(
+absl::Status TypeHelper::ResolveFieldPath(
     const google::protobuf::Type& type, const std::string& field_path_str,
     std::vector<const google::protobuf::Field*>* field_path_out) const {
   // Split the field names & call ResolveFieldPath()
@@ -185,7 +185,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
 
 const google::protobuf::Field* TypeHelper::FindField(
     const google::protobuf::Type* type,
-    google::protobuf::StringPiece name) const {
+    absl::string_view name) const {
   auto* field = Info()->FindField(type, name);
   if (field != nullptr) {
     return field;
@@ -198,7 +198,7 @@ const google::protobuf::Field* TypeHelper::FindField(
   return field;
 }
 
-pbutil::Status TypeHelper::ResolveFieldPath(
+absl::Status TypeHelper::ResolveFieldPath(
     const google::protobuf::Type& type,
     const std::vector<std::string>& field_names,
     std::vector<const google::protobuf::Field*>* field_path_out) const {
@@ -213,7 +213,7 @@ pbutil::Status TypeHelper::ResolveFieldPath(
     // Find the field by name in the current type
     auto field = FindField(current_type, field_names[i]);
     if (nullptr == field) {
-      return pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                             "Could not find field \"" + field_names[i] +
                                 "\" in the type \"" + current_type->name() +
                                 "\".");
@@ -223,8 +223,8 @@ pbutil::Status TypeHelper::ResolveFieldPath(
     if (i < field_names.size() - 1) {
       // If this is not the last field in the path, it must be a message
       if (google::protobuf::Field::TYPE_MESSAGE != field->kind()) {
-        return pbutil::Status(
-            pbutil::StatusCode::kInvalidArgument,
+        return absl::Status(
+            absl::StatusCode::kInvalidArgument,
             "Encountered a non-leaf field \"" + field->name() +
                 "\" that is not a message while parsing a field path");
       }
@@ -232,14 +232,14 @@ pbutil::Status TypeHelper::ResolveFieldPath(
       // Update the type of the current message
       current_type = Info()->GetTypeByTypeUrl(field->type_url());
       if (nullptr == current_type) {
-        return pbutil::Status(pbutil::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Cannot find the type \"" + field->type_url() +
                                   "\" while parsing a field path.");
       }
     }
   }
   *field_path_out = std::move(field_path);
-  return pbutil::Status();
+  return absl::Status();
 }
 
 }  // namespace transcoding

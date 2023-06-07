@@ -20,8 +20,8 @@
 
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/stubs/status.h"
-#include "google/protobuf/util/internal/json_stream_parser.h"
-#include "google/protobuf/util/internal/object_writer.h"
+#include "google/protobuf/util/converter/json_stream_parser.h"
+#include "google/protobuf/util/converter/object_writer.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
 #include "grpc_transcoding/message_stream.h"
 #include "grpc_transcoding/request_message_translator.h"
@@ -74,7 +74,7 @@ class LazyRequestTranslator : public MessageStream {
     return true;
   }
   bool Finished() const { return translated_->Finished() || !status_.ok(); }
-  pbutil::Status Status() const { return status_; }
+  absl::Status Status() const { return status_; }
 
  private:
   // Translates one chunk of data. Returns true, if there was input to
@@ -109,7 +109,7 @@ class LazyRequestTranslator : public MessageStream {
   // If parsing status fails, return false.
   // check translated status, if fails, return false.
   // save failed status.
-  bool CheckParsingStatus(pbutil::Status parsing_status) {
+  bool CheckParsingStatus(absl::Status parsing_status) {
     status_ = parsing_status;
     if (!status_.ok()) {
       return false;
@@ -135,7 +135,7 @@ class LazyRequestTranslator : public MessageStream {
   bool seen_input_;
 
   // Translation status
-  pbutil::Status status_;
+  absl::Status status_;
 };
 
 }  // namespace

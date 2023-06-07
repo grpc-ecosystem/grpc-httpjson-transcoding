@@ -19,6 +19,7 @@
 
 #include "google/protobuf/stubs/status.h"
 #include "transcoder_input_stream.h"
+#include "absl/status/status.h"
 
 namespace google {
 namespace grpc {
@@ -92,7 +93,7 @@ class MessageReader {
   //       is OK before consuming the `grpc_frame`.
   MessageAndGrpcFrame NextMessageAndGrpcFrame();
 
-  ::google::protobuf::util::Status Status() const { return status_; }
+  absl::Status Status() const { return status_; }
 
   // Returns true if the stream has ended (this is permanent); otherwise returns
   // false.
@@ -107,7 +108,7 @@ class MessageReader {
   // Are we all done?
   bool finished_;
   // Status
-  ::google::protobuf::util::Status status_;
+  absl::Status status_;
   // Buffer to store the current delimiter value.
   unsigned char delimiter_[kGrpcDelimiterByteSize];
 

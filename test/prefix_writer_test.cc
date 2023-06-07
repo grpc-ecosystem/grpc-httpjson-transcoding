@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "google/protobuf/util/internal/expecting_objectwriter.h"
+#include "google/protobuf/util/converter/expecting_objectwriter.h"
 #include "gtest/gtest.h"
 
 namespace google {

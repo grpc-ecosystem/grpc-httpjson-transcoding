@@ -33,8 +33,8 @@ cc_proto_library(
 
 proto_library(
     name = "benchmark_proto",
-    srcs = ["benchmark.proto"],
     testonly = 1,
+    srcs = ["benchmark.proto"],
     deps = [
         "@com_google_googleapis//google/api:annotations_proto",
         "@com_google_protobuf//:struct_proto",
@@ -43,11 +43,11 @@ proto_library(
 
 cc_binary(
     name = "benchmark_main",
+    testonly = 1,
     srcs = ["benchmark_main.cc"],
     data = [
         "benchmark_service.textproto",
     ],
-    testonly = 1,
     deps = [
         "benchmark_cc_proto",
         ":benchmark_input_stream",
@@ -72,8 +72,8 @@ cc_binary(
 # Please make sure if you're building from Debian 11 system as well.
 cc_image(
     name = "benchmark_main_image",
-    binary = ":benchmark_main",
     testonly = 1,
+    binary = ":benchmark_main",
 )
 
 # Example run command:
@@ -83,9 +83,9 @@ cc_image(
 # --define=PUSH_TAG=latest
 container_push(
     name = "benchmark_main_image_push",
+    testonly = 1,
     format = "Docker",
     image = ":benchmark_main_image",
-    testonly = 1,
     registry = "$(PUSH_REGISTRY)",
     repository = "$(PUSH_PROJECT)/grpc-httpjson-transcoding-benchmark",
     tag = "$(PUSH_TAG)",
@@ -93,9 +93,9 @@ container_push(
 
 cc_library(
     name = "utils",
+    testonly = 1,
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
-    testonly = 1,
     deps = [
         "benchmark_cc_proto",
         "//src:type_helper",
@@ -112,11 +112,13 @@ cc_library(
 
 cc_library(
     name = "benchmark_input_stream",
+    testonly = 1,
     srcs = ["benchmark_input_stream.cc"],
     hdrs = ["benchmark_input_stream.h"],
-    testonly = 1,
     deps = [
         "//src:transcoder_input_stream",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/log:absl_log",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
     ],
@@ -166,6 +168,7 @@ cc_test(
         "//src:response_to_json_translator",
         "//src:type_helper",
         "@com_github_nlohmann_json//:json",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_googleapis//google/api:service_cc_proto",
         "@com_google_googletest//:gtest_main",
     ],
