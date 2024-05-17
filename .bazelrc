@@ -16,8 +16,8 @@
 # https://github.com/bazelbuild/rules_fuzzing/blob/f6062a88d83463e2900e47bc218547ba046dad44/.bazelrc
 
 # Force the use of Clang for all builds.
-build --action_env=CC=clang-10
-build --action_env=CXX=clang++-10
+build --action_env=CC=clang-14
+build --action_env=CXX=clang++-14
 
 build --cxxopt=-std=c++14
 build --host_cxxopt=-std=c++14
