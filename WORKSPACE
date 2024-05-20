@@ -15,6 +15,11 @@
 ################################################################################
 #
 
+# See
+# https://github.com/bazelbuild/rules_fuzzing/blob/master/README.md#configuring-the-workspace.
+# The fuzzing rules must be first because if they are not, bazel will
+# pull in incompatible versions of absl and rules_python.
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
     "//:repositories.bzl",
     "absl_repositories",
@@ -26,12 +31,6 @@ load(
     "protobuf_repositories",
     "protoconverter_repositories",
 )
-
-# See
-# https://github.com/bazelbuild/rules_fuzzing/blob/master/README.md#configuring-the-workspace.
-# The fuzzing rules must be first because if they are not, bazel will
-# pull in incompatible versions of absl and rules_python.
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "rules_fuzzing",
