@@ -16,5 +16,8 @@
 #
 ################################################################################
 
-bazel build //...
-bazel test //... --test_output=errors
+# TODO: Remove these two lines after getting rid of python2 dependencies.
+apt-get upgrade
+apt-get -y install python
+bazelisk build //...
+bazelisk test //... --test_output=errors
