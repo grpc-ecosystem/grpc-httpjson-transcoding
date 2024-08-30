@@ -22,10 +22,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "absl/strings/str_split.h"
 #include "http_template.h"
 #include "path_matcher_node.h"
 #include "percent_encoding.h"
-#include "absl/strings/str_split.h"
 
 namespace google {
 namespace grpc {
@@ -56,8 +56,6 @@ class PathMatcher {
  public:
   ~PathMatcher(){};
 
-  // TODO: Do not template VariableBinding
-  template <class VariableBinding>
   Method Lookup(const std::string& http_method, const std::string& path,
                 const std::string& query_params,
                 std::vector<VariableBinding>* variable_bindings,
@@ -173,7 +171,6 @@ class PathMatcherBuilder {
 
 namespace {
 
-template <class VariableBinding>
 void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
                              const std::vector<std::string>& parts,
                              UrlUnescapeSpec unescape_spec,
@@ -210,7 +207,6 @@ void ExtractBindingsFromPath(const std::vector<HttpTemplate::Variable>& vars,
   }
 }
 
-template <class VariableBinding>
 void ExtractBindingsFromQueryParameters(
     const std::string& query_params,
     const std::unordered_set<std::string>& system_params,
@@ -325,7 +321,6 @@ PathMatcher<Method>::PathMatcher(PathMatcherBuilder<Method>&& builder)
 // TODO: cache results by adding get/put methods here (if profiling reveals
 // benefit)
 template <class Method>
-template <class VariableBinding>
 Method PathMatcher<Method>::Lookup(
     const std::string& http_method, const std::string& path,
     const std::string& query_params,

@@ -2,7 +2,6 @@
 
 #include <string>
 
-
 namespace google {
 namespace grpc {
 
@@ -11,18 +10,17 @@ namespace transcoding {
 void StatusErrorListener::InvalidName(
     const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
     internal::string_view unknown_name, internal::string_view message) {
-  status_ = absl::Status(
-      absl::StatusCode::kInvalidArgument,
-      loc.ToString() + ": " + std::string(message));
+  status_ = absl::Status(absl::StatusCode::kInvalidArgument,
+                         loc.ToString() + ": " + std::string(message));
 }
 
 void StatusErrorListener::InvalidValue(
     const ::google::protobuf::util::converter::LocationTrackerInterface& loc,
     internal::string_view type_name, internal::string_view value) {
-  status_ = absl::Status(
-      absl::StatusCode::kInvalidArgument,
-      loc.ToString() + ": invalid value " + std::string(value) + " for type " +
-          std::string(type_name));
+  status_ =
+      absl::Status(absl::StatusCode::kInvalidArgument,
+                   loc.ToString() + ": invalid value " + std::string(value) +
+                       " for type " + std::string(type_name));
 }
 
 void StatusErrorListener::MissingField(
@@ -33,7 +31,7 @@ void StatusErrorListener::MissingField(
       loc.ToString() + ": missing field " + std::string(missing_name));
 }
 
-}  // namespace src::include::grpc_transcoding}  // namespace transcoding
+}  // namespace transcoding
 
 }  // namespace grpc
 }  // namespace google

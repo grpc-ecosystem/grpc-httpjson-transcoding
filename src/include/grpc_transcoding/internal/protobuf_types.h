@@ -15,7 +15,6 @@
 #ifndef GRPC_TRANSCODING_INTERNAL_PROTOBUF_TYPES_H_
 #define GRPC_TRANSCODING_INTERNAL_PROTOBUF_TYPES_H_
 
-
 namespace google {
 namespace grpc {
 namespace transcoding {

@@ -1,9 +1,9 @@
 #ifndef GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 #define GRPC_TRANSCODING_STATUS_ERROR_LISTENER_H_
 
+#include "absl/status/status.h"
 #include "google/protobuf/util/converter/error_listener.h"
 #include "grpc_transcoding/internal/protobuf_types.h"
-#include "absl/status/status.h"
 
 namespace google {
 namespace grpc {
@@ -39,7 +39,7 @@ class StatusErrorListener
   StatusErrorListener& operator=(const StatusErrorListener&) = delete;
 };
 
-}  // namespace src::include::grpc_transcoding}  // namespace transcoding
+}  // namespace transcoding
 
 }  // namespace grpc
 }  // namespace google

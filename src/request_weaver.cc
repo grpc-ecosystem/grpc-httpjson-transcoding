@@ -16,20 +16,20 @@
 //
 #include "grpc_transcoding/request_weaver.h"
 
-#include <string>
-#include <vector>
 #include <float.h>
+
 #include <cmath>
 #include <limits>
+#include <string>
+#include <vector>
 
-#include "absl/strings/str_format.h"
 #include "absl/strings/str_cat.h"
-
-#include "google/protobuf/util/field_comparator.h"
+#include "absl/strings/str_format.h"
 #include "google/protobuf/stubs/strutil.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/converter/datapiece.h"
 #include "google/protobuf/util/converter/object_writer.h"
+#include "google/protobuf/util/field_comparator.h"
 
 namespace google {
 namespace grpc {
@@ -41,24 +41,20 @@ namespace pbconv = google::protobuf::util::converter;
 
 namespace {
 
-
-bool AlmostEquals(float a, float b) {
-  return fabs(a - b) < 32 * FLT_EPSILON;
-}
-
+bool AlmostEquals(float a, float b) { return fabs(a - b) < 32 * FLT_EPSILON; }
 
 absl::Status bindingFailureStatus(internal::string_view field_name,
-                                      internal::string_view type,
-                                      const pbconv::DataPiece& value) {
+                                  internal::string_view type,
+                                  const pbconv::DataPiece& value) {
   return absl::Status(
       absl::StatusCode::kInvalidArgument,
       absl::StrCat("Failed to convert binding value ", field_name, ":",
-                 value.ValueAsStringOrDefault(""), " to ", type));
+                   value.ValueAsStringOrDefault(""), " to ", type));
 }
 
 absl::Status isEqual(internal::string_view field_name,
-                         const pbconv::DataPiece& value_in_body,
-                         const pbconv::DataPiece& value_in_binding) {
+                     const pbconv::DataPiece& value_in_body,
+                     const pbconv::DataPiece& value_in_binding) {
   bool value_is_same = true;
   switch (value_in_body.type()) {
     case pbconv::DataPiece::TYPE_INT32: {
@@ -106,8 +102,7 @@ absl::Status isEqual(internal::string_view field_name,
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "double", value_in_binding);
       }
-      if (!AlmostEquals(
-              status.value(), value_in_body.ToDouble().value())) {
+      if (!AlmostEquals(status.value(), value_in_body.ToDouble().value())) {
         value_is_same = false;
       }
       break;
@@ -117,8 +112,7 @@ absl::Status isEqual(internal::string_view field_name,
       if (!status.ok()) {
         return bindingFailureStatus(field_name, "float", value_in_binding);
       }
-      if (!AlmostEquals(status.value(),
-                                             value_in_body.ToFloat().value())) {
+      if (!AlmostEquals(status.value(), value_in_body.ToFloat().value())) {
         value_is_same = false;
       }
       break;

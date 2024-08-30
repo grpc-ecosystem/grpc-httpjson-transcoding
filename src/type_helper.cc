@@ -65,7 +65,7 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
       return absl::Status();
     } else {
       return absl::Status(absl::StatusCode::kNotFound,
-                            "Type '" + type_url + "' cannot be found.");
+                          "Type '" + type_url + "' cannot be found.");
     }
   }
 
@@ -80,7 +80,7 @@ class SimpleTypeResolver : public pbutil::TypeResolver {
       return absl::Status();
     } else {
       return absl::Status(absl::StatusCode::kNotFound,
-                            "Enum '" + type_url + "' cannot be found.");
+                          "Enum '" + type_url + "' cannot be found.");
     }
   }
 
@@ -184,8 +184,7 @@ absl::Status TypeHelper::ResolveFieldPath(
 }
 
 const google::protobuf::Field* TypeHelper::FindField(
-    const google::protobuf::Type* type,
-    absl::string_view name) const {
+    const google::protobuf::Type* type, absl::string_view name) const {
   auto* field = Info()->FindField(type, name);
   if (field != nullptr) {
     return field;
@@ -214,9 +213,9 @@ absl::Status TypeHelper::ResolveFieldPath(
     auto field = FindField(current_type, field_names[i]);
     if (nullptr == field) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
-                            "Could not find field \"" + field_names[i] +
-                                "\" in the type \"" + current_type->name() +
-                                "\".");
+                          "Could not find field \"" + field_names[i] +
+                              "\" in the type \"" + current_type->name() +
+                              "\".");
     }
     field_path.push_back(field);
 
@@ -233,8 +232,8 @@ absl::Status TypeHelper::ResolveFieldPath(
       current_type = Info()->GetTypeByTypeUrl(field->type_url());
       if (nullptr == current_type) {
         return absl::Status(absl::StatusCode::kInvalidArgument,
-                              "Cannot find the type \"" + field->type_url() +
-                                  "\" while parsing a field path.");
+                            "Cannot find the type \"" + field->type_url() +
+                                "\" while parsing a field path.");
       }
     }
   }

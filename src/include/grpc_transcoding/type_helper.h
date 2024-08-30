@@ -15,12 +15,12 @@
 #ifndef GRPC_TRANSCODING_TYPE_HELPER_H_
 #define GRPC_TRANSCODING_TYPE_HELPER_H_
 
+#include <memory>
+#include <vector>
+
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/converter/type_info.h"
 #include "google/protobuf/util/type_resolver.h"
-
-#include <memory>
-#include <vector>
 
 namespace google {
 namespace grpc {
@@ -75,9 +75,8 @@ class TypeHelper {
   void AddType(const ::google::protobuf::Type& t);
   void AddEnum(const ::google::protobuf::Enum& e);
 
-  const google::protobuf::Field* FindField(
-      const google::protobuf::Type* type,
-      absl::string_view name) const;
+  const google::protobuf::Field* FindField(const google::protobuf::Type* type,
+                                           absl::string_view name) const;
 
   ::google::protobuf::util::TypeResolver* type_resolver_;
   std::unique_ptr<::google::protobuf::util::converter::TypeInfo> type_info_;

@@ -118,9 +118,7 @@ class RequestMessageTranslator : public MessageStream {
   // MessageStream methods
   bool NextMessage(std::string* message);
   bool Finished() const;
-  absl::Status Status() const {
-    return error_listener_.status();
-  }
+  absl::Status Status() const { return error_listener_.status(); }
 
  private:
   // Reserves space (5 bytes) for the GRPC delimiter to be written later. As it

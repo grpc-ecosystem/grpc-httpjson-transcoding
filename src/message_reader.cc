@@ -91,9 +91,8 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
       // Find out whether the stream is finished and return false.
       finished_ = in_->Finished();
       if (finished_ && in_->BytesAvailable() != 0) {
-        status_ = absl::Status(
-            absl::StatusCode::kInternal,
-            "Incomplete gRPC frame header received");
+        status_ = absl::Status(absl::StatusCode::kInternal,
+                               "Incomplete gRPC frame header received");
       }
       return nullptr;
     }
@@ -121,8 +120,8 @@ std::unique_ptr<pbio::ZeroCopyInputStream> MessageReader::NextMessage() {
       status_ = absl::Status(
           absl::StatusCode::kInternal,
           "Incomplete gRPC frame expected size: " +
-              std::to_string(current_message_size_) + " actual size: " +
-              std::to_string(in_->BytesAvailable()));
+              std::to_string(current_message_size_) +
+              " actual size: " + std::to_string(in_->BytesAvailable()));
     }
     // We don't have a full message
     return nullptr;
