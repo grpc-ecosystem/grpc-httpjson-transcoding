@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "grpc_transcoding/http_template.h"
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -30,28 +32,15 @@ namespace google {
 namespace grpc {
 namespace transcoding {
 
-namespace {
-
-// VariableBinding specifies a value for a single field in the request message.
-// When transcoding HTTP/REST/JSON to gRPC/proto the request message is
-// constructed using the HTTP body and the variable bindings (specified through
-// request url).
-struct Binding {
-  // The location of the field in the protobuf message, where the value
-  // needs to be inserted, e.g. "shelf.theme" would mean the "theme" field
-  // of the nested "shelf" message of the request protobuf message.
-  std::vector<std::string> field_path;
-  // The value to be inserted.
-  std::string value;
-};
-
-typedef std::vector<Binding> Bindings;
-typedef std::vector<std::string> FieldPath;
-class MethodInfo {};
-
-bool operator==(const Binding& b1, const Binding& b2) {
+bool operator==(const VariableBinding& b1, const VariableBinding& b2) {
   return b1.field_path == b2.field_path && b1.value == b2.value;
 }
+
+namespace {
+
+typedef std::vector<VariableBinding> VariableBindings;
+typedef std::vector<std::string> FieldPath;
+class MethodInfo {};
 
 // These comment out code will be useful when debugging. It can be added as:
 //   std::cerr << Bingings;
@@ -67,11 +56,11 @@ std::string FieldPathToString(const FieldPath& fp) {
   return s;
 }
 
-std::ostream& operator<<(std::ostream& os, const Binding& b) {
+std::ostream& operator<<(std::ostream& os, const VariableBinding& b) {
   return os << "{ " << FieldPathToString(b.field_path) << "=" << b.value << "}";
 }
 
-std::ostream& operator<<(std::ostream& os, const Bindings& bindings) {
+std::ostream& operator<<(std::ostream& os, const VariableBindings& bindings) {
   for (const auto& b : bindings) {
     os << b << std::endl;
   }
@@ -139,26 +128,26 @@ class PathMatcherTest : public ::testing::Test {
   void Build() { matcher_ = builder_.Build(); }
 
   MethodInfo* LookupWithBodyFieldPath(std::string method, std::string path,
-                                      Bindings* bindings,
+                                      VariableBindings* bindings,
                                       std::string* body_field_path) {
     return matcher_->Lookup(method, path, "", bindings, body_field_path);
   }
 
-  MethodInfo* Lookup(std::string method, std::string path, Bindings* bindings) {
+  MethodInfo* Lookup(std::string method, std::string path, VariableBindings* bindings) {
     std::string body_field_path;
     return matcher_->Lookup(method, path, std::string(), bindings,
                             &body_field_path);
   }
 
   MethodInfo* LookupWithParams(std::string method, std::string path,
-                               std::string query_params, Bindings* bindings) {
+                               std::string query_params, VariableBindings* bindings) {
     std::string body_field_path;
     return matcher_->Lookup(method, path, query_params, bindings,
                             &body_field_path);
   }
 
   MethodInfo* LookupNoBindings(std::string method, std::string path) {
-    Bindings bindings;
+    VariableBindings bindings;
     std::string body_field_path;
     auto result = matcher_->Lookup(method, path, std::string(), &bindings,
                                    &body_field_path);
@@ -173,7 +162,7 @@ class PathMatcherTest : public ::testing::Test {
 
     EXPECT_NE(nullptr, a__c);
 
-    Bindings bindings;
+    VariableBindings bindings;
     EXPECT_EQ(
         Lookup("GET",
                "/a/%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D/"
@@ -182,10 +171,10 @@ class PathMatcherTest : public ::testing::Test {
         a__c);
 
     EXPECT_EQ(
-        Bindings({// Single-part component is always fully decoded.
-                  Binding{FieldPath{"x"}, "!#$&'()*+,/:;=?@[]"},
+        VariableBindings({// Single-part component is always fully decoded.
+                  VariableBinding{FieldPath{"x"}, "!#$&'()*+,/:;=?@[]"},
                   // Multi-part component depends on the builder configuration.
-                  Binding{FieldPath{"y"}, expected_component}}),
+                  VariableBinding{FieldPath{"y"}, expected_component}}),
         bindings);
   }
 
@@ -264,63 +253,63 @@ TEST_F(PathMatcherTest, VariableBindings) {
   EXPECT_NE(nullptr, abc__);
   EXPECT_NE(nullptr, _def__);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/a/book/c/d/e", &bindings), a_cde);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "book"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "book"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/hello/b/world/c", &bindings), a_b_c);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "a/hello"}, Binding{FieldPath{"y"}, "world"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "a/hello"}, VariableBinding{FieldPath{"y"}, "world"},
       }),
       bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/zoo/d/animal/tiger", &bindings), ab_d__);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "b/zoo"},
-                Binding{FieldPath{"y"}, "d/animal/tiger"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "b/zoo"},
+                VariableBinding{FieldPath{"y"}, "d/animal/tiger"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/alpha/dog/beta/eat/bones/gamma", &bindings),
             alpha_beta__gamma);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "dog"}, Binding{FieldPath{"y"}, "eat/bones"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "dog"}, VariableBinding{FieldPath{"y"}, "eat/bones"},
       }),
       bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/a", &bindings), _a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "foo"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "foo"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/bar/a/b", &bindings), __ab);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "foo/bar"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "foo/bar"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/foo", &bindings), ab_);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "foo"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "foo"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/c/foo/bar/baz", &bindings), abc__);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "foo/bar/baz"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "foo/bar/baz"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/d/e/f/bar/baz", &bindings), _def__);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "foo"}, Binding{FieldPath{"y"}, "bar/baz"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "foo"}, VariableBinding{FieldPath{"y"}, "bar/baz"},
       }),
       bindings);
 }
@@ -331,11 +320,11 @@ TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegment) {
 
   EXPECT_NE(nullptr, a_c);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // Also test '+',  make sure it is not unescaped
   EXPECT_EQ(Lookup("GET", "/a/p%20q%2Fr+/c", &bindings), a_c);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "p q/r+"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "p q/r+"},
             }),
             bindings);
 }
@@ -366,10 +355,10 @@ TEST_F(PathMatcherTest, PercentEscapesUnescapedForSingleSegmentAllAsciiChars) {
       path += HexDigit((c & 0xf0) >> 4, 0 != u);
       path += HexDigit(c & 0x0f, 0 != u);
 
-      Bindings bindings;
+      VariableBindings bindings;
       EXPECT_EQ(Lookup("GET", path, &bindings), a_c);
-      EXPECT_EQ(Bindings({
-                    Binding{FieldPath{"x"}, std::string(1, (char)c)},
+      EXPECT_EQ(VariableBindings({
+                    VariableBinding{FieldPath{"x"}, std::string(1, (char)c)},
                 }),
                 bindings);
     }
@@ -382,10 +371,10 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment1) {
 
   EXPECT_NE(nullptr, ap_q_c);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/a/p/foo%20foo/q/bar%2Fbar/c", &bindings), ap_q_c);
   // space (%20) is escaped, but slash (%2F) isn't.
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar"}}),
             bindings);
 }
 
@@ -395,11 +384,11 @@ TEST_F(PathMatcherTest, PercentEscapesNotUnescapedForMultiSegment2) {
 
   EXPECT_NE(nullptr, a__c);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // Also test '+',  make sure it is not unescaped
   EXPECT_EQ(Lookup("GET", "/a/p/foo%20foo/q/bar%2Fbar+/c", &bindings), a__c);
   // space (%20) is unescaped, but slash (%2F) isn't. nor +
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar+"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "p/foo foo/q/bar%2Fbar+"}}),
             bindings);
 }
 
@@ -446,18 +435,18 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
   EXPECT_NE(nullptr, get_person);
   EXPECT_NE(nullptr, verb);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // with the verb
   EXPECT_EQ(Lookup("GET", "/person:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "person"}}), bindings);
   EXPECT_EQ(Lookup("GET", "/person/jason:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person/jason"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "person/jason"}}), bindings);
 
   // with the verb but with a different prefix
   EXPECT_EQ(Lookup("GET", "/animal:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "animal"}}), bindings);
   EXPECT_EQ(Lookup("GET", "/animal/cat:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal/cat"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "animal/cat"}}), bindings);
 
   // without a verb
   EXPECT_EQ(Lookup("GET", "/person", &bindings), list_person);
@@ -468,7 +457,7 @@ TEST_F(PathMatcherTest, CustomVerbIssue) {
   // with a non-verb
   EXPECT_EQ(Lookup("GET", "/person:other", &bindings), nullptr);
   EXPECT_EQ(Lookup("GET", "/person/jason:other", &bindings), get_person);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:other"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"id"}, "jason:other"}}), bindings);
   EXPECT_EQ(Lookup("GET", "/animal:other", &bindings), nullptr);
   EXPECT_EQ(Lookup("GET", "/animal/cat:other", &bindings), nullptr);
 }
@@ -485,24 +474,24 @@ TEST_F(PathMatcherTest, MatchUnregisteredCustomVerb) {
   EXPECT_NE(nullptr, get_person_2);
   EXPECT_NE(nullptr, verb);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // with the verb
   EXPECT_EQ(Lookup("GET", "/person:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "person"}}), bindings);
   EXPECT_EQ(Lookup("GET", "/person/jason:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "person/jason"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "person/jason"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/person/jason/name", &bindings), get_person_3);
   // For the wrong-format url where the verb appears in the middle segment, the
   // path matcher still regard it as a segment.
   EXPECT_EQ(Lookup("GET", "/person/jason:verb/name", &bindings), get_person_3);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"id"}, "jason:verb"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"id"}, "jason:verb"}}), bindings);
 
   // with the verb but with a different prefix
   EXPECT_EQ(Lookup("GET", "/animal:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "animal"}}), bindings);
   EXPECT_EQ(Lookup("GET", "/animal/cat:verb", &bindings), verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "animal/cat"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "animal/cat"}}), bindings);
 
   // with a non-verb
   EXPECT_EQ(Lookup("GET", "/person:other", &bindings), nullptr);
@@ -527,24 +516,24 @@ TEST_F(PathMatcherTest, VariableBindingsWithCustomVerb) {
   EXPECT_NE(nullptr, e_fverb);
   EXPECT_NE(nullptr, g__hverb);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/a/world:verb", &bindings), a_verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"y"}, "world"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"y"}, "world"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/d/animal/tiger:verb", &bindings), ad__verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"y"}, "d/animal/tiger"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"y"}, "d/animal/tiger"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/a:verb", &bindings), _averb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/foo/bar/baz/b:verb", &bindings), __bverb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo/bar/baz"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo/bar/baz"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/e/foo/f:verb", &bindings), e_fverb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/g/foo/bar/h:verb", &bindings), g__hverb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo/bar"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo/bar"}}), bindings);
 }
 
 TEST_F(PathMatcherTest, ConstantSuffixesWithVariable) {
@@ -572,52 +561,52 @@ TEST_F(PathMatcherTest, ConstantSuffixesWithVariable) {
   EXPECT_NE(nullptr, ab_yz__foo);
   EXPECT_NE(nullptr, ab___yzfoo);
 
-  Bindings bindings;
+  VariableBindings bindings;
 
   EXPECT_EQ(Lookup("GET", "/a/b/hello/world/c", &bindings), ab__);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "b/hello/world/c"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "b/hello/world/c"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/world/c/z", &bindings), ab__z);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "b/world/c"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "b/world/c"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/world/c/y/z", &bindings), ab__yz);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "b/world/c"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "b/world/c"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/world/c:verb", &bindings), ab__verb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "b/world/c"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "b/world/c"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/hello/b/world/c", &bindings), a__);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "hello/b/world/c"}}), bindings);
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "hello/b/world/c"}}), bindings);
 
   EXPECT_EQ(Lookup("GET", "/c/hello/d/esp/world/e", &bindings), c_d__e);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "hello"},
-                      Binding{FieldPath{"y"}, "d/esp/world"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "hello"},
+                      VariableBinding{FieldPath{"y"}, "d/esp/world"}}),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/c/hola/d/esp/mundo/e:verb", &bindings), c_d__everb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "hola"},
-                      Binding{FieldPath{"y"}, "d/esp/mundo"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "hola"},
+                      VariableBinding{FieldPath{"y"}, "d/esp/mundo"}}),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/f/foo/bar/baz/g", &bindings), f___g);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo"},
-                      Binding{FieldPath{"y"}, "bar/baz"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo"},
+                      VariableBinding{FieldPath{"y"}, "bar/baz"}}),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/f/foo/bar/baz/g:verb", &bindings), f___gverb);
-  EXPECT_EQ(Bindings({Binding{FieldPath{"x"}, "foo"},
-                      Binding{FieldPath{"y"}, "bar/baz"}}),
+  EXPECT_EQ(VariableBindings({VariableBinding{FieldPath{"x"}, "foo"},
+                      VariableBinding{FieldPath{"y"}, "bar/baz"}}),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/foo/y/z/bar/baz/foo", &bindings), ab_yz__foo);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "b/foo/y/z/bar/baz"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "b/foo/y/z/bar/baz"},
             }),
             bindings);
 
   EXPECT_EQ(Lookup("GET", "/a/b/foo/bar/baz/y/z/foo", &bindings), ab___yzfoo);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "b/foo/bar/baz/y/z"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "b/foo/bar/baz/y/z"},
             }),
             bindings);
 }
@@ -662,7 +651,7 @@ TEST_F(PathMatcherTest, CustomVerbMatches) {
 TEST_F(PathMatcherTest, CustomVerbMatch2) {
   MethodInfo* verb = AddGetPath("/{a=*}/{b=*}:verb");
   Build();
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
   EXPECT_EQ(bindings.size(), 2);
   EXPECT_EQ(bindings[0].value, "some:verb");
@@ -674,7 +663,7 @@ TEST_F(PathMatcherTest, CustomVerbMatch3) {
   Build();
 
   // This is not custom verb since it was not configured.
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/foo/other:verb", &bindings), verb);
   EXPECT_EQ(bindings.size(), 1);
   EXPECT_EQ(bindings[0].value, "other:verb");
@@ -694,7 +683,7 @@ TEST_F(PathMatcherTest, CustomVerbMatch5) {
   MethodInfo* verb = AddGetPath("/{a=**}:verb");
   MethodInfo* non_verb = AddGetPath("/{a=**}");
   Build();
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(Lookup("GET", "/some:verb/const:verb", &bindings), verb);
   EXPECT_EQ(bindings.size(), 1);
   EXPECT_EQ(bindings[0].value, "some:verb/const");
@@ -823,19 +812,19 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParams) {
   EXPECT_NE(nullptr, a_b);
   EXPECT_NE(nullptr, a_b_c);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=hello", &bindings), a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "hello"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "hello"},
             }),
             bindings);
 
   EXPECT_EQ(LookupWithParams("GET", "/a/book/b", "y=shelf&z=author", &bindings),
             a_b);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "book"}, Binding{FieldPath{"y"}, "shelf"},
-          Binding{FieldPath{"z"}, "author"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "book"}, VariableBinding{FieldPath{"y"}, "shelf"},
+          VariableBinding{FieldPath{"z"}, "author"},
       }),
       bindings);
 
@@ -843,10 +832,10 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParams) {
                              "z=server&t=proxy", &bindings),
             a_b_c);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "hello"},
-          Binding{FieldPath{"y"}, "endpoints"},
-          Binding{FieldPath{"z"}, "server"}, Binding{FieldPath{"t"}, "proxy"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "hello"},
+          VariableBinding{FieldPath{"y"}, "endpoints"},
+          VariableBinding{FieldPath{"z"}, "server"}, VariableBinding{FieldPath{"t"}, "proxy"},
       }),
       bindings);
 }
@@ -857,16 +846,16 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsEncoding) {
 
   EXPECT_NE(nullptr, a);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello%20world", &bindings), a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "Hello world"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "Hello world"},
             }),
             bindings);
 
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=%24%25%2F%20%0A", &bindings), a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "$%/ \n"},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "$%/ \n"},
             }),
             bindings);
 }
@@ -877,14 +866,14 @@ TEST_F(PathMatcherTest, QueryParameterNotUnescapePlus) {
 
   EXPECT_NE(nullptr, a);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
   // By default, only unescape percent-encoded %HH,  but not '+'
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings),
             a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "Hello+world"},
-                Binding{FieldPath{"y"}, "++ "},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "Hello+world"},
+                VariableBinding{FieldPath{"y"}, "++ "},
             }),
             bindings);
 }
@@ -897,14 +886,14 @@ TEST_F(PathMatcherTest, QueryParameterUnescapePlus) {
 
   EXPECT_NE(nullptr, a);
 
-  Bindings bindings;
+  VariableBindings bindings;
   // The bindings from the query parameters "x=Hello+world&y=%2B+%20"
   // Unescape percent-encoded %HH, and convert '+' to space
   EXPECT_EQ(LookupWithParams("GET", "/a", "x=Hello+world&y=%2B+%20", &bindings),
             a);
-  EXPECT_EQ(Bindings({
-                Binding{FieldPath{"x"}, "Hello world"},
-                Binding{FieldPath{"y"}, "+  "},
+  EXPECT_EQ(VariableBindings({
+                VariableBinding{FieldPath{"x"}, "Hello world"},
+                VariableBinding{FieldPath{"y"}, "+  "},
             }),
             bindings);
 }
@@ -916,21 +905,21 @@ TEST_F(PathMatcherTest, VariableBindingsWithQueryParamsAndSystemParams) {
 
   EXPECT_NE(nullptr, a_b);
 
-  Bindings bindings;
+  VariableBindings bindings;
   EXPECT_EQ(LookupWithParams("GET", "/a/hello/b", "y=world&api_key=secret",
                              &bindings),
             a_b);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "hello"}, Binding{FieldPath{"y"}, "world"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "hello"}, VariableBinding{FieldPath{"y"}, "world"},
       }),
       bindings);
   EXPECT_EQ(
       LookupWithParams("GET", "/a/hello/b", "key=secret&y=world", &bindings),
       a_b);
   EXPECT_EQ(
-      Bindings({
-          Binding{FieldPath{"x"}, "hello"}, Binding{FieldPath{"y"}, "world"},
+      VariableBindings({
+          VariableBinding{FieldPath{"x"}, "hello"}, VariableBinding{FieldPath{"y"}, "world"},
       }),
       bindings);
 }

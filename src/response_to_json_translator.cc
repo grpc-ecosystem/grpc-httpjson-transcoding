@@ -108,9 +108,8 @@ bool ResponseToJsonTranslator::TranslateMessage(
       // message, so prepend the
       // output JSON with a '['.
       if (!WriteChar(&json_stream, '[')) {
-        status_ = absl::Status(
-            absl::StatusCode::kInternal,
-            "Failed to build the response message.");
+        status_ = absl::Status(absl::StatusCode::kInternal,
+                               "Failed to build the response message.");
         return false;
       }
       first_ = false;
@@ -118,9 +117,8 @@ bool ResponseToJsonTranslator::TranslateMessage(
       // For non-newline-delimited streaming calls add a ',' before each message
       // except the first.
       if (!WriteChar(&json_stream, ',')) {
-        status_ = absl::Status(
-            absl::StatusCode::kInternal,
-            "Failed to build the response message.");
+        status_ = absl::Status(absl::StatusCode::kInternal,
+                               "Failed to build the response message.");
         return false;
       }
     }
@@ -138,9 +136,8 @@ bool ResponseToJsonTranslator::TranslateMessage(
   // Append a newline delimiter after the message if needed.
   if (streaming_ && options_.stream_newline_delimited) {
     if (!WriteChar(&json_stream, '\n')) {
-      status_ = absl::Status(
-          absl::StatusCode::kInternal,
-          "Failed to build the response message.");
+      status_ = absl::Status(absl::StatusCode::kInternal,
+                             "Failed to build the response message.");
       return false;
     }
   }

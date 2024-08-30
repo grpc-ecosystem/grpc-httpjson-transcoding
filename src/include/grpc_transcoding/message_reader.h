@@ -17,8 +17,8 @@
 
 #include <memory>
 
-#include "transcoder_input_stream.h"
 #include "absl/status/status.h"
+#include "transcoder_input_stream.h"
 
 namespace google {
 namespace grpc {

@@ -18,9 +18,9 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/status.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "transcoder_input_stream.h"
-#include "absl/status/status.h"
 
 namespace google {
 namespace grpc {

@@ -78,9 +78,7 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
                 google::protobuf::util::converter::ObjectWriter* ow,
                 StatusErrorListener* el, bool report_collisions);
 
-  absl::Status Status() {
-    return error_listener_->status();
-  }
+  absl::Status Status() { return error_listener_->status(); }
 
   // ObjectWriter methods
   RequestWeaver* StartObject(internal::string_view name);
