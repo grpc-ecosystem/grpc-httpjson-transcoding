@@ -112,6 +112,8 @@ def googletest_repositories(bind = True):
         strip_prefix = "googletest-" + GOOGLETEST_COMMIT,
         url = "https://github.com/google/googletest/archive/" + GOOGLETEST_COMMIT + ".tar.gz",
         sha256 = GOOGLETEST_SHA256,
+        patches = ["@grpc-httpjson-transcoding//bazel/external:googletest.patch"],
+        patch_args = ["-p1"],
     )
 
 GOOGLEAPIS_COMMIT = "1d5522ad1056f16a6d593b8f3038d831e64daeea"  # Sept 03, 2020

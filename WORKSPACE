@@ -15,6 +15,8 @@
 ################################################################################
 #
 
+workspace(name = "grpc-httpjson-transcoding")
+
 load(
     "//:repositories.bzl",
     "absl_repositories",
