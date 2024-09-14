@@ -36,8 +36,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   return 0;
 }
-}
-}
-}
-}
-}
+
+}  // namespace
+}  // namespace testing
+}  // namespace transcoding
+}  // namespace grpc
+}  // namespace google
