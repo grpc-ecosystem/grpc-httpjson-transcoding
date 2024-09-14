@@ -16,6 +16,7 @@
 //
 #include "grpc_transcoding/request_weaver.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -110,10 +111,10 @@ TEST_F(RequestWeaverTest, PassThrough) {
   w->StartObject("A");
   w->RenderString("x", "a");
   w->RenderBytes("by", "b");
-  w->RenderInt32("i", google::protobuf::int32(1));
-  w->RenderUint32("ui", google::protobuf::uint32(2));
-  w->RenderInt64("i64", google::protobuf::int64(3));
-  w->RenderUint64("ui64", google::protobuf::uint64(4));
+  w->RenderInt32("i", int32_t(1));
+  w->RenderUint32("ui", uint32_t(2));
+  w->RenderInt64("i64", int64_t(3));
+  w->RenderUint64("ui64", uint64_t(4));
   w->RenderBool("b", true);
   w->RenderNull("null");
   w->StartObject("B");

@@ -19,6 +19,7 @@
 #include <float.h>
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <vector>
@@ -234,7 +235,7 @@ RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
 }
 
 RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
-                                          google::protobuf::int32 value) {
+                                          int32_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);
@@ -244,7 +245,7 @@ RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
 }
 
 RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
-                                           google::protobuf::uint32 value) {
+                                           uint32_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);
@@ -254,7 +255,7 @@ RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
 }
 
 RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
-                                          google::protobuf::int64 value) {
+                                          int64_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);
@@ -264,7 +265,7 @@ RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
 }
 
 RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
-                                           google::protobuf::uint64 value) {
+                                           uint64_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);

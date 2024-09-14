@@ -15,6 +15,7 @@
 #ifndef GRPC_TRANSCODING_PREFIX_WRITER_H_
 #define GRPC_TRANSCODING_PREFIX_WRITER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -68,14 +69,10 @@ class PrefixWriter : public google::protobuf::util::converter::ObjectWriter {
   PrefixWriter* StartList(internal::string_view name);
   PrefixWriter* EndList();
   PrefixWriter* RenderBool(internal::string_view name, bool value);
-  PrefixWriter* RenderInt32(internal::string_view name,
-                            google::protobuf::int32 value);
-  PrefixWriter* RenderUint32(internal::string_view name,
-                             google::protobuf::uint32 value);
-  PrefixWriter* RenderInt64(internal::string_view name,
-                            google::protobuf::int64 value);
-  PrefixWriter* RenderUint64(internal::string_view name,
-                             google::protobuf::uint64 value);
+  PrefixWriter* RenderInt32(internal::string_view name, int32_t value);
+  PrefixWriter* RenderUint32(internal::string_view name, uint32_t value);
+  PrefixWriter* RenderInt64(internal::string_view name, int64_t value);
+  PrefixWriter* RenderUint64(internal::string_view name, uint64_t value);
   PrefixWriter* RenderDouble(internal::string_view name, double value);
   PrefixWriter* RenderFloat(internal::string_view name, float value);
   PrefixWriter* RenderString(internal::string_view name,

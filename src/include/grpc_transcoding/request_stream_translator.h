@@ -15,6 +15,7 @@
 #ifndef GRPC_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_
 #define GRPC_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -81,13 +82,13 @@ class RequestStreamTranslator
   RequestStreamTranslator* EndList();
   RequestStreamTranslator* RenderBool(internal::string_view name, bool value);
   RequestStreamTranslator* RenderInt32(internal::string_view name,
-                                       google::protobuf::int32 value);
+                                       int32_t value);
   RequestStreamTranslator* RenderUint32(internal::string_view name,
-                                        google::protobuf::uint32 value);
+                                        uint32_t value);
   RequestStreamTranslator* RenderInt64(internal::string_view name,
-                                       google::protobuf::int64 value);
+                                       int64_t value);
   RequestStreamTranslator* RenderUint64(internal::string_view name,
-                                        google::protobuf::uint64 value);
+                                        uint64_t value);
   RequestStreamTranslator* RenderDouble(internal::string_view name,
                                         double value);
   RequestStreamTranslator* RenderFloat(internal::string_view name, float value);

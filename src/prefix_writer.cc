@@ -16,6 +16,7 @@
 //
 #include "grpc_transcoding/prefix_writer.h"
 
+#include <cstdint>
 #include <string>
 
 #include "absl/strings/str_split.h"
@@ -77,7 +78,7 @@ PrefixWriter* PrefixWriter::RenderBool(internal::string_view name, bool value) {
 }
 
 PrefixWriter* PrefixWriter::RenderInt32(internal::string_view name,
-                                        google::protobuf::int32 value) {
+                                        int32_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -90,7 +91,7 @@ PrefixWriter* PrefixWriter::RenderInt32(internal::string_view name,
 }
 
 PrefixWriter* PrefixWriter::RenderUint32(internal::string_view name,
-                                         google::protobuf::uint32 value) {
+                                         uint32_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -103,7 +104,7 @@ PrefixWriter* PrefixWriter::RenderUint32(internal::string_view name,
 }
 
 PrefixWriter* PrefixWriter::RenderInt64(internal::string_view name,
-                                        google::protobuf::int64 value) {
+                                        int64_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -116,7 +117,7 @@ PrefixWriter* PrefixWriter::RenderInt64(internal::string_view name,
 }
 
 PrefixWriter* PrefixWriter::RenderUint64(internal::string_view name,
-                                         google::protobuf::uint64 value) {
+                                         uint64_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);

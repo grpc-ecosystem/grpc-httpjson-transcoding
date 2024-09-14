@@ -15,6 +15,7 @@
 #ifndef GRPC_TRANSCODING_REQUEST_WEAVER_H_
 #define GRPC_TRANSCODING_REQUEST_WEAVER_H_
 
+#include <cstdint>
 #include <list>
 #include <stack>
 #include <string>
@@ -86,14 +87,10 @@ class RequestWeaver : public google::protobuf::util::converter::ObjectWriter {
   RequestWeaver* StartList(internal::string_view name);
   RequestWeaver* EndList();
   RequestWeaver* RenderBool(internal::string_view name, bool value);
-  RequestWeaver* RenderInt32(internal::string_view name,
-                             google::protobuf::int32 value);
-  RequestWeaver* RenderUint32(internal::string_view name,
-                              google::protobuf::uint32 value);
-  RequestWeaver* RenderInt64(internal::string_view name,
-                             google::protobuf::int64 value);
-  RequestWeaver* RenderUint64(internal::string_view name,
-                              google::protobuf::uint64 value);
+  RequestWeaver* RenderInt32(internal::string_view name, int32_t value);
+  RequestWeaver* RenderUint32(internal::string_view name, uint32_t value);
+  RequestWeaver* RenderInt64(internal::string_view name, int64_t value);
+  RequestWeaver* RenderUint64(internal::string_view name, uint64_t value);
   RequestWeaver* RenderDouble(internal::string_view name, double value);
   RequestWeaver* RenderFloat(internal::string_view name, float value);
   RequestWeaver* RenderString(internal::string_view name,
