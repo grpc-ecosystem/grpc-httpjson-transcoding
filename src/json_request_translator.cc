@@ -18,10 +18,10 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "google/protobuf/io/zero_copy_stream.h"
 #include "google/protobuf/util/converter/json_stream_parser.h"
 #include "google/protobuf/util/converter/object_writer.h"
-#include "grpc_transcoding/internal/protobuf_types.h"
 #include "grpc_transcoding/message_stream.h"
 #include "grpc_transcoding/request_message_translator.h"
 #include "grpc_transcoding/request_stream_translator.h"
@@ -102,7 +102,7 @@ class LazyRequestTranslator : public MessageStream {
 
     // Feed the chunk to the parser & check the status.
     return CheckParsingStatus(json_parser_->Parse(
-        internal::string_view(reinterpret_cast<const char*>(data), size)));
+        absl::string_view(reinterpret_cast<const char*>(data), size)));
   }
 
   // If parsing status fails, return false.

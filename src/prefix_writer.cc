@@ -33,7 +33,7 @@ PrefixWriter::PrefixWriter(const std::string& prefix,
       non_actionable_depth_(0),
       writer_(ow) {}
 
-PrefixWriter* PrefixWriter::StartObject(internal::string_view name) {
+PrefixWriter* PrefixWriter::StartObject(absl::string_view name) {
   if (++non_actionable_depth_ == 1) {
     name = StartPrefix(name);
   }
@@ -49,7 +49,7 @@ PrefixWriter* PrefixWriter::EndObject() {
   return this;
 }
 
-PrefixWriter* PrefixWriter::StartList(internal::string_view name) {
+PrefixWriter* PrefixWriter::StartList(absl::string_view name) {
   if (++non_actionable_depth_ == 1) {
     name = StartPrefix(name);
   }
@@ -65,7 +65,7 @@ PrefixWriter* PrefixWriter::EndList() {
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderBool(internal::string_view name, bool value) {
+PrefixWriter* PrefixWriter::RenderBool(absl::string_view name, bool value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -77,8 +77,7 @@ PrefixWriter* PrefixWriter::RenderBool(internal::string_view name, bool value) {
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderInt32(internal::string_view name,
-                                        int32_t value) {
+PrefixWriter* PrefixWriter::RenderInt32(absl::string_view name, int32_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -90,7 +89,7 @@ PrefixWriter* PrefixWriter::RenderInt32(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderUint32(internal::string_view name,
+PrefixWriter* PrefixWriter::RenderUint32(absl::string_view name,
                                          uint32_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -103,8 +102,7 @@ PrefixWriter* PrefixWriter::RenderUint32(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderInt64(internal::string_view name,
-                                        int64_t value) {
+PrefixWriter* PrefixWriter::RenderInt64(absl::string_view name, int64_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -116,7 +114,7 @@ PrefixWriter* PrefixWriter::RenderInt64(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderUint64(internal::string_view name,
+PrefixWriter* PrefixWriter::RenderUint64(absl::string_view name,
                                          uint64_t value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
@@ -129,8 +127,7 @@ PrefixWriter* PrefixWriter::RenderUint64(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderDouble(internal::string_view name,
-                                         double value) {
+PrefixWriter* PrefixWriter::RenderDouble(absl::string_view name, double value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -142,8 +139,7 @@ PrefixWriter* PrefixWriter::RenderDouble(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderFloat(internal::string_view name,
-                                        float value) {
+PrefixWriter* PrefixWriter::RenderFloat(absl::string_view name, float value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -155,8 +151,8 @@ PrefixWriter* PrefixWriter::RenderFloat(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderString(internal::string_view name,
-                                         internal::string_view value) {
+PrefixWriter* PrefixWriter::RenderString(absl::string_view name,
+                                         absl::string_view value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -168,8 +164,8 @@ PrefixWriter* PrefixWriter::RenderString(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderBytes(internal::string_view name,
-                                        internal::string_view value) {
+PrefixWriter* PrefixWriter::RenderBytes(absl::string_view name,
+                                        absl::string_view value) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -181,7 +177,7 @@ PrefixWriter* PrefixWriter::RenderBytes(internal::string_view name,
   return this;
 }
 
-PrefixWriter* PrefixWriter::RenderNull(internal::string_view name) {
+PrefixWriter* PrefixWriter::RenderNull(absl::string_view name) {
   bool root = non_actionable_depth_ == 0;
   if (root) {
     name = StartPrefix(name);
@@ -194,7 +190,7 @@ PrefixWriter* PrefixWriter::RenderNull(internal::string_view name) {
   return this;
 }
 
-internal::string_view PrefixWriter::StartPrefix(internal::string_view name) {
+absl::string_view PrefixWriter::StartPrefix(absl::string_view name) {
   for (const auto& prefix : prefix_) {
     writer_->StartObject(name);
     name = prefix;

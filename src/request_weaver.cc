@@ -44,8 +44,8 @@ namespace {
 
 bool AlmostEquals(float a, float b) { return fabs(a - b) < 32 * FLT_EPSILON; }
 
-absl::Status bindingFailureStatus(internal::string_view field_name,
-                                  internal::string_view type,
+absl::Status bindingFailureStatus(absl::string_view field_name,
+                                  absl::string_view type,
                                   const pbconv::DataPiece& value) {
   return absl::Status(
       absl::StatusCode::kInvalidArgument,
@@ -53,7 +53,7 @@ absl::Status bindingFailureStatus(internal::string_view field_name,
                    value.ValueAsStringOrDefault(""), " to ", type));
 }
 
-absl::Status isEqual(internal::string_view field_name,
+absl::Status isEqual(absl::string_view field_name,
                      const pbconv::DataPiece& value_in_body,
                      const pbconv::DataPiece& value_in_binding) {
   bool value_is_same = true;
@@ -179,7 +179,7 @@ RequestWeaver::RequestWeaver(std::vector<BindingInfo> bindings,
   }
 }
 
-RequestWeaver* RequestWeaver::StartObject(internal::string_view name) {
+RequestWeaver* RequestWeaver::StartObject(absl::string_view name) {
   ow_->StartObject(name);
   if (current_.empty()) {
     // The outermost StartObject("");
@@ -210,7 +210,7 @@ RequestWeaver* RequestWeaver::EndObject() {
   return this;
 }
 
-RequestWeaver* RequestWeaver::StartList(internal::string_view name) {
+RequestWeaver* RequestWeaver::StartList(absl::string_view name) {
   ow_->StartList(name);
   // We don't support weaving inside lists, so we won't need to do any matching
   // until we leave this list.
@@ -224,8 +224,7 @@ RequestWeaver* RequestWeaver::EndList() {
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
-                                         bool value) {
+RequestWeaver* RequestWeaver::RenderBool(absl::string_view name, bool value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);
@@ -234,7 +233,7 @@ RequestWeaver* RequestWeaver::RenderBool(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
+RequestWeaver* RequestWeaver::RenderInt32(absl::string_view name,
                                           int32_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
@@ -244,7 +243,7 @@ RequestWeaver* RequestWeaver::RenderInt32(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
+RequestWeaver* RequestWeaver::RenderUint32(absl::string_view name,
                                            uint32_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
@@ -254,7 +253,7 @@ RequestWeaver* RequestWeaver::RenderUint32(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
+RequestWeaver* RequestWeaver::RenderInt64(absl::string_view name,
                                           int64_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
@@ -264,7 +263,7 @@ RequestWeaver* RequestWeaver::RenderInt64(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
+RequestWeaver* RequestWeaver::RenderUint64(absl::string_view name,
                                            uint64_t value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
@@ -274,7 +273,7 @@ RequestWeaver* RequestWeaver::RenderUint64(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderDouble(internal::string_view name,
+RequestWeaver* RequestWeaver::RenderDouble(absl::string_view name,
                                            double value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
@@ -284,8 +283,7 @@ RequestWeaver* RequestWeaver::RenderDouble(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
-                                          float value) {
+RequestWeaver* RequestWeaver::RenderFloat(absl::string_view name, float value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value);
     CollisionCheck(name, value_in_body);
@@ -294,8 +292,8 @@ RequestWeaver* RequestWeaver::RenderFloat(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderString(internal::string_view name,
-                                           internal::string_view value) {
+RequestWeaver* RequestWeaver::RenderString(absl::string_view name,
+                                           absl::string_view value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value, true);
     CollisionCheck(name, value_in_body);
@@ -304,13 +302,13 @@ RequestWeaver* RequestWeaver::RenderString(internal::string_view name,
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderNull(internal::string_view name) {
+RequestWeaver* RequestWeaver::RenderNull(absl::string_view name) {
   ow_->RenderNull(name);
   return this;
 }
 
-RequestWeaver* RequestWeaver::RenderBytes(internal::string_view name,
-                                          internal::string_view value) {
+RequestWeaver* RequestWeaver::RenderBytes(absl::string_view name,
+                                          absl::string_view value) {
   if (non_actionable_depth_ == 0) {
     pbconv::DataPiece value_in_body = pbconv::DataPiece(value, true);
     CollisionCheck(name, value_in_body);
@@ -337,8 +335,8 @@ void RequestWeaver::Bind(std::vector<const pb::Field*> field_path,
 void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
   for (const auto& data : info->bindings) {
     pbconv::ObjectWriter::RenderDataPieceTo(
-        pbconv::DataPiece(internal::string_view(data.second), true),
-        internal::string_view(data.first->name()), ow_);
+        pbconv::DataPiece(absl::string_view(data.second), true),
+        absl::string_view(data.first->name()), ow_);
   }
   info->bindings.clear();
   for (auto& msg : info->messages) {
@@ -352,7 +350,7 @@ void RequestWeaver::WeaveTree(RequestWeaver::WeaveInfo* info) {
   info->messages.clear();
 }
 
-void RequestWeaver::CollisionCheck(internal::string_view name,
+void RequestWeaver::CollisionCheck(absl::string_view name,
                                    const pbconv::DataPiece& value_in_body) {
   if (current_.empty()) return;
 
@@ -361,11 +359,10 @@ void RequestWeaver::CollisionCheck(internal::string_view name,
     if (name == it->first->name()) {
       if (it->first->cardinality() == pb::Field::CARDINALITY_REPEATED) {
         pbconv::ObjectWriter::RenderDataPieceTo(
-            pbconv::DataPiece(internal::string_view(it->second), true), name,
-            ow_);
+            pbconv::DataPiece(absl::string_view(it->second), true), name, ow_);
       } else if (report_collisions_) {
         pbconv::DataPiece value_in_binding =
-            pbconv::DataPiece(internal::string_view(it->second), true);
+            pbconv::DataPiece(absl::string_view(it->second), true);
         absl::Status compare_status =
             isEqual(name, value_in_body, value_in_binding);
         if (!compare_status.ok()) {
@@ -380,7 +377,7 @@ void RequestWeaver::CollisionCheck(internal::string_view name,
 }
 
 RequestWeaver::WeaveInfo* RequestWeaver::WeaveInfo::FindWeaveMsg(
-    const internal::string_view field_name) {
+    const absl::string_view field_name) {
   for (auto& msg : messages) {
     if (field_name == msg.first->name()) {
       return &msg.second;
