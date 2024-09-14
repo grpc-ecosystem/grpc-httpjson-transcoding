@@ -16,7 +16,7 @@
 //
 #include "test_common.h"
 
-#include <ctype.h>
+#include <cctype>
 #include <fstream>
 #include <string>
 #include <vector>

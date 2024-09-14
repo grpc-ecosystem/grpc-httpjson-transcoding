@@ -16,10 +16,9 @@
 //
 #include "grpc_transcoding/request_weaver.h"
 
-#include <float.h>
-
 #include <cmath>
 #include <cstdint>
+#include <cfloat>
 #include <limits>
 #include <string>
 #include <vector>
