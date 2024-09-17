@@ -38,8 +38,8 @@ def protobuf_repositories(bind = True):
         sha256 = PROTOBUF_SHA256,
     )
 
-GOOGLETEST_COMMIT = "703bd9caab50b139428cea1aaff9974ebee5742e"  # v1.10.0: Oct 2, 2019
-GOOGLETEST_SHA256 = "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d"
+GOOGLETEST_COMMIT = "f8d7d77c06936315286eb55f8de22cd23c188571"  # v1.14.0: Aug 2, 2023
+GOOGLETEST_SHA256 = "7ff5db23de232a39cbb5c9f5143c355885e30ac596161a6b9fc50c4538bfbf01"
 
 def googletest_repositories(bind = True):
     http_archive(
@@ -47,8 +47,6 @@ def googletest_repositories(bind = True):
         strip_prefix = "googletest-" + GOOGLETEST_COMMIT,
         url = "https://github.com/google/googletest/archive/" + GOOGLETEST_COMMIT + ".tar.gz",
         sha256 = GOOGLETEST_SHA256,
-        patches = ["@grpc-httpjson-transcoding//bazel/external:googletest.patch"],
-        patch_args = ["-p1"],
     )
 
 GOOGLEAPIS_COMMIT = "1d5522ad1056f16a6d593b8f3038d831e64daeea"  # Sept 03, 2020
@@ -74,39 +72,11 @@ def googlebenchmark_repositories(bind = True):
     )
 
 def nlohmannjson_repositories(bind = True):
-    BUILD = """
-# Copyright 2016 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
-#
-licenses(["notice"])
-package(default_visibility = ["//visibility:public"])
-cc_library(
-    name = "json",
-    hdrs = [
-        "single_include/nlohmann/json.hpp",
-    ],
-    strip_include_prefix = "single_include/",
-)
-"""
     http_archive(
         name = "com_github_nlohmann_json",
-        strip_prefix = "json-3.11.2",
-        urls = ["https://github.com/nlohmann/json/archive/v3.11.2.tar.gz"],
-        sha256 = "d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273",
-        build_file_content = BUILD,
+        strip_prefix = "json-3.11.3",
+        urls = ["https://github.com/nlohmann/json/archive/v3.11.3.tar.gz"],
+        sha256 = "0d8ef5af7f9794e3263480193c491549b2ba6cc74bb018906202ada498a79406",
     )
 
 RULES_DOCKER_COMMIT = "0.25.0"  # Jun 22, 2022
