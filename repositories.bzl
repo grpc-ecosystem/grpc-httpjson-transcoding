@@ -103,8 +103,8 @@ def protobuf_repositories(bind = True):
         sha256 = PROTOBUF_SHA256,
     )
 
-GOOGLETEST_COMMIT = "703bd9caab50b139428cea1aaff9974ebee5742e"  # v1.10.0: Oct 2, 2019
-GOOGLETEST_SHA256 = "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d"
+GOOGLETEST_COMMIT = "f8d7d77c06936315286eb55f8de22cd23c188571"  # v1.14.0: Aug 2, 2023
+GOOGLETEST_SHA256 = "7ff5db23de232a39cbb5c9f5143c355885e30ac596161a6b9fc50c4538bfbf01"
 
 def googletest_repositories(bind = True):
     http_archive(
@@ -112,8 +112,6 @@ def googletest_repositories(bind = True):
         strip_prefix = "googletest-" + GOOGLETEST_COMMIT,
         url = "https://github.com/google/googletest/archive/" + GOOGLETEST_COMMIT + ".tar.gz",
         sha256 = GOOGLETEST_SHA256,
-        patches = ["@grpc-httpjson-transcoding//bazel/external:googletest.patch"],
-        patch_args = ["-p1"],
     )
 
 GOOGLEAPIS_COMMIT = "1d5522ad1056f16a6d593b8f3038d831e64daeea"  # Sept 03, 2020
