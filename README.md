@@ -31,13 +31,13 @@ $ script/check-style
 
 ## Toolchain
 
-The Bazel build system defaults to using clang 10 to enable reproducible builds.
+The Bazel build system defaults to using clang 14 to enable reproducible builds.
 
 ## Continuous Integration
 
 This repository is integrated with [OSS Prow](https://github.com/kubernetes/test-infra/tree/master/prow). Prow will run the [presubmit script](https://github.com/grpc-ecosystem/grpc-httpjson-transcoding/blob/master/script/ci.sh) on each Pull Request to verify tests pass. Note:
 
-- PR submission is only allowed if the job passes. 
+- PR submission is only allowed if the job passes.
 - If you are an outside contributor, Prow may not run until a Googler LGTMs.
 
 # Contribution
