@@ -17,20 +17,6 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "protobuf",
-    hdrs = [
-        "include/grpc_transcoding/internal/protobuf_types.h",
-    ],
-    includes = [
-        "include/",
-    ],
-    deps = [
-        "@com_google_protobuf//:protobuf",
-        "@com_google_protoconverter//:all",
-    ],
-)
-
-cc_library(
     name = "prefix_writer",
     srcs = [
         "prefix_writer.cc",
@@ -42,8 +28,9 @@ cc_library(
         "include/",
     ],
     deps = [
-        ":protobuf",
         "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )
 
@@ -59,10 +46,11 @@ cc_library(
         "include/",
     ],
     deps = [
-        ":protobuf",
         ":status_error_listener",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )
 
@@ -98,8 +86,10 @@ cc_library(
     deps = [
         ":message_stream",
         ":prefix_writer",
-        ":protobuf",
         ":request_weaver",
+        "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )
 
@@ -192,6 +182,7 @@ cc_library(
     deps = [
         ":request_message_translator",
         ":request_stream_translator",
+        "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
     ],
 )
@@ -294,9 +285,10 @@ cc_library(
         "include/",
     ],
     deps = [
-        ":protobuf",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_protoconverter//:all",
     ],
 )

@@ -18,12 +18,12 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "google/protobuf/stubs/bytestream.h"
 #include "google/protobuf/type.pb.h"
 #include "google/protobuf/util/converter/error_listener.h"
 #include "google/protobuf/util/converter/protostream_objectwriter.h"
 #include "google/protobuf/util/type_resolver.h"
-#include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
 #include "prefix_writer.h"
 #include "request_weaver.h"

@@ -15,13 +15,14 @@
 #ifndef GRPC_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_
 #define GRPC_TRANSCODING_REQUEST_STREAM_TRANSLATOR_H_
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "google/protobuf/util/converter/object_writer.h"
 #include "google/protobuf/util/type_resolver.h"
-#include "grpc_transcoding/internal/protobuf_types.h"
 #include "message_stream.h"
 #include "request_message_translator.h"
 
@@ -75,27 +76,22 @@ class RequestStreamTranslator
 
  private:
   // ObjectWriter methods.
-  RequestStreamTranslator* StartObject(internal::string_view name);
+  RequestStreamTranslator* StartObject(absl::string_view name);
   RequestStreamTranslator* EndObject();
-  RequestStreamTranslator* StartList(internal::string_view name);
+  RequestStreamTranslator* StartList(absl::string_view name);
   RequestStreamTranslator* EndList();
-  RequestStreamTranslator* RenderBool(internal::string_view name, bool value);
-  RequestStreamTranslator* RenderInt32(internal::string_view name,
-                                       google::protobuf::int32 value);
-  RequestStreamTranslator* RenderUint32(internal::string_view name,
-                                        google::protobuf::uint32 value);
-  RequestStreamTranslator* RenderInt64(internal::string_view name,
-                                       google::protobuf::int64 value);
-  RequestStreamTranslator* RenderUint64(internal::string_view name,
-                                        google::protobuf::uint64 value);
-  RequestStreamTranslator* RenderDouble(internal::string_view name,
-                                        double value);
-  RequestStreamTranslator* RenderFloat(internal::string_view name, float value);
-  RequestStreamTranslator* RenderString(internal::string_view name,
-                                        internal::string_view value);
-  RequestStreamTranslator* RenderBytes(internal::string_view name,
-                                       internal::string_view value);
-  RequestStreamTranslator* RenderNull(internal::string_view name);
+  RequestStreamTranslator* RenderBool(absl::string_view name, bool value);
+  RequestStreamTranslator* RenderInt32(absl::string_view name, int32_t value);
+  RequestStreamTranslator* RenderUint32(absl::string_view name, uint32_t value);
+  RequestStreamTranslator* RenderInt64(absl::string_view name, int64_t value);
+  RequestStreamTranslator* RenderUint64(absl::string_view name, uint64_t value);
+  RequestStreamTranslator* RenderDouble(absl::string_view name, double value);
+  RequestStreamTranslator* RenderFloat(absl::string_view name, float value);
+  RequestStreamTranslator* RenderString(absl::string_view name,
+                                        absl::string_view value);
+  RequestStreamTranslator* RenderBytes(absl::string_view name,
+                                       absl::string_view value);
+  RequestStreamTranslator* RenderNull(absl::string_view name);
 
   // Sets up the ProtoMessageHelper to handle writing data.
   void StartMessageTranslator();
@@ -104,7 +100,7 @@ class RequestStreamTranslator
   void EndMessageTranslator();
 
   // Helper method to render a single piece of data, to reuse code.
-  void RenderData(internal::string_view name, std::function<void()> renderer);
+  void RenderData(absl::string_view name, std::function<void()> renderer);
 
   // TypeResolver to be passed to the RequestMessageTranslator
   google::protobuf::util::TypeResolver& type_resolver_;

@@ -16,7 +16,6 @@
 //
 #include "grpc_transcoding/http_template.h"
 
-#include <cassert>
 #include <string>
 #include <vector>
 

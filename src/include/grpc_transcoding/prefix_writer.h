@@ -15,11 +15,12 @@
 #ifndef GRPC_TRANSCODING_PREFIX_WRITER_H_
 #define GRPC_TRANSCODING_PREFIX_WRITER_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "google/protobuf/util/converter/object_writer.h"
-#include "grpc_transcoding/internal/protobuf_types.h"
 
 namespace google {
 namespace grpc {
@@ -63,30 +64,24 @@ class PrefixWriter : public google::protobuf::util::converter::ObjectWriter {
                google::protobuf::util::converter::ObjectWriter* ow);
 
   // ObjectWriter methods.
-  PrefixWriter* StartObject(internal::string_view name);
+  PrefixWriter* StartObject(absl::string_view name);
   PrefixWriter* EndObject();
-  PrefixWriter* StartList(internal::string_view name);
+  PrefixWriter* StartList(absl::string_view name);
   PrefixWriter* EndList();
-  PrefixWriter* RenderBool(internal::string_view name, bool value);
-  PrefixWriter* RenderInt32(internal::string_view name,
-                            google::protobuf::int32 value);
-  PrefixWriter* RenderUint32(internal::string_view name,
-                             google::protobuf::uint32 value);
-  PrefixWriter* RenderInt64(internal::string_view name,
-                            google::protobuf::int64 value);
-  PrefixWriter* RenderUint64(internal::string_view name,
-                             google::protobuf::uint64 value);
-  PrefixWriter* RenderDouble(internal::string_view name, double value);
-  PrefixWriter* RenderFloat(internal::string_view name, float value);
-  PrefixWriter* RenderString(internal::string_view name,
-                             internal::string_view value);
-  PrefixWriter* RenderBytes(internal::string_view name,
-                            internal::string_view value);
-  PrefixWriter* RenderNull(internal::string_view name);
+  PrefixWriter* RenderBool(absl::string_view name, bool value);
+  PrefixWriter* RenderInt32(absl::string_view name, int32_t value);
+  PrefixWriter* RenderUint32(absl::string_view name, uint32_t value);
+  PrefixWriter* RenderInt64(absl::string_view name, int64_t value);
+  PrefixWriter* RenderUint64(absl::string_view name, uint64_t value);
+  PrefixWriter* RenderDouble(absl::string_view name, double value);
+  PrefixWriter* RenderFloat(absl::string_view name, float value);
+  PrefixWriter* RenderString(absl::string_view name, absl::string_view value);
+  PrefixWriter* RenderBytes(absl::string_view name, absl::string_view value);
+  PrefixWriter* RenderNull(absl::string_view name);
 
  private:
   // Helper method to start the prefix and return the name to use for the value.
-  internal::string_view StartPrefix(internal::string_view name);
+  absl::string_view StartPrefix(absl::string_view name);
 
   // Helper method to end the prefix.
   void EndPrefix();

@@ -16,6 +16,7 @@
 //
 #include "grpc_transcoding/prefix_writer.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -49,10 +50,10 @@ TEST_F(PrefixWriterTest, EmptyPrefix) {
   expect_.StartObject("A");
   expect_.RenderString("x", "a");
   expect_.RenderBytes("by", "b");
-  expect_.RenderInt32("i", google::protobuf::int32(1));
-  expect_.RenderUint32("ui", google::protobuf::uint32(2));
-  expect_.RenderInt64("i64", google::protobuf::int64(3));
-  expect_.RenderUint64("ui64", google::protobuf::uint64(4));
+  expect_.RenderInt32("i", int32_t(1));
+  expect_.RenderUint32("ui", uint32_t(2));
+  expect_.RenderInt64("i64", int64_t(3));
+  expect_.RenderUint64("ui64", uint64_t(4));
   expect_.RenderBool("b", true);
   expect_.RenderNull("null");
   expect_.StartObject("B");
@@ -67,10 +68,10 @@ TEST_F(PrefixWriterTest, EmptyPrefix) {
   w->StartObject("A");
   w->RenderString("x", "a");
   w->RenderBytes("by", "b");
-  w->RenderInt32("i", google::protobuf::int32(1));
-  w->RenderUint32("ui", google::protobuf::uint32(2));
-  w->RenderInt64("i64", google::protobuf::int64(3));
-  w->RenderUint64("ui64", google::protobuf::uint64(4));
+  w->RenderInt32("i", int32_t(1));
+  w->RenderUint32("ui", uint32_t(2));
+  w->RenderInt64("i64", int64_t(3));
+  w->RenderUint64("ui64", uint64_t(4));
   w->RenderBool("b", true);
   w->RenderNull("null");
   w->StartObject("B");
@@ -120,19 +121,19 @@ TEST_F(PrefixWriterTest, OneLevelPrefix2) {
   expect_.EndObject();  // "A"
 
   expect_.StartObject("i32");
-  expect_.RenderInt32("A", google::protobuf::int32(-32));
+  expect_.RenderInt32("A", int32_t(-32));
   expect_.EndObject();  // "A"
 
   expect_.StartObject("ui32");
-  expect_.RenderUint32("A", google::protobuf::uint32(32));
+  expect_.RenderUint32("A", uint32_t(32));
   expect_.EndObject();  // "A"
 
   expect_.StartObject("i64");
-  expect_.RenderInt64("A", google::protobuf::int64(-64));
+  expect_.RenderInt64("A", int64_t(-64));
   expect_.EndObject();  // "A"
 
   expect_.StartObject("ui64");
-  expect_.RenderUint64("A", google::protobuf::uint64(64));
+  expect_.RenderUint64("A", uint64_t(64));
   expect_.EndObject();  // "A"
 
   expect_.StartObject("b");
@@ -147,10 +148,10 @@ TEST_F(PrefixWriterTest, OneLevelPrefix2) {
 
   w->RenderString("x", "a");
   w->RenderBytes("by", "b");
-  w->RenderInt32("i32", google::protobuf::int32(-32));
-  w->RenderUint32("ui32", google::protobuf::uint32(32));
-  w->RenderInt64("i64", google::protobuf::int64(-64));
-  w->RenderUint64("ui64", google::protobuf::uint64(64));
+  w->RenderInt32("i32", int32_t(-32));
+  w->RenderUint32("ui32", uint32_t(32));
+  w->RenderInt64("i64", int64_t(-64));
+  w->RenderUint64("ui64", uint64_t(64));
   w->RenderBool("b", false);
   w->RenderNull("nil");
 }
