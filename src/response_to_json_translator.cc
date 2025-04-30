@@ -16,6 +16,8 @@
 //
 #include "grpc_transcoding/response_to_json_translator.h"
 
+#include <algorithm>
+#include <cstring>
 #include <string>
 
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
@@ -97,10 +99,22 @@ bool WriteChar(::google::protobuf::io::ZeroCopyOutputStream* stream, char c) {
 }
 
 // A helper to write a string to a ZeroCopyOutputStream.
-bool WriteString(::google::protobuf::io::ZeroCopyOutputStream* stream, std::string str) {
-  for (auto c : str) {
-    if (!WriteChar(stream, c)) {
+bool WriteString(::google::protobuf::io::ZeroCopyOutputStream* stream,
+                 const std::string& str) {
+  int bytes_to_write = str.size();
+  int bytes_written = 0;
+  while (bytes_written < bytes_to_write) {
+    int size = 0;
+    void* data;
+    if (!stream->Next(&data, &size) || size == 0) {
       return false;
+    }
+    int bytes_to_write_this_iteration =
+        std::min(bytes_to_write - bytes_written, size);
+    memcpy(data, str.data() + bytes_written, bytes_to_write_this_iteration);
+    bytes_written += bytes_to_write_this_iteration;
+    if (bytes_to_write_this_iteration < size) {
+      stream->BackUp(size - bytes_to_write_this_iteration);
     }
   }
   return true;
