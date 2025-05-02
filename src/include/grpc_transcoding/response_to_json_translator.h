@@ -70,6 +70,11 @@ struct JsonResponseTranslateOptions {
   // If set to false, all streaming messages are treated as a JSON array and
   // separated by comma.
   bool stream_newline_delimited;
+
+  // If true, enforces Server-Sent Events (SSE) message framing (`data: <message>\n\n`)
+  // and, `stream_newline_delimited` is ignored.
+  // If false, message framing is determined by `stream_newline_delimited`.
+  bool stream_sse_style_delimited;
 };
 
 class ResponseToJsonTranslator : public MessageStream {
@@ -84,7 +89,7 @@ class ResponseToJsonTranslator : public MessageStream {
       ::google::protobuf::util::TypeResolver* type_resolver,
       std::string type_url, bool streaming, TranscoderInputStream* in,
       const JsonResponseTranslateOptions& options = {
-          ::google::protobuf::util::JsonPrintOptions(), false});
+          ::google::protobuf::util::JsonPrintOptions(), false, false});
 
   // MessageStream implementation
   bool NextMessage(std::string* message);

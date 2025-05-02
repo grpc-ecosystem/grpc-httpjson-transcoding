@@ -16,6 +16,8 @@
 //
 #include "grpc_transcoding/response_to_json_translator.h"
 
+#include <algorithm>
+#include <cstring>
 #include <string>
 
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
@@ -65,10 +67,11 @@ bool ResponseToJsonTranslator::NextMessage(std::string* message) {
       return false;
     }
   } else if (streaming_ && reader_.Finished()) {
-    if (!options_.stream_newline_delimited) {
-      // This is a non-newline-delimited streaming call and the input is
-      // finished. Return the final ']'
-      // or "[]" in case this was an empty stream.
+    if (!options_.stream_newline_delimited &&
+        !options_.stream_sse_style_delimited) {
+      // This is a non-newline-delimited and non-SSE-style-delimited streaming
+      // call and the input is finished. Return the final ']' or "[]" in case
+      // this was an empty stream.
       *message = first_ ? "[]" : "]";
     }
     finished_ = true;
@@ -95,6 +98,28 @@ bool WriteChar(::google::protobuf::io::ZeroCopyOutputStream* stream, char c) {
   return true;
 }
 
+// A helper to write a string to a ZeroCopyOutputStream.
+bool WriteString(::google::protobuf::io::ZeroCopyOutputStream* stream,
+                 const std::string& str) {
+  int bytes_to_write = str.size();
+  int bytes_written = 0;
+  while (bytes_written < bytes_to_write) {
+    int size = 0;
+    void* data;
+    if (!stream->Next(&data, &size) || size == 0) {
+      return false;
+    }
+    int bytes_to_write_this_iteration =
+        std::min(bytes_to_write - bytes_written, size);
+    memcpy(data, str.data() + bytes_written, bytes_to_write_this_iteration);
+    bytes_written += bytes_to_write_this_iteration;
+    if (bytes_to_write_this_iteration < size) {
+      stream->BackUp(size - bytes_to_write_this_iteration);
+    }
+  }
+  return true;
+}
+
 }  // namespace
 
 bool ResponseToJsonTranslator::TranslateMessage(
@@ -102,7 +127,22 @@ bool ResponseToJsonTranslator::TranslateMessage(
     std::string* json_out) {
   ::google::protobuf::io::StringOutputStream json_stream(json_out);
 
-  if (streaming_ && !options_.stream_newline_delimited) {
+  if (streaming_ && options_.stream_sse_style_delimited) {
+    if (first_) {
+      if (!WriteString(&json_stream, "data: ")) {
+        status_ = absl::Status(absl::StatusCode::kInternal,
+                               "Failed to build the response message.");
+        return false;
+      }
+      first_ = false;
+    } else {
+      if (!WriteString(&json_stream, "\n\ndata: ")) {
+        status_ = absl::Status(absl::StatusCode::kInternal,
+                               "Failed to build the response message.");
+        return false;
+      }
+    }
+  } else if (streaming_ && !options_.stream_newline_delimited) {
     if (first_) {
       // This is a non-newline-delimited streaming call and this is the first
       // message, so prepend the
@@ -134,7 +174,7 @@ bool ResponseToJsonTranslator::TranslateMessage(
   }
 
   // Append a newline delimiter after the message if needed.
-  if (streaming_ && options_.stream_newline_delimited) {
+  if (streaming_ && options_.stream_newline_delimited && !options_.stream_sse_style_delimited) {
     if (!WriteChar(&json_stream, '\n')) {
       status_ = absl::Status(absl::StatusCode::kInternal,
                              "Failed to build the response message.");

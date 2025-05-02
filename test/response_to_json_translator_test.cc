@@ -911,6 +911,81 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingNewlineDelimitedDirectTest) {
   EXPECT_FALSE(translator.NextMessage(&message));
 }
 
+TEST_F(ResponseToJsonTranslatorTest, StreamingSSEStyleDelimitedDirectTest) {
+  // Load the service config
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+
+  // Create a TypeHelper using the service config
+  TypeHelper type_helper(service.types(), service.enums());
+
+  // Messages to test
+  auto test_message1 =
+      GenerateGrpcMessage<Shelf>(R"(name : "1" theme : "Fiction")");
+  auto test_message2 =
+      GenerateGrpcMessage<Shelf>(R"(name : "2" theme : "Fantasy")");
+  auto test_message3 =
+      GenerateGrpcMessage<Shelf>(R"(name : "3" theme : "Children")");
+  auto test_message4 =
+      GenerateGrpcMessage<Shelf>(R"(name : "4" theme : "Classics")");
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/Shelf", true, &input_stream,
+      {pbutil::JsonPrintOptions(), true, true});
+
+  std::string message;
+  // There is nothing translated
+  EXPECT_FALSE(translator.NextMessage(&message));
+
+  // Add test_message1 to the stream
+  input_stream.AddChunk(test_message1);
+
+  // Now we should have the test_message1 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_EQ("data: {\"name\":\"1\",\"theme\":\"Fiction\"}", message);
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Add the test_message2, test_message3 and part of test_message4
+  input_stream.AddChunk(test_message2);
+  input_stream.AddChunk(test_message3);
+  input_stream.AddChunk(test_message4.substr(0, 10));
+
+  // Now we should have test_message2 & test_message3 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_EQ("\n\ndata: {\"name\":\"2\",\"theme\":\"Fantasy\"}", message);
+
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_EQ("\n\ndata: {\"name\":\"3\",\"theme\":\"Children\"}", message);
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Add the rest of test_message4
+  input_stream.AddChunk(test_message4.substr(10));
+
+  // Now we should have the test_message4 translated
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_EQ("\n\ndata: {\"name\":\"4\",\"theme\":\"Classics\"}", message);
+
+  // No more messages, but not finished yet
+  EXPECT_FALSE(translator.NextMessage(&message));
+  EXPECT_FALSE(translator.Finished());
+
+  // Now finish the stream
+  input_stream.Finish();
+
+  // All done!
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_TRUE(translator.Finished());
+  EXPECT_FALSE(translator.NextMessage(&message));
+}
+
 TEST_F(ResponseToJsonTranslatorTest, Streaming5KMessages) {
   // Load the service config
   ::google::api::Service service;
