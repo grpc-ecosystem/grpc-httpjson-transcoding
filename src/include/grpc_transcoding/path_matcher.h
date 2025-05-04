@@ -275,7 +275,7 @@ std::vector<std::string> ExtractRequestParts(
     result = absl::StrSplit(path.substr(1), '/');
   }
   // Removes all trailing empty parts caused by extra "/".
-  while (!result.empty() && (*(--result.end())).empty()) {
+  while (!result.empty() && result.back().empty()) {
     result.pop_back();
   }
   return result;
