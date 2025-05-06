@@ -69,12 +69,12 @@ struct JsonResponseTranslateOptions {
   // If set to true, newline "\n" is used to separate streaming messages.
   // If set to false, all streaming messages are treated as a JSON array and
   // separated by comma.
-  bool stream_newline_delimited;
+  bool stream_newline_delimited = false;
 
   // If true, enforces Server-Sent Events (SSE) message framing (`data: <message>\n\n`)
   // and, `stream_newline_delimited` is ignored.
   // If false, message framing is determined by `stream_newline_delimited`.
-  bool stream_sse_style_delimited;
+  bool stream_sse_style_delimited = false;
 };
 
 class ResponseToJsonTranslator : public MessageStream {

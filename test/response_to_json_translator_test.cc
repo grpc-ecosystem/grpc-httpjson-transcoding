@@ -944,7 +944,7 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingSSEStyleDelimitedDirectTest) {
 
   // Now we should have the test_message1 translated
   EXPECT_TRUE(translator.NextMessage(&message));
-  EXPECT_EQ("data: {\"name\":\"1\",\"theme\":\"Fiction\"}", message);
+  EXPECT_EQ("data: {\"name\":\"1\",\"theme\":\"Fiction\"}\n\n", message);
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
@@ -957,10 +957,10 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingSSEStyleDelimitedDirectTest) {
 
   // Now we should have test_message2 & test_message3 translated
   EXPECT_TRUE(translator.NextMessage(&message));
-  EXPECT_EQ("\n\ndata: {\"name\":\"2\",\"theme\":\"Fantasy\"}", message);
+  EXPECT_EQ("data: {\"name\":\"2\",\"theme\":\"Fantasy\"}\n\n", message);
 
   EXPECT_TRUE(translator.NextMessage(&message));
-  EXPECT_EQ("\n\ndata: {\"name\":\"3\",\"theme\":\"Children\"}", message);
+  EXPECT_EQ("data: {\"name\":\"3\",\"theme\":\"Children\"}\n\n", message);
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
@@ -971,7 +971,7 @@ TEST_F(ResponseToJsonTranslatorTest, StreamingSSEStyleDelimitedDirectTest) {
 
   // Now we should have the test_message4 translated
   EXPECT_TRUE(translator.NextMessage(&message));
-  EXPECT_EQ("\n\ndata: {\"name\":\"4\",\"theme\":\"Classics\"}", message);
+  EXPECT_EQ("data: {\"name\":\"4\",\"theme\":\"Classics\"}\n\n", message);
 
   // No more messages, but not finished yet
   EXPECT_FALSE(translator.NextMessage(&message));
