@@ -128,19 +128,10 @@ bool ResponseToJsonTranslator::TranslateMessage(
   ::google::protobuf::io::StringOutputStream json_stream(json_out);
 
   if (streaming_ && options_.stream_sse_style_delimited) {
-    if (first_) {
-      if (!WriteString(&json_stream, "data: ")) {
-        status_ = absl::Status(absl::StatusCode::kInternal,
-                               "Failed to build the response message.");
-        return false;
-      }
-      first_ = false;
-    } else {
-      if (!WriteString(&json_stream, "\n\ndata: ")) {
-        status_ = absl::Status(absl::StatusCode::kInternal,
-                               "Failed to build the response message.");
-        return false;
-      }
+    if (!WriteString(&json_stream, "data: ")) {
+      status_ = absl::Status(absl::StatusCode::kInternal,
+                             "Failed to build the response message.");
+      return false;
     }
   } else if (streaming_ && !options_.stream_newline_delimited) {
     if (first_) {
@@ -174,7 +165,13 @@ bool ResponseToJsonTranslator::TranslateMessage(
   }
 
   // Append a newline delimiter after the message if needed.
-  if (streaming_ && options_.stream_newline_delimited && !options_.stream_sse_style_delimited) {
+  if (streaming_ && options_.stream_sse_style_delimited) {
+    if (!WriteString(&json_stream, "\n\n")) {
+      status_ = absl::Status(absl::StatusCode::kInternal,
+                             "Failed to build the response message.");
+      return false;
+    }
+  } else if (streaming_ && options_.stream_newline_delimited) {
     if (!WriteChar(&json_stream, '\n')) {
       status_ = absl::Status(absl::StatusCode::kInternal,
                              "Failed to build the response message.");
