@@ -1,8 +1,6 @@
 # bazel build folders
-/bazel-bin
-/bazel-grpc-httpjson-transcoding
-/bazel-out
-/bazel-testlogs
+/bazel-*
+MODULE.bazel.lock
 
 # IDE
 .clwb/
