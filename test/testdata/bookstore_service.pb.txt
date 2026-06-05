@@ -455,6 +455,18 @@ types {
     file_name: "wrappers.proto"
   }
 }
+types {
+  name: "ScalarBoolMessage"
+  fields {
+    kind: TYPE_BOOL
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "b"
+    json_name: "b"
+  }
+  source_context {
+  }
+}
 enums {
   name: "google.protobuf.NullValue"
   enumvalue {

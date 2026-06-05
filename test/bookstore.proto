@@ -73,3 +73,6 @@ message DeleteBookRequest {
   int64 shelf = 1;
   int64 book = 2;
 }
+message ScalarBoolMessage {
+  bool b = 1;
+}

@@ -794,6 +794,64 @@ TEST_F(JsonRequestTranslatorTest, StreamingErrorNotAnArray) {
       absl::StatusCode::kInvalidArgument));
 }
 
+// Scalar bool fields accept string values.
+// The proto JSON spec requires bool fields to only accept JSON true/false
+// literals, but the transcoder also accepts string values like "true", "yes",
+// "false", "no" (case-insensitive).
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringTrue) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "true"})", "b: true");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringFalse) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "false"})", "b: false");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringYes) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "yes"})", "b: true");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringNo) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "no"})", "b: false");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringCaseInsensitive) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "TrUe"})", "b: true");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringNOUpperCase) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("ScalarBoolMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": "NO"})", "b: false");
+  tc.Build();
+  EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
+}
+
 }  // namespace
 }  // namespace testing
 }  // namespace transcoding
