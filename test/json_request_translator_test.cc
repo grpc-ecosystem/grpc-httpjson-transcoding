@@ -852,6 +852,155 @@ TEST_F(JsonRequestTranslatorTest, ScalarBoolAcceptsStringNOUpperCase) {
   EXPECT_TRUE((RunTest<ScalarBoolMessage>(1, 1.0, &tc)));
 }
 
+// Wrapper types accept the object/message form {"value": ...}.
+// The proto JSON spec requires wrapper types (e.g. google.protobuf.BoolValue)
+// to be represented as their underlying scalar, not as {"value": <scalar>}.
+
+TEST_F(JsonRequestTranslatorTest, BoolValueAcceptsObjectFormTrue) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": true}})", "b { value: true }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BoolValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, BoolValueAcceptsObjectFormFalse) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": false}})", "b { value: false }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BoolValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, StringValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("StringValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"s": {"value": "oh no"}})", R"(s { value: "oh no" })");
+  tc.Build();
+  EXPECT_TRUE((RunTest<StringValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, BytesValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BytesValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": "dGVzdA=="}})", R"(b { value: "test" })");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BytesValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, Int32ValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("Int32ValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"i": {"value": 42}})", "i { value: 42 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<Int32ValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, Int64ValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("Int64ValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"i": {"value": "42"}})", "i { value: 42 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<Int64ValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, UInt32ValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("UInt32ValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"u": {"value": 42}})", "u { value: 42 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<UInt32ValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, UInt64ValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("UInt64ValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"u": {"value": "42"}})", "u { value: 42 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<UInt64ValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, FloatValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FloatValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"f": {"value": 3.14}})", "f { value: 3.14 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FloatValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, DoubleValueAcceptsObjectForm) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("DoubleValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"d": {"value": 2.718}})", "d { value: 2.718 }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<DoubleValueMessage>(1, 1.0, &tc)));
+}
+
+// Behaviors 1+2 combined: wrapper types in object form also accept string
+// bool values.
+TEST_F(JsonRequestTranslatorTest, BoolValueObjectFormAcceptsStringYes) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": "yes"}})", "b { value: true }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BoolValueMessage>(1, 1.0, &tc)));
+}
+
+TEST_F(JsonRequestTranslatorTest, BoolValueObjectFormAcceptsStringNo) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": "no"}})", "b { value: false }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BoolValueMessage>(1, 1.0, &tc)));
+}
+
+// Extra keys alongside "value" are silently ignored.
+TEST_F(JsonRequestTranslatorTest, BoolValueObjectFormExtraKeysIgnored) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"b": {"value": true, "extra": "ignored"}})",
+                "b { value: true }");
+  tc.Build();
+  EXPECT_TRUE((RunTest<BoolValueMessage>(1, 1.0, &tc)));
+}
+
+// When a wrapper type field receives an object with NO "value" key, the
+// transcoder correctly rejects it with INVALID_ARGUMENT.
+TEST_F(JsonRequestTranslatorTest, BoolValueRejectsArbitraryObject) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("BoolValueMessage");
+  Build();
+  AddChunk(R"({"b": {"foo": "bar", "baz": 123}})");
+  Finish();
+  EXPECT_TRUE(Tester().ExpectNone());
+  EXPECT_TRUE(
+      Tester().ExpectStatusEq(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(JsonRequestTranslatorTest, StringValueRejectsArbitraryObject) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("StringValueMessage");
+  Build();
+  AddChunk(R"({"s": {"name": "test", "count": 42}})");
+  Finish();
+  EXPECT_TRUE(Tester().ExpectNone());
+  EXPECT_TRUE(
+      Tester().ExpectStatusEq(absl::StatusCode::kInvalidArgument));
+}
+
 }  // namespace
 }  // namespace testing
 }  // namespace transcoding

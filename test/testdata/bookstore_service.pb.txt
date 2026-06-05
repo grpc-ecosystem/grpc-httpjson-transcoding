@@ -456,6 +456,110 @@ types {
   }
 }
 types {
+  name: "google.protobuf.StringValue"
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.BytesValue"
+  fields {
+    kind: TYPE_BYTES
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.Int32Value"
+  fields {
+    kind: TYPE_INT32
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.Int64Value"
+  fields {
+    kind: TYPE_INT64
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.UInt32Value"
+  fields {
+    kind: TYPE_UINT32
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.UInt64Value"
+  fields {
+    kind: TYPE_UINT64
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.FloatValue"
+  fields {
+    kind: TYPE_FLOAT
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
+  name: "google.protobuf.DoubleValue"
+  fields {
+    kind: TYPE_DOUBLE
+    cardinality: CARDINALITY_REQUIRED
+    number: 1
+    name: "value"
+    json_name: "value"
+  }
+  source_context {
+    file_name: "wrappers.proto"
+  }
+}
+types {
   name: "ScalarBoolMessage"
   fields {
     kind: TYPE_BOOL
@@ -463,6 +567,123 @@ types {
     number: 1
     name: "b"
     json_name: "b"
+  }
+  source_context {
+  }
+}
+types {
+  name: "BoolValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "b"
+    type_url: "type.googleapis.com/google.protobuf.BoolValue"
+    json_name: "b"
+  }
+  source_context {
+  }
+}
+types {
+  name: "StringValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "s"
+    type_url: "type.googleapis.com/google.protobuf.StringValue"
+    json_name: "s"
+  }
+  source_context {
+  }
+}
+types {
+  name: "BytesValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "b"
+    type_url: "type.googleapis.com/google.protobuf.BytesValue"
+    json_name: "b"
+  }
+  source_context {
+  }
+}
+types {
+  name: "Int32ValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "i"
+    type_url: "type.googleapis.com/google.protobuf.Int32Value"
+    json_name: "i"
+  }
+  source_context {
+  }
+}
+types {
+  name: "Int64ValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "i"
+    type_url: "type.googleapis.com/google.protobuf.Int64Value"
+    json_name: "i"
+  }
+  source_context {
+  }
+}
+types {
+  name: "UInt32ValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "u"
+    type_url: "type.googleapis.com/google.protobuf.UInt32Value"
+    json_name: "u"
+  }
+  source_context {
+  }
+}
+types {
+  name: "UInt64ValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "u"
+    type_url: "type.googleapis.com/google.protobuf.UInt64Value"
+    json_name: "u"
+  }
+  source_context {
+  }
+}
+types {
+  name: "FloatValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "f"
+    type_url: "type.googleapis.com/google.protobuf.FloatValue"
+    json_name: "f"
+  }
+  source_context {
+  }
+}
+types {
+  name: "DoubleValueMessage"
+  fields {
+    kind: TYPE_MESSAGE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "d"
+    type_url: "type.googleapis.com/google.protobuf.DoubleValue"
+    json_name: "d"
   }
   source_context {
   }
