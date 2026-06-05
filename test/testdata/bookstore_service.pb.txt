@@ -707,6 +707,25 @@ types {
   source_context {
   }
 }
+types {
+  name: "FloatDoubleMessage"
+  fields {
+    kind: TYPE_FLOAT
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "f"
+    json_name: "f"
+  }
+  fields {
+    kind: TYPE_DOUBLE
+    cardinality: CARDINALITY_OPTIONAL
+    number: 2
+    name: "d"
+    json_name: "d"
+  }
+  source_context {
+  }
+}
 enums {
   name: "google.protobuf.NullValue"
   enumvalue {
