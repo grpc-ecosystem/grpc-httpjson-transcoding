@@ -688,6 +688,25 @@ types {
   source_context {
   }
 }
+types {
+  name: "FieldNamingMessage"
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 1
+    name: "snake_case_field"
+    json_name: "snakeCaseField"
+  }
+  fields {
+    kind: TYPE_STRING
+    cardinality: CARDINALITY_OPTIONAL
+    number: 2
+    name: "custom_field"
+    json_name: "myCustomName"
+  }
+  source_context {
+  }
+}
 enums {
   name: "google.protobuf.NullValue"
   enumvalue {

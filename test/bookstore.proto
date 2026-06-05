@@ -104,3 +104,7 @@ message FloatValueMessage {
 message DoubleValueMessage {
   google.protobuf.DoubleValue d = 1;
 }
+message FieldNamingMessage {
+  string snake_case_field = 1;
+  string custom_field = 2 [json_name = "myCustomName"];
+}

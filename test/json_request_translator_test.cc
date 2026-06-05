@@ -1001,6 +1001,76 @@ TEST_F(JsonRequestTranslatorTest, StringValueRejectsArbitraryObject) {
       Tester().ExpectStatusEq(absl::StatusCode::kInvalidArgument));
 }
 
+// Body presence detection with variable bindings (query parameters).
+// When a JSON body and a query parameter target the same field, the weaver's
+// CollisionCheck determines which value wins. CollisionCheck compares the raw
+// JSON key name against the binding's proto field name (Field::name()). This
+// means collision is only detected when the body uses the proto field name, not
+// the json_name.
+
+// Proto field name in body → collision detected → body wins.
+TEST_F(JsonRequestTranslatorTest, BodyProtoNameWinsOverBinding) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FieldNamingMessage");
+  AddVariableBinding("snake_case_field", "query");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"snake_case_field": "body"})",
+                R"(snake_case_field: "body")");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FieldNamingMessage>(1, 1.0, &tc)));
+}
+
+// json_name (camelCase) in body → collision NOT detected → binding is weaved
+// after body → query param silently overrides body value.
+TEST_F(JsonRequestTranslatorTest, BodyJsonNameOverriddenByBinding) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FieldNamingMessage");
+  AddVariableBinding("snake_case_field", "query");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"snakeCaseField": "body"})",
+                R"(snake_case_field: "query")");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FieldNamingMessage>(1, 1.0, &tc)));
+}
+
+// Custom json_name in body → collision NOT detected → binding overrides.
+TEST_F(JsonRequestTranslatorTest, BodyCustomJsonNameOverriddenByBinding) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FieldNamingMessage");
+  AddVariableBinding("custom_field", "query");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"myCustomName": "body"})",
+                R"(custom_field: "query")");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FieldNamingMessage>(1, 1.0, &tc)));
+}
+
+// Empty string body value using proto name → collision detected → body wins
+// (default value is still considered present).
+TEST_F(JsonRequestTranslatorTest, BodyEmptyStringWinsOverBinding) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FieldNamingMessage");
+  AddVariableBinding("snake_case_field", "query");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"snake_case_field": ""})",
+                R"(snake_case_field: "")");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FieldNamingMessage>(1, 1.0, &tc)));
+}
+
+// Null body value → RenderNull does not call CollisionCheck → binding survives
+// and is weaved → query param wins.
+TEST_F(JsonRequestTranslatorTest, BodyNullAllowsBindingToWin) {
+  LoadService("bookstore_service.pb.txt");
+  SetMessageType("FieldNamingMessage");
+  AddVariableBinding("snake_case_field", "query");
+  TranslationTestCase tc(false);
+  tc.AddMessage(R"({"snake_case_field": null})",
+                R"(snake_case_field: "query")");
+  tc.Build();
+  EXPECT_TRUE((RunTest<FieldNamingMessage>(1, 1.0, &tc)));
+}
+
 }  // namespace
 }  // namespace testing
 }  // namespace transcoding
