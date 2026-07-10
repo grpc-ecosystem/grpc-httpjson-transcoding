@@ -18,6 +18,7 @@
 // Test proto for transcoding
 syntax = "proto3";
 package google.grpc.transcoding;
+import "google/protobuf/wrappers.proto";
 message Biography {
   int64 year_born = 1;
   int64 year_died = 2;
@@ -72,4 +73,42 @@ message GetBookRequest {
 message DeleteBookRequest {
   int64 shelf = 1;
   int64 book = 2;
+}
+message ScalarBoolMessage {
+  bool b = 1;
+}
+message BoolValueMessage {
+  google.protobuf.BoolValue b = 1;
+}
+message StringValueMessage {
+  google.protobuf.StringValue s = 1;
+}
+message BytesValueMessage {
+  google.protobuf.BytesValue b = 1;
+}
+message Int32ValueMessage {
+  google.protobuf.Int32Value i = 1;
+}
+message Int64ValueMessage {
+  google.protobuf.Int64Value i = 1;
+}
+message UInt32ValueMessage {
+  google.protobuf.UInt32Value u = 1;
+}
+message UInt64ValueMessage {
+  google.protobuf.UInt64Value u = 1;
+}
+message FloatValueMessage {
+  google.protobuf.FloatValue f = 1;
+}
+message DoubleValueMessage {
+  google.protobuf.DoubleValue d = 1;
+}
+message FieldNamingMessage {
+  string snake_case_field = 1;
+  string custom_field = 2 [json_name = "myCustomName"];
+}
+message FloatDoubleMessage {
+  float f = 1;
+  double d = 2;
 }

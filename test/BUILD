@@ -114,6 +114,7 @@ proto_library(
     name = "bookstore_proto",
     testonly = 1,
     srcs = ["bookstore.proto"],
+    deps = ["@com_google_protobuf//:wrappers_proto"],
 )
 
 cc_proto_library(

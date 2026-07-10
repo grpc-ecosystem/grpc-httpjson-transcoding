@@ -1110,6 +1110,73 @@ TEST_F(ResponseToJsonTranslatorTest, IncompleteFrame) {
             "Incomplete gRPC frame expected size: 5 actual size: 1");
 }
 
+// Float and double fields set to integer values are serialized as integers in
+// JSON (e.g. 100, not 100.0). This uses direct string matching because
+// ExpectJsonObjectEq normalizes numbers and would treat 100 and 100.0 as equal.
+TEST_F(ResponseToJsonTranslatorTest, FloatIntegerValueNoDecimalPoint) {
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/FloatDoubleMessage", false,
+      &input_stream);
+
+  input_stream.AddChunk(
+      GenerateGrpcMessage<FloatDoubleMessage>(R"(f: 100 d: 1000)"));
+  input_stream.Finish();
+
+  std::string message;
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_NE(std::string::npos, message.find("100"));
+  EXPECT_NE(std::string::npos, message.find("1000"));
+  EXPECT_EQ(std::string::npos, message.find("100.0"));
+  EXPECT_EQ(std::string::npos, message.find("1000.0"));
+}
+
+TEST_F(ResponseToJsonTranslatorTest, DoubleIntegerValueNoDecimalPoint) {
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/FloatDoubleMessage", false,
+      &input_stream);
+
+  input_stream.AddChunk(
+      GenerateGrpcMessage<FloatDoubleMessage>(R"(d: 42)"));
+  input_stream.Finish();
+
+  std::string message;
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_NE(std::string::npos, message.find("42"));
+  EXPECT_EQ(std::string::npos, message.find("42.0"));
+}
+
+TEST_F(ResponseToJsonTranslatorTest, FloatDoubleNonIntegerValueHasDecimal) {
+  ::google::api::Service service;
+  ASSERT_TRUE(
+      transcoding::testing::LoadService("bookstore_service.pb.txt", &service));
+  TypeHelper type_helper(service.types(), service.enums());
+
+  TestZeroCopyInputStream input_stream;
+  ResponseToJsonTranslator translator(
+      type_helper.Resolver(), "type.googleapis.com/FloatDoubleMessage", false,
+      &input_stream);
+
+  input_stream.AddChunk(
+      GenerateGrpcMessage<FloatDoubleMessage>(R"(f: 3.14 d: 2.718)"));
+  input_stream.Finish();
+
+  std::string message;
+  EXPECT_TRUE(translator.NextMessage(&message));
+  EXPECT_NE(std::string::npos, message.find("."));
+}
+
 }  // namespace
 }  // namespace testing
 }  // namespace transcoding
